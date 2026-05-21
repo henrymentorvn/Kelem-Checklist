@@ -203,6 +203,50 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 .dt-day-total{font-size:14px;font-weight:700;color:var(--green)}
 .dt-ca-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0}
 .dt-missing{font-size:12px;color:#c0392b}
+
+/* CHẤM CÔNG */
+.cc-wrap{padding:16px}
+.cc-person-block{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.cc-person-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--cream)}
+.cc-person-name{font-size:15px;font-weight:500;color:var(--ink)}
+.cc-person-shift{font-size:12px;color:var(--muted);margin-top:1px}
+.cc-status-row{display:flex;gap:6px;padding:12px 16px 0}
+.cc-status-btn{flex:1;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;background:var(--white);color:var(--muted);text-align:center;transition:all 0.15s}
+.cc-status-btn.selected-ok{background:#E8F5E9;border-color:#4CAF50;color:#2E7D32}
+.cc-status-btn.selected-late{background:#FFF8E1;border-color:#FFC107;color:#E65100}
+.cc-status-btn.selected-sick{background:#FFEBEE;border-color:#EF9A9A;color:#C62828}
+.cc-status-btn.selected-leave{background:var(--green-pale);border-color:var(--green);color:var(--green)}
+.cc-status-btn.selected-early{background:var(--brown-pale);border-color:var(--brown);color:var(--brown)}
+.cc-time-row{display:flex;gap:10px;padding:10px 16px}
+.cc-time-group{flex:1}
+.cc-time-label{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.cc-time-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--cream);color:var(--ink)}
+.cc-time-input:focus{outline:none;border-color:var(--brown)}
+.cc-reason-wrap{padding:0 16px 10px}
+.cc-reason-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--cream);color:var(--ink)}
+.cc-reason-input:focus{outline:none;border-color:var(--brown)}
+.cc-save-row{padding:10px 16px 14px}
+.cc-save-btn{width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.cc-save-btn:active{opacity:0.85}
+.cc-saved-banner{margin:10px 16px 14px;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:10px 14px;font-size:13px;color:#2E7D32}
+.cc-edit-btn{background:none;border:none;color:var(--brown);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;margin-left:8px}
+
+/* BẢNG CHẤM CÔNG ADMIN */
+.att-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.att-table th{background:var(--green);color:#fff;padding:7px 8px;text-align:left;font-weight:500}
+.att-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+.att-table tr:nth-child(even) td{background:var(--cream)}
+.att-badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+.att-ok{background:#E8F5E9;color:#2E7D32}
+.att-late{background:#FFF8E1;color:#E65100}
+.att-sick{background:#FFEBEE;color:#C62828}
+.att-leave{background:var(--green-pale);color:var(--green)}
+.att-early{background:var(--brown-pale);color:var(--brown)}
+.att-none{background:#f5f5f5;color:#aaa}
+.att-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.att-sum-item{flex:1;min-width:80px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.att-sum-num{font-size:18px;font-weight:700}
+.att-sum-label{font-size:11px;color:var(--muted);margin-top:2px}
 </style>
 </head>
 <body>
@@ -346,6 +390,7 @@ function load(){
   try{const s=localStorage.getItem("kl_sc4");if(s)scoreState=JSON.parse(s);}catch(e){}
   try{const k=localStorage.getItem("kl_kc4");if(k)ketcaState=JSON.parse(k);}catch(e){}
   try{const n=localStorage.getItem("kl_nl4");if(n)nlState=JSON.parse(n);}catch(e){}
+  loadCC();
 }
 function saveCL(){try{localStorage.setItem("kl_cl4",JSON.stringify(clState));}catch(e){}}
 function saveSC(){try{localStorage.setItem("kl_sc4",JSON.stringify(scoreState));}catch(e){}}
@@ -413,8 +458,8 @@ function renderApp(){
   const tabs=r.type==="staff"
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
-    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
+    ?[{id:"checklist",label:"Checklist"},{id:"cham-cong",label:"Chấm công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
   tb.classList.add("visible");
@@ -431,6 +476,8 @@ function switchTab(tab){
   else if(tab==="nguyen-lieu")renderNguyenLieu();
   else if(tab==="cham-diem")renderChamDiem();
   else if(tab==="xac-nhan")renderXacNhan();
+  else if(tab==="cham-cong")renderChamCong();
+  else if(tab==="cham-cong-admin")renderAttendance();
   else if(tab==="tong-ket")renderTongKet();
   else if(tab==="doanh-thu")renderDoanhThu();
 }
@@ -833,6 +880,207 @@ function renderDoanhThu(){
   });
   h+="</div>";
   document.getElementById("main-content").innerHTML=h;
+}
+
+
+// ===================== CHẤM CÔNG =====================
+const CC_STATUSES = {
+  ok:    {label:'Đúng giờ', cls:'selected-ok',    badge:'att-ok',    short:'✓'},
+  late:  {label:'Đi trễ',   cls:'selected-late',   badge:'att-late',  short:'Trễ'},
+  sick:  {label:'Nghỉ ốm',  cls:'selected-sick',   badge:'att-sick',  short:'Ốm'},
+  leave: {label:'Nghỉ phép',cls:'selected-leave',  badge:'att-leave', short:'Phép'},
+  early: {label:'Về sớm',   cls:'selected-early',  badge:'att-early', short:'Sớm'},
+};
+const CC_PEOPLE = {
+  thoa:  {name:'Thoa',  shift:'07:00–18:00',   inTime:'07:00', outTime:'18:00'},
+  hanh:  {name:'Hạnh',  shift:'07:00–14:30',   inTime:'07:00', outTime:'14:30'},
+  hieu:  {name:'Hiếu',  shift:'07:00–22:00',   inTime:'07:00', outTime:'22:00'},
+};
+let ccState = {};
+
+function loadCC(){
+  try{const c=localStorage.getItem('kl_cc4');if(c)ccState=JSON.parse(c);}catch(e){}
+}
+function saveCC(){try{localStorage.setItem('kl_cc4',JSON.stringify(ccState));}catch(e){}}
+
+function renderChamCong(){
+  const dk = getDateKey();
+  if(!ccState[dk]) ccState[dk]={};
+  let h = '<div class="cc-wrap">';
+  h += '<div class="sec-title">Chấm công hôm nay — '+dk+'</div>';
+
+  Object.entries(CC_PEOPLE).forEach(([p, info])=>{
+    const r = ROLES[p];
+    const rec = ccState[dk][p] || {};
+    const isSaved = rec.saved;
+
+    h += `<div class="cc-person-block" id="cc-block-${p}">
+      <div class="cc-person-header">
+        <div class="avatar ${r.avClass}" style="width:38px;height:38px;font-size:13px">${r.avatar}</div>
+        <div>
+          <div class="cc-person-name">${info.name}</div>
+          <div class="cc-person-shift">${info.shift}</div>
+        </div>
+      </div>`;
+
+    if(isSaved){
+      const st = CC_STATUSES[rec.status]||CC_STATUSES.ok;
+      h += `<div class="cc-saved-banner">
+        <span class="att-badge ${st.badge}">${st.label}</span>
+        &nbsp; Vào: <strong>${rec.inTime||'—'}</strong> &nbsp; Ra: <strong>${rec.outTime||'—'}</strong>
+        ${rec.reason ? `<br><span style="color:#555;font-size:12px;margin-top:4px;display:block">Lý do: ${rec.reason}</span>` : ''}
+        <button class="cc-edit-btn" onclick="editCC('${p}')">Sửa</button>
+      </div>`;
+    } else {
+      const status = rec.status || 'ok';
+      const needReason = ['late','sick','leave','early'].includes(status);
+      h += `<div class="cc-status-row">`;
+      Object.entries(CC_STATUSES).forEach(([key,st])=>{
+        h += `<button class="cc-status-btn${status===key?' '+st.cls:''}" onclick="setCCStatus('${p}','${key}')">${st.label}</button>`;
+      });
+      h += `</div>`;
+      h += `<div class="cc-time-row">
+        <div class="cc-time-group">
+          <div class="cc-time-label">Giờ vào ca</div>
+          <input type="time" class="cc-time-input" id="cc-in-${p}" value="${rec.inTime||info.inTime}">
+        </div>
+        <div class="cc-time-group">
+          <div class="cc-time-label">Giờ ra ca</div>
+          <input type="time" class="cc-time-input" id="cc-out-${p}" value="${rec.outTime||''}">
+        </div>
+      </div>`;
+      if(needReason){
+        h += `<div class="cc-reason-wrap">
+          <input class="cc-reason-input" id="cc-reason-${p}" placeholder="Nhập lý do..." value="${rec.reason||''}">
+        </div>`;
+      } else {
+        h += `<div id="cc-reason-wrap-${p}"></div>`;
+      }
+      h += `<div class="cc-save-row">
+        <button class="cc-save-btn" onclick="saveCCRecord('${p}')">Lưu chấm công ${info.name}</button>
+      </div>`;
+    }
+    h += `</div>`;
+  });
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function setCCStatus(p, status){
+  const dk = getDateKey();
+  if(!ccState[dk]) ccState[dk]={};
+  if(!ccState[dk][p]) ccState[dk][p]={};
+  ccState[dk][p].status = status;
+  saveCC();
+  renderChamCong();
+}
+
+function saveCCRecord(p){
+  const dk = getDateKey();
+  if(!ccState[dk]) ccState[dk]={};
+  const status = ccState[dk][p]&&ccState[dk][p].status || 'ok';
+  const needReason = ['late','sick','leave','early'].includes(status);
+  const inEl = document.getElementById('cc-in-'+p);
+  const outEl = document.getElementById('cc-out-'+p);
+  const reasonEl = document.getElementById('cc-reason-'+p);
+  const inTime = inEl ? inEl.value : '';
+  const outTime = outEl ? outEl.value : '';
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+  if(needReason && !reason){
+    alert('Vui lòng nhập lý do cho trạng thái này');
+    return;
+  }
+  ccState[dk][p] = {status, inTime, outTime, reason, saved:true,
+    savedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})};
+  saveCC();
+  renderChamCong();
+}
+
+function editCC(p){
+  const dk = getDateKey();
+  if(ccState[dk]&&ccState[dk][p]) ccState[dk][p].saved = false;
+  saveCC();
+  renderChamCong();
+}
+
+// ADMIN: xem bảng chấm công
+function renderAttendance(){
+  const mk = getMonthKey(currentMonth);
+  let h = '<div class="wrap">';
+  h += `<div class="month-picker">
+    <button class="month-nav" onclick="changeMonthAtt(-1)">‹</button>
+    <div style="font-size:14px;font-weight:500">${mk}</div>
+    <button class="month-nav" onclick="changeMonthAtt(1)">›</button>
+  </div>`;
+
+  // Tổng hợp
+  const people = ['thoa','hanh','hieu'];
+  const summary = {};
+  people.forEach(p=>{ summary[p]={ok:0,late:0,sick:0,leave:0,early:0,total:0}; });
+
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0).getDate();
+  const rows = [];
+  for(let i=1; i<=daysInMonth; i++){
+    const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+    if(d > new Date()) break;
+    const dk = d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const dayData = ccState[dk] || {};
+    const row = {dk, data:{}};
+    people.forEach(p=>{
+      const rec = dayData[p];
+      if(rec&&rec.saved){
+        row.data[p] = rec;
+        summary[p][rec.status] = (summary[p][rec.status]||0)+1;
+        summary[p].total++;
+      }
+    });
+    rows.push(row);
+  }
+
+  // Summary cards mỗi người
+  people.forEach(p=>{
+    const r = ROLES[p], s = summary[p];
+    if(s.total===0) return;
+    h += `<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:8px 0 6px">${r.name} — ${mk}</div>`;
+    h += `<div class="att-summary">
+      <div class="att-sum-item"><div class="att-sum-num" style="color:#2E7D32">${s.ok||0}</div><div class="att-sum-label">Đúng giờ</div></div>
+      <div class="att-sum-item"><div class="att-sum-num" style="color:#E65100">${s.late||0}</div><div class="att-sum-label">Đi trễ</div></div>
+      <div class="att-sum-item"><div class="att-sum-num" style="color:#C62828">${s.sick||0}</div><div class="att-sum-label">Nghỉ ốm</div></div>
+      <div class="att-sum-item"><div class="att-sum-num" style="color:var(--green)">${s.leave||0}</div><div class="att-sum-label">Nghỉ phép</div></div>
+      <div class="att-sum-item"><div class="att-sum-num" style="color:var(--brown)">${s.early||0}</div><div class="att-sum-label">Về sớm</div></div>
+    </div>`;
+  });
+
+  // Bảng chi tiết
+  h += `<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:8px 0 6px">Chi tiết từng ngày</div>`;
+  h += `<div style="overflow-x:auto">
+  <table class="att-table">
+    <tr><th>Ngày</th><th>Thoa</th><th>Hạnh</th><th>Hiếu</th></tr>`;
+  rows.reverse().forEach(({dk, data})=>{
+    h += `<tr><td style="white-space:nowrap;font-size:11px">${dk}</td>`;
+    people.forEach(p=>{
+      const rec = data[p];
+      if(rec){
+        const st = CC_STATUSES[rec.status]||CC_STATUSES.ok;
+        h += `<td>
+          <span class="att-badge ${st.badge}">${st.label}</span>
+          <div style="font-size:11px;color:#888;margin-top:2px">${rec.inTime||'—'} → ${rec.outTime||'—'}</div>
+          ${rec.reason?`<div style="font-size:11px;color:#b5813a;margin-top:1px">${rec.reason}</div>`:''}
+        </td>`;
+      } else {
+        h += `<td><span class="att-badge att-none">Chưa chấm</span></td>`;
+      }
+    });
+    h += `</tr>`;
+  });
+  h += `</table></div></div>`;
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function changeMonthAtt(d){
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
+  renderAttendance();
 }
 
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
