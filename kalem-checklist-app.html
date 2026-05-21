@@ -4,38 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Kalem — Checklist Vận Hành</title>
+<title>Kalem — Vận Hành</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#f5f4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1a1612}
-.app-header{background:#fff;border-bottom:1px solid #e8e2d8;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px}
+html,body{min-height:100%;background:#f5f4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1a1612}
+
+/* HEADER */
+.app-header{background:#fff;border-bottom:1px solid #e8e2d8;padding:12px 16px;position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:10px}
 .logo{font-size:20px;font-weight:600;color:#1a1612;letter-spacing:-0.3px}
+.role-pill{font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid #e8e2d8;color:#888;cursor:pointer;margin-left:4px}
 .date-badge{margin-left:auto;font-size:12px;color:#888;background:#f5f4f1;padding:4px 10px;border-radius:20px;border:1px solid #e8e2d8;white-space:nowrap}
-.screen{display:none;min-height:calc(100vh - 52px)}
+
+/* TAB BAR */
+.tab-bar{background:#fff;border-bottom:1px solid #e8e2d8;position:sticky;top:52px;z-index:190;display:none;overflow-x:auto}
+.tab-bar.visible{display:flex}
+.tab-btn{flex-shrink:0;padding:11px 14px;font-size:13px;color:#888;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn.active{color:#1a1612;font-weight:500;border-bottom-color:#1a1612}
+
+/* SCREENS */
+.screen{display:none}
 .screen.active{display:block}
-.home-wrap{padding:16px}
-.section-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.8px;padding:12px 0 8px}
-.person-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.15s;-webkit-transition:border-color 0.15s;active:scale(0.98)}
-.person-card:active{background:#faf8f4}
-.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0}
+.wrap{padding:16px}
+
+/* ROLE SELECT */
+.role-select-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.role-select-logo{font-size:32px;font-weight:700;color:#1a1612;margin-bottom:6px;letter-spacing:-0.5px}
+.role-select-sub{font-size:14px;color:#888;margin-bottom:32px}
+.role-btn{width:100%;max-width:320px;background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:16px 18px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left}
+.role-btn:active{background:#faf8f4}
+.role-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0}
 .av-thoa{background:#f0ede8;color:#6b5740}
 .av-hanh{background:#e8ede8;color:#4a7a5a}
 .av-hieu{background:#ede8e0;color:#b5813a}
+.av-admin{background:#1a1612;color:#f5f0e8}
+.role-info{flex:1}
+.role-name{font-size:16px;font-weight:500;color:#1a1612}
+.role-desc{font-size:12px;color:#888;margin-top:2px}
+
+/* PIN MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:320px}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.pin-input{width:100%;padding:12px 14px;border:1px solid #e8e2d8;border-radius:10px;font-size:20px;text-align:center;letter-spacing:8px;font-family:inherit;margin-bottom:12px}
+.pin-input:focus{outline:none;border-color:#b5813a}
+.modal-btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:8px}
+.modal-btn.primary{background:#1a1612;color:#fff}
+.modal-btn.secondary{background:#f5f4f1;color:#888}
+.modal-error{font-size:13px;color:#c0392b;text-align:center;margin-bottom:8px;display:none}
+
+/* CARDS */
+.sec-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.8px;padding:12px 0 8px}
+.person-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.person-card:active{background:#faf8f4}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0}
 .person-info{flex:1;min-width:0}
-.person-name{font-size:16px;font-weight:500;color:#1a1612}
+.person-name{font-size:16px;font-weight:500}
 .person-role{font-size:12px;color:#888;margin-top:2px}
 .person-stats{text-align:right;flex-shrink:0}
-.stat-num{font-size:15px;font-weight:500;color:#1a1612}
+.stat-num{font-size:15px;font-weight:500}
 .stat-label{font-size:11px;color:#aaa;margin-top:1px}
 .mini-bar-wrap{height:3px;background:#e8e2d8;border-radius:2px;margin-top:6px;width:60px;margin-left:auto}
 .mini-bar{height:3px;border-radius:2px;transition:width 0.3s}
-.bar-thoa{background:#6b5740}
-.bar-hanh{background:#4a7a5a}
-.bar-hieu{background:#b5813a}
+.bar-thoa{background:#6b5740}.bar-hanh{background:#4a7a5a}.bar-hieu{background:#b5813a}
 
+/* OVERVIEW */
 .overview-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px}
-.overview-title{font-size:13px;font-weight:500;color:#1a1612;margin-bottom:12px}
 .ov-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .ov-row:last-child{margin-bottom:0}
 .ov-name{font-size:13px;color:#666;width:52px;flex-shrink:0}
@@ -43,331 +78,939 @@ html,body{height:100%;background:#f5f4f1;font-family:-apple-system,BlinkMacSyste
 .ov-bar{height:6px;border-radius:3px;transition:width 0.4s}
 .ov-pct{font-size:12px;color:#888;width:34px;text-align:right;flex-shrink:0}
 
-.reset-btn{width:100%;padding:12px;border:1px solid #e8e2d8;border-radius:10px;background:#fff;color:#888;font-size:13px;cursor:pointer;margin-top:4px;font-family:inherit}
-.reset-btn:active{background:#f5f4f1}
-
-.checklist-wrap{padding:16px}
+/* CHECKLIST */
 .back-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#888;padding:4px 0;display:flex;align-items:center;gap:4px;font-family:inherit}
+.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#888;padding:4px 0;font-family:inherit}
 .progress-text{margin-left:auto;font-size:13px;color:#888}
-.top-bar-wrap{height:4px;background:#e8e2d8;border-radius:2px;margin-bottom:18px}
+.top-bar-wrap{height:4px;background:#e8e2d8;border-radius:2px;margin-bottom:16px}
 .top-bar{height:4px;border-radius:2px;transition:width 0.3s}
-
-.sec-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px;margin-top:4px}
-.task-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:opacity 0.2s}
+.task-sec-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 5px;margin-top:4px}
+.task-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px;cursor:pointer}
 .task-card:active{background:#faf8f4}
 .task-card.done{opacity:0.5}
 .task-card.done .task-name{text-decoration:line-through;color:#aaa}
 .task-card.priority{border-left:3px solid #b5813a}
-.check-wrap{flex-shrink:0;margin-top:1px}
-.check-circle{width:23px;height:23px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;transition:all 0.15s;background:#fff}
-.check-circle.checked-thoa{background:#6b5740;border-color:#6b5740}
-.check-circle.checked-hanh{background:#4a7a5a;border-color:#4a7a5a}
-.check-circle.checked-hieu{background:#b5813a;border-color:#b5813a}
-.check-icon{display:none;width:12px;height:9px}
-.check-circle.checked-thoa .check-icon,
-.check-circle.checked-hanh .check-icon,
-.check-circle.checked-hieu .check-icon{display:block}
+.check-circle{width:23px;height:23px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;margin-top:1px;transition:all 0.15s}
+.ck-thoa{background:#6b5740;border-color:#6b5740}
+.ck-hanh{background:#4a7a5a;border-color:#4a7a5a}
+.ck-hieu{background:#b5813a;border-color:#b5813a}
 .task-body{flex:1;min-width:0}
-.task-name{font-size:14px;color:#1a1612;line-height:1.4;font-weight:400}
-.task-name.priority-star::before{content:'★ ';color:#b5813a;font-size:12px}
-.task-std{font-size:12px;color:#4a7a5a;margin-top:4px;line-height:1.4}
-.task-std::before{content:'✓ '}
-.task-note{font-size:12px;color:#b5813a;margin-top:4px;line-height:1.4}
-.task-note::before{content:'⚠ '}
-
+.task-name{font-size:14px;color:#1a1612;line-height:1.4}
+.task-name.ps::before{content:'★ ';color:#b5813a;font-size:12px}
 .done-banner{background:#eaf3de;border:1px solid #c0dd97;border-radius:10px;padding:12px 16px;text-align:center;font-size:13px;color:#3b6d11;margin-bottom:14px}
 
-@media(max-width:400px){
-  .person-role{font-size:11px}
-  .task-name{font-size:13px}
-}
+/* KẾT CA */
+.ketca-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:16px;margin-top:8px;margin-bottom:10px}
+.ketca-title{font-size:14px;font-weight:600;color:#1a1612;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ketca-confirmed{background:#eaf3de;border:1px solid #c0dd97;border-radius:10px;padding:10px 14px;font-size:13px;color:#3b6d11;margin-bottom:10px;text-align:center}
+.field-label{font-size:12px;color:#888;margin-bottom:5px;font-weight:500}
+.field-input{width:100%;padding:10px 12px;border:1px solid #e8e2d8;border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;color:#1a1612}
+.field-input:focus{outline:none;border-color:#b5813a}
+.field-row{display:flex;gap:10px}
+.field-row .field-group{flex:1}
+.submit-btn{width:100%;padding:13px;background:#1a1612;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px}
+.submit-btn:active{opacity:0.85}
+.confirm-btn{width:100%;padding:13px;background:#4a7a5a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:8px}
+
+/* BÁO CÁO ĐẸP ĐỂ CHỤP */
+.report-card{background:#fff;border:2px solid #1a1612;border-radius:16px;padding:20px;margin-top:12px}
+.report-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e8e2d8}
+.report-logo{font-size:18px;font-weight:700;color:#1a1612}
+.report-date{font-size:12px;color:#888;margin-left:auto}
+.report-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ece6}
+.report-row:last-child{border-bottom:none}
+.report-label{font-size:13px;color:#888}
+.report-value{font-size:14px;font-weight:500;color:#1a1612}
+.report-total{background:#f5f4f1;border-radius:10px;padding:12px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
+.report-total-label{font-size:14px;font-weight:600;color:#1a1612}
+.report-total-value{font-size:20px;font-weight:700;color:#b5813a}
+.report-confirmed{display:flex;align-items:center;gap:6px;font-size:12px;color:#4a7a5a;margin-top:12px}
+
+/* NGUYÊN LIỆU */
+.nl-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:14px;margin-bottom:8px}
+.nl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.nl-name{font-size:14px;font-weight:500}
+.nl-type{font-size:11px;padding:2px 8px;border-radius:20px}
+.nl-tuoi{background:#fdf3e8;color:#b5813a}
+.nl-kho{background:#e8ede8;color:#4a7a5a}
+.nl-status{font-size:12px;color:#888;margin-bottom:8px}
+.nl-input-row{display:flex;gap:8px;align-items:center}
+.nl-input{flex:1;padding:8px 12px;border:1px solid #e8e2d8;border-radius:8px;font-size:13px;font-family:inherit}
+.nl-input:focus{outline:none;border-color:#b5813a}
+.nl-save-btn{padding:8px 14px;background:#1a1612;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.nl-history{margin-top:8px;font-size:12px;color:#aaa}
+.nl-add-btn{width:100%;padding:12px;border:1px dashed #e8e2d8;border-radius:10px;background:none;color:#888;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px}
+.nl-submitted{background:#eaf3de;border:1px solid #c0dd97;border-radius:8px;padding:8px 12px;font-size:12px;color:#3b6d11;margin-top:6px}
+.nl-pending{background:#fdf3e8;border:1px solid #f0c080;border-radius:8px;padding:8px 12px;font-size:12px;color:#b5813a;margin-top:6px}
+
+/* CHẤM ĐIỂM */
+.score-person-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.score-person-card:active{background:#faf8f4}
+.score-badge{font-size:13px;font-weight:500;margin-left:auto;padding:4px 10px;border-radius:20px}
+.badge-thoa{background:#f0ede8;color:#6b5740}
+.badge-hanh{background:#e8ede8;color:#4a7a5a}
+.score-task-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:14px;margin-bottom:8px}
+.score-task-name{font-size:13px;color:#1a1612;line-height:1.4;margin-bottom:10px;font-weight:500}
+.score-task-name.ps::before{content:'★ ';color:#b5813a;font-size:11px}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row input[type=range]{flex:1;accent-color:#b5813a}
+.score-num{font-size:20px;font-weight:700;color:#b5813a;min-width:28px;text-align:right}
+.score-labels{display:flex;justify-content:space-between;font-size:11px;color:#bbb;margin-top:3px}
+.save-score-btn{width:100%;padding:14px;background:#1a1612;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px;font-family:inherit}
+.today-scored{background:#eaf3de;border:1px solid #c0dd97;border-radius:10px;padding:10px 14px;font-size:13px;color:#3b6d11;margin-bottom:14px;text-align:center}
+
+/* TỔNG KẾT */
+.month-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:16px;margin-bottom:10px}
+.month-name-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.month-avg{font-size:22px;font-weight:700;color:#b5813a}
+.month-stat-row{display:flex;gap:8px}
+.month-stat{flex:1;background:#f5f4f1;border-radius:8px;padding:8px;text-align:center}
+.month-stat-num{font-size:16px;font-weight:500}
+.month-stat-label{font-size:11px;color:#aaa;margin-top:2px}
+.reward-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-top:10px}
+.reward-yes{background:#eaf3de;color:#3b6d11}
+.reward-no{background:#fdf3e8;color:#b5813a}
+.month-picker{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:10px 14px;margin-bottom:12px}
+.month-nav{background:none;border:none;font-size:22px;cursor:pointer;color:#888;padding:0 10px;font-family:inherit}
+.threshold-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:14px;margin-bottom:12px}
+.threshold-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.threshold-input{width:56px;padding:6px 10px;border:1px solid #e8e2d8;border-radius:8px;font-size:14px;text-align:center;font-family:inherit}
+.save-threshold-btn{padding:8px 16px;background:#1a1612;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+
+/* DOANH THU ADMIN */
+.dt-day-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.dt-day-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dt-day-date{font-size:13px;font-weight:500}
+.dt-day-total{font-size:14px;font-weight:700;color:#b5813a}
+.dt-ca-row{display:flex;justify-content:space-between;font-size:12px;color:#888;padding:3px 0}
+.dt-missing{font-size:12px;color:#c0392b}
+.summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.summary-stat{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:12px;text-align:center}
+.summary-stat-num{font-size:20px;font-weight:700;color:#1a1612}
+.summary-stat-label{font-size:11px;color:#aaa;margin-top:3px}
 </style>
 </head>
 <body>
 
-<div class="app-header">
+<!-- HEADER -->
+<div class="app-header" id="app-header" style="display:none">
   <div class="logo">Kalem</div>
+  <div class="role-pill" id="role-pill" onclick="showChangePIN()"></div>
   <div class="date-badge" id="today-label"></div>
 </div>
 
-<div id="home-screen" class="screen active">
-  <div class="home-wrap">
-    <div class="section-title">Chọn ca của bạn</div>
+<!-- TAB BAR -->
+<div class="tab-bar" id="tab-bar"></div>
 
-    <div class="person-card" onclick="openPerson('thoa')">
-      <div class="avatar av-thoa">TH</div>
-      <div class="person-info">
-        <div class="person-name">Thoa</div>
-        <div class="person-role">Vòng trong · 06:00–17:00</div>
-      </div>
-      <div class="person-stats">
-        <div class="stat-num" id="pn-thoa">0/0</div>
-        <div class="stat-label">hoàn thành</div>
-        <div class="mini-bar-wrap"><div class="mini-bar bar-thoa" id="mb-thoa" style="width:0%"></div></div>
-      </div>
-    </div>
+<!-- MAIN CONTENT -->
+<div id="main-content"></div>
 
-    <div class="person-card" onclick="openPerson('hanh')">
-      <div class="avatar av-hanh">HN</div>
-      <div class="person-info">
-        <div class="person-name">Hạnh</div>
-        <div class="person-role">Vòng ngoài · 07:00–14:00</div>
-      </div>
-      <div class="person-stats">
-        <div class="stat-num" id="pn-hanh">0/0</div>
-        <div class="stat-label">hoàn thành</div>
-        <div class="mini-bar-wrap"><div class="mini-bar bar-hanh" id="mb-hanh" style="width:0%"></div></div>
-      </div>
-    </div>
-
-    <div class="person-card" onclick="openPerson('hieu')">
-      <div class="avatar av-hieu">HI</div>
-      <div class="person-info">
-        <div class="person-name">Hiếu</div>
-        <div class="person-role">Ca trưởng · 07:00–22:00</div>
-      </div>
-      <div class="person-stats">
-        <div class="stat-num" id="pn-hieu">0/0</div>
-        <div class="stat-label">hoàn thành</div>
-        <div class="mini-bar-wrap"><div class="mini-bar bar-hieu" id="mb-hieu" style="width:0%"></div></div>
-      </div>
-    </div>
-
-    <div class="section-title" style="margin-top:8px">Tổng quan hôm nay</div>
-    <div class="overview-card">
-      <div class="ov-row">
-        <div class="ov-name">Thoa</div>
-        <div class="ov-bar-wrap"><div class="ov-bar bar-thoa" id="ob-thoa" style="width:0%"></div></div>
-        <div class="ov-pct" id="op-thoa">0%</div>
-      </div>
-      <div class="ov-row">
-        <div class="ov-name">Hạnh</div>
-        <div class="ov-bar-wrap"><div class="ov-bar bar-hanh" id="ob-hanh" style="width:0%"></div></div>
-        <div class="ov-pct" id="op-hanh">0%</div>
-      </div>
-      <div class="ov-row">
-        <div class="ov-name">Hiếu</div>
-        <div class="ov-bar-wrap"><div class="ov-bar bar-hieu" id="ob-hieu" style="width:0%"></div></div>
-        <div class="ov-pct" id="op-hieu">0%</div>
-      </div>
-    </div>
-
-    <button class="reset-btn" onclick="resetDay()">↺ &nbsp;Đặt lại cho ngày mới</button>
+<!-- PIN MODAL -->
+<div class="modal-overlay" id="pin-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="pin-title">Xác nhận PIN</div>
+    <div class="modal-sub" id="pin-sub">Nhập mã PIN để tiếp tục</div>
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pin-input" placeholder="••••">
+    <div class="modal-error" id="pin-error">PIN không đúng, thử lại</div>
+    <button class="modal-btn primary" onclick="confirmPIN()">Xác nhận</button>
+    <button class="modal-btn secondary" onclick="closePIN()">Huỷ</button>
   </div>
 </div>
 
-<div id="checklist-screen" class="screen">
-  <div class="checklist-wrap" id="checklist-body"></div>
-</div>
-
 <script>
-const DATA = {
-  thoa: {
-    name:'Thoa', color:'thoa',
-    sections:[
-      {label:'06:00 — 08:00 · Mở quán', tasks:[
-        {id:'t01',name:'Mở máy tính + khởi động máy order (POS)',std:'Màn hình POS hiển thị, có thể nhận order ngay',priority:true},
-        {id:'t02',name:'Bật máy nước nóng + máy pha cà phê',std:'Đợi đèn báo xanh trước khi pha'},
-        {id:'t03',name:'Kiểm tra nguyên vật liệu tồn kho',std:'Đá, sữa, trà, sirup, bánh — ghi thiếu vào sổ báo cáo',note:'Thiếu nguyên liệu quan trọng: báo Hiếu trước 7h30',priority:true},
-        {id:'t04',name:'Bật đèn trong quầy + đèn bảng hiệu',std:'Đèn sáng đều, không bóng chập chờn'},
-        {id:'t05',name:'Mở nhạc nền',std:'Âm lượng vừa nghe — không quá to trước 8h'},
-        {id:'t06',name:'Lau toàn bộ bàn ghế trong quán',std:'Bề mặt sạch, không vết nước hoặc bụi, ghế thẳng hàng'},
-        {id:'t07',name:'Quét sàn toàn bộ khu vực trong quán',std:'Không còn lá khô, bụi — đặc biệt góc khuất dưới bàn'},
-        {id:'t08',name:'Lau sàn ướt',std:'Sàn khô trước khi mở cửa (tránh khách trượt ngã)'},
-        {id:'t09',name:'Mở cửa sổ + cửa chính',std:'Cửa mở đúng giờ, không để khách đứng đợi ngoài'},
-        {id:'t10',name:'Quét màng nhện (góc trần, cột)',std:'Không còn màng nhện nhìn thấy bằng mắt thường'},
-        {id:'t11',name:'Đem bàn ghế ra ban công (nếu trời không mưa)',std:'Sắp xếp gọn, đúng vị trí quy định'},
-        {id:'t12',name:'Lau kệ, tủ trưng bày + đem bánh ra trưng bày',std:'Bánh đẹp mắt, nhãn giá đúng vị trí, tủ kính không có vân tay'},
-        {id:'t13',name:'Dọn gọn ly, thìa, dụng cụ pha chế vào đúng vị trí',std:'Ly sạch úp ngược, thìa xếp gọn, tạp dề treo đúng móc'},
-        {id:'t14',name:'Thay túi rác trong quầy',std:'Túi rác mới, thùng rác không có mùi'},
-        {id:'t15',name:'Pha 2 ly cà phê phin',std:'Phin được vệ sinh sạch trước khi pha, đúng tỷ lệ tiêu chuẩn'},
-        {id:'t16',name:'[Chỉ T7, CN] Mang bình trà tự phục vụ ra khu khách',std:'Bình trà pha sẵn, có nhãn tên loại trà, đặt đúng vị trí'},
-      ]},
-      {label:'08:00 — 17:00 · Vận hành & Đóng ca', tasks:[
-        {id:'t17',name:'Pha chế đồ uống theo order POS',std:'Đúng tỷ lệ, đúng ly — ra trong 5 phút/đơn, 8 phút/phức tạp',priority:true},
-        {id:'t18',name:'Duy trì quầy pha chế gọn sạch liên tục',std:'Sau mỗi order: lau quầy, rửa tay, dụng cụ về đúng vị trí'},
-        {id:'t19',name:'Thu dọn bàn sau khi khách rời đi',std:'Lau bàn trong vòng 3 phút — không để bàn bẩn khi khách mới vào'},
-        {id:'t20',name:'Theo dõi đá, sữa, sirup — bổ sung liên tục',std:'Không để hết nguyên liệu giữa lúc đông khách'},
-        {id:'t21',name:'Lau dọn quầy giữa ca (khoảng 15h)',std:'Quầy luôn gọn trong giờ mở cửa'},
-        {id:'t22',name:'Bàn giao quầy pha chế cho Hiếu trước 17h',std:'Nguyên liệu còn bao nhiêu, thiếu gì, order đang chạy — bàn giao miệng + ghi sổ',priority:true},
-      ]},
-    ]
-  },
-  hanh:{
-    name:'Hạnh', color:'hanh',
-    sections:[
-      {label:'07:00 — 09:00 · Mở khu ngoài', tasks:[
-        {id:'h01',name:'Thổi lá toàn bộ khu vực ngoài',std:'Thứ tự: vườn nho → gốc cây sala → khu vui chơi → cầu thang → ngoài cổng',priority:true},
-        {id:'h02',name:'Dọn vệ sinh toilet',std:'Mở cửa sổ → bật máy xông tinh dầu → quét → cọ bồn cầu → lau gương → quét màng nhện → lau sàn',note:'Bổ sung giấy vệ sinh và xà phòng nếu sắp hết — khách phàn nàn nhiều nhất điều này',priority:true},
-        {id:'h03',name:'Lau bàn ghế khu vực ngoài',std:'Khu vui chơi, vườn nho, góc cây sala — mặt bàn khô, không bụi hoặc sương đêm'},
-        {id:'h04',name:'Trải khăn bàn khu cây sala',std:'Khăn phẳng, không nhăn, đúng màu quy định'},
-        {id:'h05',name:'Sắp xếp bàn ghế đúng layout',std:'Khu vui chơi + góc cây sala + vườn nho — theo sơ đồ mặt bằng'},
-        {id:'h06',name:'Treo võng khu vui chơi',std:'Võng căng đúng độ cao, kiểm tra móc treo an toàn trước khi cho khách dùng'},
-        {id:'h07',name:'Thay túi rác khu vực ngoài',std:'Tại: góc cây sala, khu vui chơi, cầu thang gần toilet — buộc kín túi cũ'},
-        {id:'h08',name:'Lau gương ngoài trời',std:'Gương khu vui chơi + gương gần lá cờ — không còn vệt nước mưa hay vân tay'},
-        {id:'h09',name:'Kiểm tra khu vật nuôi (thỏ, gà, ngỗng, cừu)',std:'Có đủ nước, thức ăn cơ bản; khu không có mùi nặng; chuồng khóa đúng',note:'Báo ngay Hiếu nếu con vật bệnh, bỏ ăn hoặc chuồng bị hư'},
-      ]},
-      {label:'09:00 — 13:30 · Vận hành', tasks:[
-        {id:'h10',name:'Đón khách tại cổng, hướng dẫn chỗ ngồi',std:'Chào tự nhiên, nụ cười — không để khách đứng chờ quá 1 phút',priority:true},
-        {id:'h11',name:'Phục vụ đồ uống đến tận bàn khu ngoài',std:'Đặt đúng người order, xác nhận tên món'},
-        {id:'h12',name:'Kiểm tra toilet định kỳ (mỗi 2 tiếng)',std:'Sàn khô, không mùi, giấy vệ sinh đủ, xà phòng có'},
-        {id:'h13',name:'Hỗ trợ khách chụp ảnh checkin',std:'Nhiệt tình, gợi ý góc đẹp — cơ hội tạo nội dung tự nhiên cho Kalem'},
-      ]},
-      {label:'13:30 — 14:00 · Bàn giao ca', tasks:[
-        {id:'h14',name:'Quét dọn lại toàn bộ khu vực ngoài',std:'Không còn cốc bẩn, khay chưa dọn, rác trên sàn khu ngoài',priority:true},
-        {id:'h15',name:'Nhặt rác quanh khu vật nuôi và cổng',std:'Bao gồm rác do khách bỏ không đúng chỗ, lá cây rơi sau giờ thổi sáng'},
-        {id:'h16',name:'Kiểm tra toilet lần cuối + bổ sung vật tư',std:'Để sẵn giấy vệ sinh dự phòng, bổ sung xà phòng đủ cho buổi chiều'},
-        {id:'h17',name:'Báo cáo bàn giao với Hiếu trước khi về',std:'Nói rõ tình trạng khu vực, vấn đề tồn đọng — Hiếu ký xác nhận',priority:true},
-      ]},
-    ]
-  },
-  hieu:{
-    name:'Hiếu', color:'hieu',
-    sections:[
-      {label:'07:00 — 09:00 · Mở quán & Kiểm tra', tasks:[
-        {id:'i01',name:'Kiểm tra trang phục toàn đội trước 8h30',std:'Áo đồng phục đúng màu, tạp dề đeo, tóc gọn — nhắc nhở nhẹ nếu chưa đúng',priority:true},
-        {id:'i02',name:'Đi vòng kiểm tra toàn quán (vòng trong + vòng ngoài)',std:'Dùng checklist Thoa và Hạnh để check — ghi lại điểm chưa đạt và yêu cầu bổ sung ngay',priority:true},
-        {id:'i03',name:'Chuẩn bị nguyên liệu pha chế đầu ngày',std:'Ủ trà trái cây, ủ trà sữa, nấu sirup đường, sên mãng cầu. Hoàn thành trước 9h00',priority:true},
-        {id:'i04',name:'Chấm công + xác nhận nhân sự có mặt đủ',std:'Ghi giờ vào của từng người. Nếu vắng, báo ngay Henry'},
-        {id:'i05',name:'Kiểm tra sổ đặt bàn / lịch hẹn hôm nay',std:'Biết trước có đoàn không, có sự kiện đặc biệt không — phân công chuẩn bị phù hợp'},
-        {id:'i06',name:'Kiểm tra tồn kho từ báo cáo Thoa + bổ sung thiếu hụt',std:'Sirup, mứt, sữa, trà, đá — đặt hàng nếu sắp hết. Không để hết hàng giữa ca'},
-      ]},
-      {label:'09:00 — 17:00 · Vận hành', tasks:[
-        {id:'i07',name:'Giám sát chất lượng phục vụ liên tục',std:'Khách có đồ uống trong 5–8 phút, bàn dọn nhanh, nhân viên không đứng túm tụm',priority:true},
-        {id:'i08',name:'Nhận và xử lý thanh toán qua POS',std:'Đọc lại tổng tiền trước khi thu — không nhận tiền ngoài POS',priority:true},
-        {id:'i09',name:'Tiếp nhận phàn nàn / yêu cầu đặc biệt từ khách',std:'Lắng nghe, xin lỗi ngay — không tranh luận. Báo Henry nếu vượt thẩm quyền'},
-        {id:'i10',name:'Nhận bàn giao từ Hạnh lúc 14h, ký xác nhận',std:'Ghi nhận vấn đề tồn đọng vào sổ ca'},
-        {id:'i11',name:'Tưới cây toàn bộ khu vực (15h–16h)',std:'Tưới đều gốc, không tưới lên mặt bàn ghế hoặc khu khách đang ngồi'},
-        {id:'i12',name:'Thổi lá khu vực ngoài (khoảng 16h)',std:'Ưu tiên khu chụp ảnh, cây sala, lối vào chính'},
-        {id:'i13',name:'Kiểm tra vật nuôi buổi chiều — bổ sung thức ăn/nước',std:'Ghi vào sổ nếu con nào có biểu hiện bất thường'},
-        {id:'i14',name:'Bật đèn chiều tối (17:00–17:30)',std:'Thứ tự: đèn ban công → đèn viền → đèn bảng hiệu → đèn gốc cây sala → đèn khu vui chơi',priority:true},
-        {id:'i15',name:'Kiểm tra bổ sung nguyên liệu cho ca tối',std:'Đá đủ không, trà còn không, sirup còn không — chuẩn bị trước giờ đông khách tối'},
-      ]},
-      {label:'20:30 — 22:00 · Đóng quán', tasks:[
-        {id:'i16',name:'Lau dọn quầy pha chế toàn bộ',std:'Lau mặt quầy, dụng cụ về đúng vị trí, không còn vệt cà phê hoặc sữa',priority:true},
-        {id:'i17',name:'Vệ sinh máy cà phê đúng quy trình',std:'Thứ tự: đổ bã cà phê → chà máy → xả máy → chà rửa khay + lau khô → chà tấm lót → lau bên ngoài máy',note:'Không vệ sinh đúng cách sẽ làm hỏng máy và ảnh hưởng chất lượng cà phê hôm sau',priority:true},
-        {id:'i18',name:'Xử lý đá và khay đá cuối ngày',std:'Cất đá vào bao đá trong tủ đông, rửa sạch khay đá, úp ngược cho ráo'},
-        {id:'i19',name:'Cất bánh vào tủ lạnh đúng cách',std:'Bọc hoặc đậy nắp, ghi ngày sản xuất — bánh hết hạn không được để lại bán'},
-        {id:'i20',name:'Quét và lau sàn toàn bộ bên trong quán',std:'Quét trước, lau sau — không lau ngược hướng ra cửa'},
-        {id:'i21',name:'Thu bàn ghế ban công vào trong (nếu dự báo mưa đêm)',std:'Kiểm tra thời tiết — nếu trời quang có thể để ngoài nhưng xếp gọn gàng'},
-        {id:'i22',name:'Tắt điện theo thứ tự quy định',std:'Thứ tự: đèn gốc cây sala → đèn khu vui chơi → đèn ban công → đèn trong quán → đèn bảng hiệu (tắt sau cùng)',priority:true},
-        {id:'i23',name:'Tắt máy tính + máy order (POS)',std:'Tắt đúng cách qua phần mềm — không rút điện đột ngột, tránh mất dữ liệu POS',priority:true},
-        {id:'i24',name:'Tắt máy nước nóng + máy pha cà phê (tắt điện nguồn)'},
-        {id:'i25',name:'Đóng tất cả cửa sổ + cửa chính',std:'Kiểm tra từng cửa đã khóa — kéo thử trước khi bước ra'},
-        {id:'i26',name:'Kiểm tra an toàn toàn khu trước khi khóa cổng',std:'Đi một vòng: không còn khách, không còn điện bật, không còn thiết bị chạy, chuồng vật nuôi đã khóa',note:'Bước quan trọng nhất — không được bỏ qua dù đã mệt',priority:true},
-        {id:'i27',name:'Khóa cổng chính',std:'Kiểm tra khóa lần 2 sau khi đóng'},
-        {id:'i28',name:'Chốt doanh thu POS + báo cáo ca cho Henry',std:'Chụp ảnh màn hình POS, đếm tiền mặt, ghi sự cố phát sinh (nếu có)',priority:true},
-      ]},
-    ]
-  }
+// ===================== DATA =====================
+const ROLES = {
+  thoa:  {name:'Thoa',  type:'staff', avatar:'TH', avClass:'av-thoa', color:'#6b5740', barClass:'bar-thoa', ckClass:'ck-thoa', desc:'Vòng trong · 07:00–18:00 (T7/CN đến 21:00)'},
+  hanh:  {name:'Hạnh',  type:'staff', avatar:'HN', avClass:'av-hanh', color:'#4a7a5a', barClass:'bar-hanh', ckClass:'ck-hanh', desc:'Vòng ngoài · 07:00–14:30'},
+  hieu:  {name:'Hiếu',  type:'lead',  avatar:'HI', avClass:'av-hieu', color:'#b5813a', barClass:'bar-hieu', ckClass:'ck-hieu', desc:'Ca trưởng · 07:00–22:00'},
+  henry: {name:'Henry', type:'admin', avatar:'HE', avClass:'av-admin', color:'#1a1612', desc:'Quản trị'},
+  ka:    {name:'Ka',    type:'admin', avatar:'KA', avClass:'av-admin', color:'#1a1612', desc:'Quản trị'},
 };
 
-let state = {date:'', thoa:{}, hanh:{}, hieu:{}};
-let currentPerson = null;
+const DATA = {
+  thoa:{sections:[
+    {label:'07:00–09:00 · Mở quán — Vòng trong',tasks:[
+      {id:'t01',name:'Mở máy tính + khởi động máy order (POS)',std:'Màn hình POS hiển thị, có thể nhận order ngay',priority:true},
+      {id:'t02',name:'Bật máy nước nóng + máy pha cà phê',std:'Đợi đèn báo xanh trước khi pha'},
+      {id:'t03',name:'Bật đèn trong quầy + đèn bảng hiệu',std:'Đèn sáng đều, không bóng chập chờn'},
+      {id:'t04',name:'Mở nhạc nền',std:'Âm lượng vừa nghe — không quá to trước 8h'},
+      {id:'t05',name:'Lau toàn bộ bàn ghế trong quán',std:'Bề mặt sạch, không vết nước hoặc bụi, ghế thẳng hàng'},
+      {id:'t06',name:'Quét sàn + lau sàn ướt toàn bộ trong quán',std:'Sàn khô trước khi mở cửa — tránh khách trượt ngã'},
+      {id:'t07',name:'Mở cửa sổ + cửa chính',std:'Cửa mở đúng 07:00, không để khách đứng đợi ngoài'},
+      {id:'t08',name:'Quét màng nhện (góc trần, cột)',std:'Không còn màng nhện nhìn thấy bằng mắt thường'},
+      {id:'t09',name:'Lau kệ, tủ trưng bày + đem bánh ra trưng bày',std:'Bánh đẹp mắt, nhãn giá đúng, tủ kính không vân tay'},
+      {id:'t10',name:'Dọn gọn ly, thìa, dụng cụ pha chế vào đúng vị trí',std:'Ly sạch úp ngược, thìa xếp gọn, tạp dề treo đúng móc'},
+      {id:'t11',name:'Thay túi rác trong quầy',std:'Túi rác mới, thùng không có mùi'},
+      {id:'t12',name:'Kiểm tra tồn kho nguyên liệu pha chế + ghi báo cáo',std:'Đồ tươi báo mỗi ngày, nguyên liệu khô báo khi còn dùng được 3–5 ngày',priority:true},
+      {id:'t13',name:'[T7, CN] Mang bình trà tự phục vụ ra khu khách',std:'Bình trà pha sẵn, có nhãn tên loại trà'},
+    ]},
+    {label:'09:00–18:00 · Vận hành',tasks:[
+      {id:'t14',name:'Pha chế đồ uống theo order POS',std:'Đúng tỷ lệ, đúng ly — ra trong 5 phút/đơn đơn, 8 phút/đơn phức tạp',priority:true},
+      {id:'t15',name:'Duy trì quầy pha chế gọn sạch liên tục',std:'Sau mỗi order: lau quầy, rửa tay, dụng cụ về đúng vị trí'},
+      {id:'t16',name:'Thu dọn bàn sau khi khách rời đi (trong 3 phút)',std:'Lau bàn, dựng ghế — không để bàn bẩn khi khách mới vào'},
+      {id:'t17',name:'Theo dõi đá, sữa, sirup — bổ sung liên tục',std:'Không để hết nguyên liệu giữa lúc đông khách'},
+      {id:'t18',name:'Lau dọn quầy giữa ca (khoảng 14h)',std:'Quầy luôn gọn trong giờ mở cửa'},
+    ]},
+    {label:'17:45–18:00 · Kết ca — Vệ sinh máy cà phê',tasks:[
+      {id:'t19',name:'Tắt máy pha cà phê + vệ sinh đúng quy trình',std:'Thứ tự: đổ bã → chà máy → xả máy → chà rửa khay + lau khô → chà tấm lót → lau bên ngoài máy',priority:true,note:'Máy rất tốn điện — tắt đúng giờ. Khách tối gọi cà phê sẽ bán phin thay thế'},
+      {id:'t20',name:'Thông báo cho Hiếu: máy cà phê đã tắt, ca tối bán phin',std:'Nhắn Hiếu trực tiếp hoặc qua Zalo nhóm'},
+      {id:'t21',name:'Điền báo cáo kết ca + nộp cho Hiếu xác nhận',std:'Xem mục Kết ca bên dưới',priority:true},
+    ]},
+  ]},
+  hanh:{sections:[
+    {label:'07:00–09:00 · Mở quán — Vòng ngoài',tasks:[
+      {id:'h01',name:'Thổi lá toàn bộ khu vực ngoài',std:'Thứ tự: vườn nho → gốc cây sala → khu vui chơi → cầu thang → ngoài cổng',priority:true},
+      {id:'h02',name:'Dọn vệ sinh toilet',std:'Quy trình: mở cửa sổ → bật máy xông tinh dầu → quét → cọ bồn cầu → lau gương → quét màng nhện → lau sàn → kiểm tra giấy VS và xà phòng',priority:true},
+      {id:'h03',name:'Lau bàn ghế khu vực ngoài',std:'Khu vui chơi, vườn nho, góc cây sala — mặt bàn khô, không bụi'},
+      {id:'h04',name:'Trải khăn bàn khu cây sala',std:'Khăn phẳng, không nhăn, đúng màu quy định'},
+      {id:'h05',name:'Sắp xếp bàn ghế đúng layout',std:'Khu vui chơi + cây sala + vườn nho — theo sơ đồ mặt bằng'},
+      {id:'h06',name:'Treo võng khu vui chơi',std:'Võng căng đúng độ cao, kiểm tra móc treo an toàn'},
+      {id:'h07',name:'Thay túi rác khu vực ngoài',std:'Tại: cây sala, khu vui chơi, cầu thang gần toilet — buộc kín túi cũ'},
+      {id:'h08',name:'Lau gương ngoài trời',std:'Gương khu vui chơi + gương gần lá cờ — không còn vệt nước hay vân tay'},
+      {id:'h09',name:'Kiểm tra khu vật nuôi (thỏ, gà, ngỗng, cừu)',std:'Có đủ nước và thức ăn; khu không có mùi nặng; chuồng khóa đúng',note:'Báo ngay Hiếu nếu con vật bệnh, bỏ ăn hoặc chuồng bị hư'},
+      {id:'h10',name:'Đem bàn ghế ra ban công (nếu trời không mưa)',std:'Sắp xếp gọn, đúng vị trí quy định'},
+      {id:'h11',name:'Kiểm tra tồn kho nguyên liệu bếp/nấu ăn + ghi báo cáo',std:'Đồ tươi sống báo mỗi ngày, nguyên liệu khô báo khi còn dùng được 3–5 ngày',priority:true},
+    ]},
+    {label:'09:00–14:00 · Vận hành',tasks:[
+      {id:'h12',name:'Đón khách tại cổng, hướng dẫn chỗ ngồi',std:'Chào tự nhiên, nụ cười — không để khách đứng chờ quá 1 phút',priority:true},
+      {id:'h13',name:'Phục vụ đồ uống đến tận bàn khu ngoài',std:'Đặt đúng người order, xác nhận tên món'},
+      {id:'h14',name:'Kiểm tra toilet định kỳ (mỗi 2 tiếng)',std:'Sàn khô, không mùi, giấy vệ sinh đủ, xà phòng có — bổ sung ngay nếu thiếu'},
+      {id:'h15',name:'Hỗ trợ khách chụp ảnh checkin',std:'Nhiệt tình, gợi ý góc đẹp — tạo nội dung tự nhiên cho Kalem'},
+      {id:'h16',name:'Nhặt rác + quét lại khu vực ngoài (khoảng 12h)',std:'Không còn rác trên sàn, cốc bẩn trên bàn'},
+    ]},
+    {label:'14:00–14:30 · Kết ca',tasks:[
+      {id:'h17',name:'Quét dọn sạch toàn bộ khu vực ngoài',std:'Không còn cốc bẩn, rác trên sàn — bàn ghế xếp gọn',priority:true},
+      {id:'h18',name:'Kiểm tra toilet lần cuối + bổ sung giấy VS và xà phòng',std:'Để sẵn giấy và xà phòng dự phòng đủ cho buổi chiều'},
+      {id:'h19',name:'Kiểm tra vật nuôi — bổ sung thức ăn/nước buổi chiều',std:'Ghi sổ nếu có biểu hiện bất thường'},
+      {id:'h20',name:'Điền báo cáo kết ca + nộp cho Hiếu xác nhận',std:'Xem mục Kết ca bên dưới',priority:true},
+    ]},
+  ]},
+  hieu:{sections:[
+    {label:'07:00–09:00 · Kiểm tra mở quán',tasks:[
+      {id:'i01',name:'Kiểm tra trang phục toàn đội',std:'Áo đồng phục, tạp dề, tóc gọn — nhắc nhở nhẹ nếu chưa đúng',priority:true},
+      {id:'i02',name:'Đi vòng kiểm tra vòng trong (Thoa)',std:'Dùng checklist Thoa để kiểm tra — ghi lại điểm chưa đạt'},
+      {id:'i03',name:'Đi vòng kiểm tra vòng ngoài (Hạnh)',std:'Dùng checklist Hạnh để kiểm tra — ghi lại điểm chưa đạt'},
+      {id:'i04',name:'Chấm công + xác nhận nhân sự có mặt đủ',std:'Ghi giờ vào của từng người. Nếu vắng, báo ngay Henry/Ka'},
+      {id:'i05',name:'Kiểm tra sổ đặt bàn / sự kiện hôm nay',std:'Biết trước có đoàn, sự kiện đặc biệt — phân công chuẩn bị phù hợp'},
+      {id:'i06',name:'Nhận báo cáo tồn kho từ Thoa (pha chế) và Hạnh (bếp)',std:'Tổng hợp, đánh giá mức độ khẩn cấp, báo Henry/Ka quyết định đặt hàng',priority:true},
+    ]},
+    {label:'09:00–22:00 · Kiểm soát & Vận hành',tasks:[
+      {id:'i07',name:'Giám sát chất lượng phục vụ liên tục',std:'Khách có đồ uống trong 5–8 phút, bàn dọn nhanh, nhân viên không đứng túm tụm',priority:true},
+      {id:'i08',name:'Giám sát thanh toán qua POS',std:'Đảm bảo mọi order đều qua POS — không có giao dịch ngoài hệ thống',priority:true},
+      {id:'i09',name:'Tiếp nhận phàn nàn / yêu cầu đặc biệt từ khách',std:'Lắng nghe, xin lỗi ngay — không tranh luận. Báo Henry/Ka nếu vượt thẩm quyền'},
+      {id:'i10',name:'Xác nhận kết ca Hạnh lúc 14:30',std:'Kiểm tra báo cáo kết ca, ký xác nhận trên app',priority:true},
+      {id:'i11',name:'Bật đèn chiều tối (17:00–17:30)',std:'Thứ tự: đèn ban công → đèn viền → đèn bảng hiệu → đèn gốc cây sala → đèn khu vui chơi',priority:true},
+      {id:'i12',name:'Kiểm tra vật nuôi buổi chiều — bổ sung thức ăn/nước',std:'Ghi sổ nếu có biểu hiện bất thường'},
+      {id:'i13',name:'Xác nhận kết ca Thoa lúc 18:00 (hoặc 21:00 T7/CN)',std:'Kiểm tra báo cáo kết ca, ký xác nhận trên app',priority:true},
+      {id:'i14',name:'Tưới cây toàn bộ khu vực (15h–16h)',std:'Tưới đều gốc, không tưới lên mặt bàn ghế hoặc khu khách đang ngồi'},
+    ]},
+    {label:'21:30–22:00 · Đóng quán',tasks:[
+      {id:'i15',name:'Lau dọn quầy pha chế + khu vực trong quán',std:'Mặt quầy sạch, dụng cụ về đúng vị trí, không còn vệt bẩn',priority:true},
+      {id:'i16',name:'Xử lý đá và khay đá cuối ngày',std:'Cất đá vào bao đá trong tủ đông, rửa sạch khay, úp ngược cho ráo'},
+      {id:'i17',name:'Cất bánh vào tủ lạnh đúng cách',std:'Bọc hoặc đậy nắp, ghi ngày sản xuất — bánh hết hạn không được để lại bán'},
+      {id:'i18',name:'Quét và lau sàn toàn bộ bên trong',std:'Quét trước, lau sau'},
+      {id:'i19',name:'Thu bàn ghế ban công (nếu dự báo mưa đêm)'},
+      {id:'i20',name:'Tắt điện theo thứ tự',std:'Đèn gốc cây sala → đèn khu vui chơi → đèn ban công → đèn trong quán → đèn bảng hiệu (tắt sau cùng)',priority:true},
+      {id:'i21',name:'Tắt máy tính + POS (tắt đúng qua phần mềm)',std:'Không rút điện đột ngột — tránh mất dữ liệu POS',priority:true},
+      {id:'i22',name:'Tắt máy nước nóng + các thiết bị điện còn lại'},
+      {id:'i23',name:'Đóng + khóa tất cả cửa sổ và cửa chính',std:'Kéo thử từng cửa trước khi bước ra'},
+      {id:'i24',name:'Kiểm tra an toàn toàn khu trước khi khóa cổng',std:'Không còn khách, không còn điện bật, không còn thiết bị chạy, chuồng vật nuôi đã khóa',priority:true,note:'Bước quan trọng nhất — không được bỏ qua dù đã mệt'},
+      {id:'i25',name:'Khóa cổng chính (kiểm tra 2 lần)',std:'Kéo thử cổng sau khi khóa'},
+      {id:'i26',name:'Chụp màn hình báo cáo tổng ngày gửi Zalo cho Henry/Ka',std:'Chụp cả 2 báo cáo kết ca đã được xác nhận',priority:true},
+    ]},
+  ]},
+};
 
-function getToday(){
-  return new Date().toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+// ===================== STATE =====================
+let currentRole = null;
+let currentPIN = localStorage.getItem('kl_pin') || '2025';
+let clState = {date:'', thoa:{}, hanh:{}, hieu:{}};
+let scoreState = {};
+let ketcaState = {};
+let nlState = {};
+let threshold = parseInt(localStorage.getItem('kl_th3')) || 7;
+let currentMonth = new Date();
+let currentCLPerson = null;
+let currentScorePerson = null;
+let pinCallback = null;
+let currentTab = null;
+
+function getToday(){return new Date().toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});}
+function getDateKey(){return new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Ho_Chi_Minh'});}
+function getMonthKey(d){return 'T'+(d.getMonth()+1)+'/'+d.getFullYear();}
+function fmtMoney(n){return parseInt(n||0).toLocaleString('vi-VN')+'đ';}
+
+function load(){
+  try{const c=localStorage.getItem('kl_cl3');if(c){const s=JSON.parse(c);if(s.date===getToday())clState=s;else clState={date:getToday(),thoa:{},hanh:{},hieu:{}};}}catch(e){clState={date:getToday(),thoa:{},hanh:{},hieu:{}};}
+  try{const s=localStorage.getItem('kl_sc3');if(s)scoreState=JSON.parse(s);}catch(e){}
+  try{const k=localStorage.getItem('kl_kc3');if(k)ketcaState=JSON.parse(k);}catch(e){}
+  try{const n=localStorage.getItem('kl_nl3');if(n)nlState=JSON.parse(n);}catch(e){}
 }
+function saveCL(){try{localStorage.setItem('kl_cl3',JSON.stringify(clState));}catch(e){}}
+function saveSC(){try{localStorage.setItem('kl_sc3',JSON.stringify(scoreState));}catch(e){}}
+function saveKC(){try{localStorage.setItem('kl_kc3',JSON.stringify(ketcaState));}catch(e){}}
+function saveNL(){try{localStorage.setItem('kl_nl3',JSON.stringify(nlState));}catch(e){}}
 
-function loadState(){
-  try{
-    const raw = localStorage.getItem('kalem_v1');
-    if(raw){
-      const s = JSON.parse(raw);
-      if(s.date === getToday()){ state = s; return; }
-    }
-  }catch(e){}
-  state = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+// ===================== PIN =====================
+function showPIN(title, sub, cb){
+  pinCallback = cb;
+  document.getElementById('pin-title').textContent = title;
+  document.getElementById('pin-sub').textContent = sub;
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').style.display = 'none';
+  document.getElementById('pin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('pin-input').focus(),100);
 }
-
-function saveState(){
-  try{ localStorage.setItem('kalem_v1', JSON.stringify(state)); }catch(e){}
+function confirmPIN(){
+  const val = document.getElementById('pin-input').value;
+  if(val === currentPIN){
+    document.getElementById('pin-modal').classList.remove('open');
+    if(pinCallback) pinCallback();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+  }
 }
+function closePIN(){document.getElementById('pin-modal').classList.remove('open');}
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')confirmPIN();});
 
-function getTotal(p){ return DATA[p].sections.reduce((a,s)=>a+s.tasks.length,0); }
-function getDone(p){ return Object.values(state[p]||{}).filter(Boolean).length; }
-
-function updateHome(){
-  ['thoa','hanh','hieu'].forEach(p=>{
-    const total = getTotal(p);
-    const done = getDone(p);
-    const pct = total ? Math.round(done/total*100) : 0;
-    document.getElementById('pn-'+p).textContent = done+'/'+total;
-    document.getElementById('mb-'+p).style.width = pct+'%';
-    document.getElementById('ob-'+p).style.width = pct+'%';
-    document.getElementById('op-'+p).textContent = pct+'%';
+function showChangePIN(){
+  showPIN('Đổi vai trò','Nhập PIN để đổi vai trò hoặc đổi PIN',()=>{
+    showRoleSelect();
   });
 }
 
-function openPerson(p){
-  currentPerson = p;
-  const d = DATA[p];
-  const s = state[p]||{};
-  const total = getTotal(p);
-  const done = getDone(p);
-  const pct = total ? Math.round(done/total*100) : 0;
-  const color = p==='thoa'?'#6b5740':p==='hanh'?'#4a7a5a':'#b5813a';
+// ===================== ROLE SELECT =====================
+function showRoleSelect(){
+  document.getElementById('app-header').style.display = 'none';
+  document.getElementById('tab-bar').classList.remove('visible');
+  document.getElementById('main-content').innerHTML = `
+    <div class="role-select-wrap">
+      <div class="role-select-logo">Kalem</div>
+      <div class="role-select-sub">Chọn vai trò của bạn</div>
+      ${Object.entries(ROLES).map(([key,r])=>`
+        <div class="role-btn" onclick="selectRole('${key}')">
+          <div class="avatar role-avatar ${r.avClass}">${r.avatar}</div>
+          <div class="role-info">
+            <div class="role-name">${r.name}</div>
+            <div class="role-desc">${r.desc}</div>
+          </div>
+        </div>
+      `).join('')}
+      <div style="margin-top:16px;font-size:12px;color:#aaa;text-align:center;cursor:pointer" onclick="showChangePINSetting()">Đổi mã PIN</div>
+    </div>`;
+}
 
-  let html = '';
-  if(done===total && total>0){
-    html += '<div class="done-banner">✓ Hoàn thành tất cả công việc hôm nay!</div>';
+function showChangePINSetting(){
+  showPIN('Đổi mã PIN','Nhập PIN hiện tại để xác nhận',()=>{
+    const newPin = prompt('Nhập mã PIN mới (4 số):');
+    if(newPin && /^\d{4}$/.test(newPin)){
+      currentPIN = newPin;
+      localStorage.setItem('kl_pin', newPin);
+      alert('Đã đổi PIN thành công!');
+    } else if(newPin) {
+      alert('PIN phải là 4 chữ số!');
+    }
+  });
+}
+
+function selectRole(role){
+  const r = ROLES[role];
+  if(r.type === 'admin' || r.type === 'lead'){
+    showPIN('Xác nhận vai trò '+r.name,'Nhập PIN để tiếp tục',()=>{
+      setRole(role);
+    });
+  } else {
+    setRole(role);
   }
-  html += '<div class="back-row">';
-  html += '<button class="back-btn" onclick="goHome()">← Trang chủ</button>';
-  html += '<span class="progress-text">'+done+'/'+total+' việc</span>';
-  html += '</div>';
-  html += '<div class="top-bar-wrap"><div class="top-bar" style="width:'+pct+'%;background:'+color+'"></div></div>';
+}
 
+function setRole(role){
+  currentRole = role;
+  localStorage.setItem('kl_role', role);
+  const r = ROLES[role];
+  document.getElementById('role-pill').textContent = r.name;
+  document.getElementById('app-header').style.display = 'flex';
+  renderApp();
+}
+
+// ===================== APP LAYOUT =====================
+function renderApp(){
+  const r = ROLES[currentRole];
+  const tabs = [];
+  if(r.type === 'staff'){
+    tabs.push({id:'checklist', label:'Checklist'});
+    tabs.push({id:'ketca', label:'Kết ca'});
+    tabs.push({id:'nguyen-lieu', label:'Nguyên liệu'});
+  } else if(r.type === 'lead'){
+    tabs.push({id:'checklist', label:'Checklist'});
+    tabs.push({id:'cham-diem', label:'Chấm điểm'});
+    tabs.push({id:'xac-nhan', label:'Xác nhận ca'});
+    tabs.push({id:'nguyen-lieu', label:'Nguyên liệu'});
+  } else {
+    tabs.push({id:'tong-ket', label:'Tổng kết'});
+    tabs.push({id:'doanh-thu', label:'Doanh thu'});
+    tabs.push({id:'nguyen-lieu', label:'Nguyên liệu'});
+    tabs.push({id:'cham-diem', label:'Điểm nhân viên'});
+  }
+
+  const tabBar = document.getElementById('tab-bar');
+  tabBar.innerHTML = tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
+  tabBar.classList.add('visible');
+  switchTab(tabs[0].id);
+}
+
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('tab-btn-'+tab);
+  if(btn) btn.classList.add('active');
+  const r = ROLES[currentRole];
+  if(tab === 'checklist') renderChecklist();
+  else if(tab === 'ketca') renderKetCa();
+  else if(tab === 'nguyen-lieu') renderNguyenLieu();
+  else if(tab === 'cham-diem') renderChamDiem();
+  else if(tab === 'xac-nhan') renderXacNhan();
+  else if(tab === 'tong-ket') renderTongKet();
+  else if(tab === 'doanh-thu') renderDoanhThu();
+}
+
+// ===================== CHECKLIST =====================
+function renderChecklist(){
+  if(currentRole === 'thoa' || currentRole === 'hanh'){
+    renderMyChecklist(currentRole);
+  } else {
+    renderChecklistHome();
+  }
+}
+
+function renderChecklistHome(){
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Checklist hôm nay</div>';
+  ['thoa','hanh','hieu'].forEach(p=>{
+    const r = ROLES[p];
+    const total = getTotal(p), done = getDone(p);
+    const pct = total ? Math.round(done/total*100) : 0;
+    h += `<div class="person-card" onclick="openCLPerson('${p}')">
+      <div class="avatar ${r.avClass}">${r.avatar}</div>
+      <div class="person-info"><div class="person-name">${r.name}</div><div class="person-role">${r.desc}</div></div>
+      <div class="person-stats">
+        <div class="stat-num" style="color:${r.color}">${done}/${total}</div>
+        <div class="stat-label">hoàn thành</div>
+        <div class="mini-bar-wrap"><div class="mini-bar ${r.barClass}" style="width:${pct}%"></div></div>
+      </div></div>`;
+  });
+  h += '<div class="sec-title" style="margin-top:4px">Tiến độ chung</div>';
+  h += '<div class="overview-card">';
+  ['thoa','hanh','hieu'].forEach(p=>{
+    const r=ROLES[p],total=getTotal(p),done=getDone(p);
+    const pct=total?Math.round(done/total*100):0;
+    h+=`<div class="ov-row"><div class="ov-name">${r.name}</div><div class="ov-bar-wrap"><div class="ov-bar ${r.barClass}" style="width:${pct}%"></div></div><div class="ov-pct">${pct}%</div></div>`;
+  });
+  h += '</div></div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function openCLPerson(p){
+  currentCLPerson = p;
+  renderMyChecklist(p);
+}
+
+function renderMyChecklist(p){
+  const d = DATA[p], s = clState[p]||{};
+  const total = getTotal(p), done = getDone(p);
+  const pct = total ? Math.round(done/total*100) : 0;
+  const r = ROLES[p];
+  let h = '<div class="wrap">';
+  if(currentRole !== 'thoa' && currentRole !== 'hanh'){
+    h += `<div class="back-row"><button class="back-btn" onclick="renderChecklistHome()">← Tất cả</button><span class="progress-text">${done}/${total} việc</span></div>`;
+  } else {
+    h += `<div class="back-row"><div style="font-size:14px;font-weight:500;color:${r.color}">${r.name}</div><span class="progress-text">${done}/${total} việc</span></div>`;
+  }
+  h += `<div class="top-bar-wrap"><div class="top-bar" style="width:${pct}%;background:${r.color}"></div></div>`;
+  if(done===total&&total>0) h += '<div class="done-banner">✓ Hoàn thành tất cả công việc hôm nay!</div>';
   d.sections.forEach(sec=>{
-    html += '<div class="sec-label">'+sec.label+'</div>';
+    h += `<div class="task-sec-label">${sec.label}</div>`;
     sec.tasks.forEach(task=>{
       const isDone = !!s[task.id];
-      html += '<div class="task-card'+(isDone?' done':'')+(task.priority?' priority':'')+'" onclick="toggleTask(\''+task.id+'\')">';
-      html += '<div class="check-wrap"><div class="check-circle'+(isDone?' checked-'+p:'')+'">'+
-        (isDone?'<svg class="check-icon" viewBox="0 0 12 9" fill="none"><polyline points="1,4.5 4.5,8 11,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+
-        '</div></div>';
-      html += '<div class="task-body">';
-      html += '<div class="task-name'+(task.priority?' priority-star':'')+'">'+task.name+'</div>';
-      if(task.std) html += '<div class="task-std">'+task.std+'</div>';
-      if(task.note) html += '<div class="task-note">'+task.note+'</div>';
-      html += '</div></div>';
+      h += `<div class="task-card${isDone?' done':''}${task.priority?' priority':''}" onclick="toggleTask('${p}','${task.id}')">
+        <div class="check-circle${isDone?' '+r.ckClass:''}">${isDone?'<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><polyline points="1,4.5 4.5,8 11,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+        <div class="task-body">
+          <div class="task-name${task.priority?' ps':''}">${task.name}</div>
+          ${task.std?`<div style="font-size:12px;color:#4a7a5a;margin-top:3px;line-height:1.4">✓ ${task.std}</div>`:''}
+          ${task.note?`<div style="font-size:12px;color:#b5813a;margin-top:3px;line-height:1.4">⚠ ${task.note}</div>`:''}
+        </div></div>`;
     });
   });
-
-  document.getElementById('checklist-body').innerHTML = html;
-  document.getElementById('home-screen').classList.remove('active');
-  document.getElementById('checklist-screen').classList.add('active');
-  window.scrollTo(0,0);
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
 }
 
-function toggleTask(id){
-  if(!state[currentPerson]) state[currentPerson]={};
-  state[currentPerson][id] = !state[currentPerson][id];
-  saveState();
-  updateHome();
-  openPerson(currentPerson);
+function getTotal(p){return DATA[p].sections.reduce((a,s)=>a+s.tasks.length,0);}
+function getDone(p){return Object.values(clState[p]||{}).filter(Boolean).length;}
+
+function toggleTask(p, id){
+  if(!clState[p]) clState[p]={};
+  clState[p][id] = !clState[p][id];
+  saveCL();
+  if(currentRole==='thoa'||currentRole==='hanh') renderMyChecklist(p);
+  else renderMyChecklist(currentCLPerson||p);
 }
 
-function goHome(){
-  currentPerson = null;
-  document.getElementById('checklist-screen').classList.remove('active');
-  document.getElementById('home-screen').classList.add('active');
-  updateHome();
-  window.scrollTo(0,0);
+// ===================== KẾT CA =====================
+function renderKetCa(){
+  const p = currentRole;
+  const caLabel = p==='hanh' ? 'Kết ca 1 — 14:30' : 'Kết ca 2 — 18:00 (T7/CN: 21:00)';
+  const dk = getDateKey();
+  const kc = ketcaState[dk]&&ketcaState[dk][p];
+  const r = ROLES[p];
+  let h = '<div class="wrap">';
+  h += `<div class="sec-title">${caLabel}</div>`;
+
+  if(kc && kc.confirmed){
+    h += renderReportCard(p, kc, true);
+    h += '<div style="font-size:13px;color:#888;text-align:center;margin-top:8px">Đã được Hiếu xác nhận ✓<br>Chụp màn hình này gửi Zalo cho Henry/Ka</div>';
+  } else if(kc && kc.submitted){
+    h += renderReportCard(p, kc, false);
+    h += '<div style="font-size:13px;color:#b5813a;text-align:center;margin-top:8px;padding:10px;background:#fdf3e8;border-radius:10px">Đã nộp — đang chờ Hiếu xác nhận</div>';
+  } else {
+    h += `<div class="ketca-card">
+      <div class="ketca-title">📋 Báo cáo doanh thu ca</div>
+      <div class="field-label">Tổng tiền mặt thu được (đồng)</div>
+      <input type="number" class="field-input" id="kc-tienmat" placeholder="Ví dụ: 1500000">
+      <div class="field-label">Tổng chuyển khoản (đồng)</div>
+      <input type="number" class="field-input" id="kc-ck" placeholder="Ví dụ: 800000">
+      <div class="field-label">Số khách phục vụ (lượt)</div>
+      <input type="number" class="field-input" id="kc-khach" placeholder="Ví dụ: 25">
+      <div class="field-label">Ghi chú / Sự cố phát sinh (nếu có)</div>
+      <textarea class="field-input" id="kc-ghichu" rows="3" placeholder="Thiết bị hỏng, khách phàn nàn, hết nguyên liệu..."></textarea>
+      <button class="submit-btn" onclick="submitKetCa('${p}')">Nộp báo cáo cho Hiếu ✓</button>
+    </div>`;
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
 }
 
-function resetDay(){
-  if(!confirm('Đặt lại toàn bộ checklist cho ngày mới?')) return;
-  state = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
-  saveState();
-  updateHome();
+function renderReportCard(p, kc, confirmed){
+  const r = ROLES[p];
+  const tienmat = parseInt(kc.tienmat||0);
+  const ck = parseInt(kc.ck||0);
+  const total = tienmat + ck;
+  return `<div class="report-card" id="report-card">
+    <div class="report-header">
+      <div>
+        <div class="report-logo">Kalem</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">Báo cáo kết ca — ${r.name}</div>
+      </div>
+      <div class="report-date">${getDateKey()}</div>
+    </div>
+    <div class="report-row"><div class="report-label">Tiền mặt</div><div class="report-value">${fmtMoney(tienmat)}</div></div>
+    <div class="report-row"><div class="report-label">Chuyển khoản</div><div class="report-value">${fmtMoney(ck)}</div></div>
+    <div class="report-row"><div class="report-label">Số khách</div><div class="report-value">${kc.khach||0} lượt</div></div>
+    ${kc.ghichu?`<div class="report-row"><div class="report-label">Ghi chú</div><div class="report-value" style="font-size:13px;color:#888">${kc.ghichu}</div></div>`:''}
+    <div class="report-total">
+      <div class="report-total-label">Tổng doanh thu ca</div>
+      <div class="report-total-value">${fmtMoney(total)}</div>
+    </div>
+    ${confirmed?`<div class="report-confirmed">✓ Đã xác nhận bởi Hiếu · ${kc.confirmedAt||''}</div>`:''}
+  </div>`;
 }
 
-// Init
+function submitKetCa(p){
+  const tienmat = document.getElementById('kc-tienmat').value;
+  const ck = document.getElementById('kc-ck').value;
+  const khach = document.getElementById('kc-khach').value;
+  const ghichu = document.getElementById('kc-ghichu').value;
+  if(!tienmat && !ck){ alert('Vui lòng nhập ít nhất tiền mặt hoặc chuyển khoản'); return; }
+  const dk = getDateKey();
+  if(!ketcaState[dk]) ketcaState[dk] = {};
+  ketcaState[dk][p] = {tienmat, ck, khach, ghichu, submitted:true, confirmed:false, submittedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})};
+  saveKC();
+  renderKetCa();
+}
+
+// ===================== XÁC NHẬN CA (HIẾU) =====================
+function renderXacNhan(){
+  const dk = getDateKey();
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Xác nhận kết ca hôm nay</div>';
+  ['hanh','thoa'].forEach(p=>{
+    const r = ROLES[p];
+    const kc = ketcaState[dk]&&ketcaState[dk][p];
+    const caLabel = p==='hanh'?'Kết ca 1 — Hạnh (14:30)':'Kết ca 2 — Thoa (18:00/21:00)';
+    h += `<div style="font-size:12px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px">${caLabel}</div>`;
+    if(!kc || !kc.submitted){
+      h += `<div style="background:#f5f4f1;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#aaa;margin-bottom:10px">${r.name} chưa nộp báo cáo</div>`;
+    } else if(kc.confirmed){
+      h += renderReportCard(p, kc, true);
+      h += '<div style="height:12px"></div>';
+    } else {
+      h += renderReportCard(p, kc, false);
+      h += `<button class="confirm-btn" onclick="confirmKetCa('${p}')">✓ Xác nhận báo cáo của ${r.name}</button>`;
+      h += '<div style="height:12px"></div>';
+    }
+  });
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function confirmKetCa(p){
+  const dk = getDateKey();
+  if(ketcaState[dk]&&ketcaState[dk][p]){
+    ketcaState[dk][p].confirmed = true;
+    ketcaState[dk][p].confirmedAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    saveKC();
+    renderXacNhan();
+  }
+}
+
+// ===================== NGUYÊN LIỆU =====================
+function renderNguyenLieu(){
+  const dk = getDateKey();
+  if(!nlState[dk]) nlState[dk] = {thoa:[], hanh:[]};
+  const isAdmin = ROLES[currentRole].type === 'admin';
+  const isLead = ROLES[currentRole].type === 'lead';
+
+  let h = '<div class="wrap">';
+
+  if(currentRole === 'thoa'){
+    h += '<div class="sec-title">Báo cáo nguyên liệu pha chế</div>';
+    h += '<div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.6">Báo nguyên liệu tươi mỗi ngày. Nguyên liệu khô báo khi còn dùng được 3–5 ngày.</div>';
+    h += renderNLForm('thoa', dk);
+  } else if(currentRole === 'hanh'){
+    h += '<div class="sec-title">Báo cáo nguyên liệu bếp</div>';
+    h += '<div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.6">Báo đồ tươi sống mỗi ngày. Nguyên liệu khô báo khi còn dùng được 3–5 ngày.</div>';
+    h += renderNLForm('hanh', dk);
+  } else {
+    h += '<div class="sec-title">Tổng hợp nguyên liệu hôm nay</div>';
+    h += renderNLSummary(dk);
+    h += '<div class="sec-title" style="margin-top:8px">Lịch sử 7 ngày gần nhất</div>';
+    h += renderNLHistory();
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function renderNLForm(p, dk){
+  const items = nlState[dk][p] || [];
+  let h = '';
+  items.forEach((item, idx)=>{
+    const isSubmitted = item.submitted;
+    h += `<div class="nl-card">
+      <div class="nl-header">
+        <div class="nl-name">${item.name||'Nguyên liệu '+(idx+1)}</div>
+        <span class="nl-type ${item.type==='tuoi'?'nl-tuoi':'nl-kho'}">${item.type==='tuoi'?'Tươi':'Khô/lâu'}</span>
+      </div>
+      <div class="nl-status">${item.status||''}</div>
+      ${isSubmitted
+        ? `<div class="nl-submitted">✓ Đã báo cáo lúc ${item.submittedAt}</div>`
+        : `<div class="nl-input-row">
+            <input class="nl-input" placeholder="Tình trạng / số lượng còn lại" value="${item.status||''}" oninput="updateNLItem('${p}',${idx},'status',this.value)">
+            <button class="nl-save-btn" onclick="submitNLItem('${p}',${idx})">Báo</button>
+           </div>`}
+    </div>`;
+  });
+  h += `<button class="nl-add-btn" onclick="addNLItem('${p}','tuoi')">+ Thêm đồ tươi sống</button>`;
+  h += `<button class="nl-add-btn" style="margin-top:6px" onclick="addNLItem('${p}','kho')">+ Thêm nguyên liệu khô</button>`;
+  return h;
+}
+
+function addNLItem(p, type){
+  const dk = getDateKey();
+  if(!nlState[dk]) nlState[dk]={thoa:[],hanh:[]};
+  if(!nlState[dk][p]) nlState[dk][p]=[];
+  const name = prompt('Tên nguyên liệu:');
+  if(!name) return;
+  nlState[dk][p].push({name, type, status:'', submitted:false});
+  saveNL(); renderNguyenLieu();
+}
+
+function updateNLItem(p, idx, field, val){
+  const dk = getDateKey();
+  if(nlState[dk]&&nlState[dk][p]&&nlState[dk][p][idx]) nlState[dk][p][idx][field]=val;
+  saveNL();
+}
+
+function submitNLItem(p, idx){
+  const dk = getDateKey();
+  if(nlState[dk]&&nlState[dk][p]&&nlState[dk][p][idx]){
+    nlState[dk][p][idx].submitted = true;
+    nlState[dk][p][idx].submittedAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  }
+  saveNL(); renderNguyenLieu();
+}
+
+function renderNLSummary(dk){
+  let h = '';
+  [{p:'thoa',label:'Pha chế (Thoa)'},{p:'hanh',label:'Bếp (Hạnh)'}].forEach(({p,label})=>{
+    const items = nlState[dk]&&nlState[dk][p]||[];
+    h += `<div style="font-size:12px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.6px;padding:8px 0 6px">${label}</div>`;
+    if(!items.length){
+      h += `<div style="background:#f5f4f1;border-radius:10px;padding:12px;font-size:13px;color:#aaa;margin-bottom:8px">Chưa có báo cáo hôm nay</div>`;
+    } else {
+      items.forEach(item=>{
+        h += `<div class="nl-card" style="margin-bottom:6px">
+          <div class="nl-header">
+            <div class="nl-name">${item.name}</div>
+            <span class="nl-type ${item.type==='tuoi'?'nl-tuoi':'nl-kho'}">${item.type==='tuoi'?'Tươi':'Khô'}</span>
+          </div>
+          <div style="font-size:13px;color:#444">${item.status||'—'}</div>
+          ${item.submitted?`<div class="nl-submitted">✓ Đã báo lúc ${item.submittedAt}</div>`:`<div class="nl-pending">⏳ Chưa xác nhận báo cáo</div>`}
+        </div>`;
+      });
+    }
+  });
+  return h;
+}
+
+function renderNLHistory(){
+  let h = '';
+  const today = new Date();
+  for(let i=0; i<7; i++){
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const dk = d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const data = nlState[dk];
+    if(!data) continue;
+    const thoaCount = (data.thoa||[]).filter(x=>x.submitted).length;
+    const hanhCount = (data.hanh||[]).filter(x=>x.submitted).length;
+    if(!thoaCount && !hanhCount) continue;
+    h += `<div class="dt-day-card">
+      <div class="dt-day-header"><div class="dt-day-date">${dk}</div></div>
+      <div class="dt-ca-row"><span>Pha chế (Thoa)</span><span>${thoaCount} mục đã báo</span></div>
+      <div class="dt-ca-row"><span>Bếp (Hạnh)</span><span>${hanhCount} mục đã báo</span></div>
+    </div>`;
+  }
+  return h || '<div style="font-size:13px;color:#aaa;text-align:center;padding:20px">Chưa có lịch sử</div>';
+}
+
+// ===================== CHẤM ĐIỂM =====================
+function renderChamDiem(){
+  if(currentScorePerson){
+    renderScoringDetail(currentScorePerson);
+    return;
+  }
+  const dk = getDateKey();
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Chấm điểm hôm nay</div>';
+  h += '<div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.5">Chấm từng mục công việc từ 1–10. App tự tính trung bình và tích lũy theo tháng.</div>';
+  ['thoa','hanh'].forEach(p=>{
+    const r = ROLES[p];
+    const s = scoreState[dk]&&scoreState[dk][p];
+    const avg = s&&Object.keys(s).length ? calcAvg(s) : null;
+    h += `<div class="score-person-card" onclick="openScoring('${p}')">
+      <div class="avatar ${r.avClass}">${r.avatar}</div>
+      <div class="person-info"><div class="person-name">${r.name}</div><div class="person-role">${avg?'Đã chấm hôm nay':'Chưa chấm hôm nay'}</div></div>
+      <div class="score-badge badge-${p}">${avg?avg.toFixed(1)+'/10':'→'}</div>
+    </div>`;
+  });
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function openScoring(p){
+  currentScorePerson = p;
+  renderScoringDetail(p);
+}
+
+function renderScoringDetail(p){
+  const dk = getDateKey();
+  if(!scoreState[dk]) scoreState[dk]={};
+  if(!scoreState[dk][p]) scoreState[dk][p]={};
+  const saved = scoreState[dk][p];
+  const r = ROLES[p];
+  const avg = Object.keys(saved).length ? calcAvg(saved) : null;
+  let h = '<div class="wrap">';
+  h += `<div class="back-row"><button class="back-btn" onclick="currentScorePerson=null;renderChamDiem()">← Chấm điểm</button></div>`;
+  if(avg !== null) h += `<div class="today-scored" id="avg-disp">Điểm trung bình: <strong>${avg.toFixed(1)}/10</strong></div>`;
+  else h += `<div class="today-scored" id="avg-disp" style="display:none"></div>`;
+  h += `<div style="font-size:13px;font-weight:500;color:${r.color};margin-bottom:12px">Chấm điểm cho ${r.name}</div>`;
+  DATA[p].sections.forEach(sec=>{
+    h += `<div class="task-sec-label">${sec.label}</div>`;
+    sec.tasks.forEach(task=>{
+      const val = saved[task.id]||5;
+      h += `<div class="score-task-card">
+        <div class="score-task-name${task.priority?' ps':''}">${task.name}</div>
+        <div class="slider-row">
+          <input type="range" min="1" max="10" step="1" value="${val}" data-person="${p}" data-task="${task.id}" oninput="onSlider(this)">
+          <div class="score-num" id="sv-${task.id}">${val}</div>
+        </div>
+        <div class="score-labels"><span>1 · Kém</span><span>10 · Xuất sắc</span></div>
+      </div>`;
+    });
+  });
+  h += `<button class="save-score-btn" onclick="finishScoring('${p}')">Lưu điểm cho ${r.name} ✓</button><div style="height:24px"></div>`;
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function onSlider(el){
+  const p=el.dataset.person, id=el.dataset.task, val=parseInt(el.value);
+  document.getElementById('sv-'+id).textContent = val;
+  const dk = getDateKey();
+  if(!scoreState[dk]) scoreState[dk]={};
+  if(!scoreState[dk][p]) scoreState[dk][p]={};
+  scoreState[dk][p][id] = val;
+  saveSC();
+  const avg = calcAvg(scoreState[dk][p]);
+  const el2 = document.getElementById('avg-disp');
+  if(el2){el2.style.display='';el2.innerHTML=`Điểm trung bình: <strong>${avg.toFixed(1)}/10</strong>`;}
+}
+
+function finishScoring(p){
+  saveSC();
+  alert('Đã lưu điểm cho '+ROLES[p].name+'!');
+  currentScorePerson = null;
+  renderChamDiem();
+}
+
+function calcAvg(scores){
+  const v=Object.values(scores).filter(x=>x>0);
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : 0;
+}
+
+// ===================== TỔNG KẾT =====================
+function renderTongKet(){
+  document.getElementById('main-content').innerHTML = buildTongKet();
+}
+
+function buildTongKet(){
+  const mk = getMonthKey(currentMonth);
+  let h = '<div class="wrap">';
+  h += `<div class="threshold-card">
+    <div style="font-size:13px;font-weight:500">Ngưỡng điểm xét thưởng</div>
+    <div class="threshold-row">
+      <div style="font-size:13px;color:#666;flex:1">Điểm trung bình tháng ≥</div>
+      <input type="number" class="threshold-input" id="threshold-input" min="1" max="10" value="${threshold}">
+      <button class="save-threshold-btn" onclick="saveThreshold()">Lưu</button>
+    </div>
+  </div>`;
+  h += `<div class="month-picker">
+    <button class="month-nav" onclick="changeMonth(-1)">‹</button>
+    <div style="font-size:14px;font-weight:500">${mk}</div>
+    <button class="month-nav" onclick="changeMonth(1)">›</button>
+  </div>`;
+
+  ['thoa','hanh'].forEach(p=>{
+    const r = ROLES[p];
+    const days = [];
+    Object.keys(scoreState).forEach(dk=>{
+      if(!scoreState[dk]||!scoreState[dk][p]) return;
+      const parts = dk.split('/');
+      if(parts.length < 3) return;
+      const d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+      if(d.getMonth()===currentMonth.getMonth()&&d.getFullYear()===currentMonth.getFullYear()){
+        const avg = calcAvg(scoreState[dk][p]);
+        if(avg>0) days.push({date:dk, avg});
+      }
+    });
+    const n = days.length;
+    const mAvg = n ? days.reduce((a,b)=>a+b.avg,0)/n : 0;
+    const isReward = mAvg >= threshold && n > 0;
+    const above = days.filter(d=>d.avg>=threshold).length;
+    const maxScore = n ? Math.max(...days.map(d=>d.avg)) : 0;
+    h += `<div class="month-card">
+      <div class="month-name-row">
+        <div class="avatar ${r.avClass}" style="width:38px;height:38px;font-size:13px">${r.avatar}</div>
+        <div><div style="font-size:15px;font-weight:500">${r.name}</div><div style="font-size:12px;color:#aaa">${mk}</div></div>
+        <div style="margin-left:auto;text-align:right"><div class="month-avg">${n?mAvg.toFixed(1):'–'}</div><div style="font-size:11px;color:#aaa">/ 10</div></div>
+      </div>
+      <div class="month-stat-row">
+        <div class="month-stat"><div class="month-stat-num">${n}</div><div class="month-stat-label">ngày chấm</div></div>
+        <div class="month-stat"><div class="month-stat-num">${above}</div><div class="month-stat-label">ngày đạt ngưỡng</div></div>
+        <div class="month-stat"><div class="month-stat-num">${n?maxScore.toFixed(1):'–'}</div><div class="month-stat-label">điểm cao nhất</div></div>
+      </div>
+      ${n>0?`<div><span class="reward-badge ${isReward?'reward-yes':'reward-no'}">${isReward?'✓ Đủ điều kiện thưởng':'✗ Chưa đạt ngưỡng thưởng'}</span></div>`:''}
+    </div>`;
+  });
+  if(!['thoa','hanh'].some(p=>Object.keys(scoreState).length))
+    h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có dữ liệu chấm điểm tháng này</div>';
+  h += '</div>';
+  return h;
+}
+
+function saveThreshold(){
+  threshold = parseInt(document.getElementById('threshold-input').value)||7;
+  if(threshold<1)threshold=1; if(threshold>10)threshold=10;
+  localStorage.setItem('kl_th3', threshold);
+  renderTongKet();
+  alert('Đã lưu ngưỡng: '+threshold+'/10');
+}
+
+function changeMonth(d){
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
+  if(currentTab==='tong-ket') renderTongKet();
+  else if(currentTab==='doanh-thu') renderDoanhThu();
+}
+
+// ===================== DOANH THU =====================
+function renderDoanhThu(){
+  const mk = getMonthKey(currentMonth);
+  let totalMonth = 0, totalDays = 0;
+  const dayCards = [];
+  const today = new Date();
+
+  for(let i=0; i<31; i++){
+    const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i+1);
+    if(d.getMonth() !== currentMonth.getMonth()) break;
+    const dk = d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const kc = ketcaState[dk];
+    if(!kc && d > today) continue;
+    const ca1 = kc&&kc.hanh;
+    const ca2 = kc&&kc.thoa;
+    const t1 = ca1 ? (parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)) : 0;
+    const t2 = ca2 ? (parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)) : 0;
+    const dayTotal = t1 + t2;
+    if(dayTotal > 0){ totalMonth += dayTotal; totalDays++; }
+    if(kc || d <= today){
+      dayCards.push({dk, ca1, ca2, t1, t2, dayTotal});
+    }
+  }
+
+  let h = '<div class="wrap">';
+  h += `<div class="month-picker">
+    <button class="month-nav" onclick="changeMonth(-1)">‹</button>
+    <div style="font-size:14px;font-weight:500">${mk}</div>
+    <button class="month-nav" onclick="changeMonth(1)">›</button>
+  </div>`;
+
+  h += `<div class="summary-stats">
+    <div class="summary-stat"><div class="summary-stat-num">${fmtMoney(totalMonth)}</div><div class="summary-stat-label">Tổng doanh thu tháng</div></div>
+    <div class="summary-stat"><div class="summary-stat-num">${totalDays} ngày</div><div class="summary-stat-label">Có doanh thu</div></div>
+  </div>`;
+
+  if(!dayCards.length){
+    h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có báo cáo kết ca tháng này</div>';
+  } else {
+    dayCards.reverse().forEach(({dk,ca1,ca2,t1,t2,dayTotal})=>{
+      h += `<div class="dt-day-card">
+        <div class="dt-day-header">
+          <div class="dt-day-date">${dk}</div>
+          <div class="dt-day-total">${dayTotal?fmtMoney(dayTotal):'—'}</div>
+        </div>
+        <div class="dt-ca-row">
+          <span>Ca 1 (Hạnh)</span>
+          <span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?'<span style="color:#b5813a">Chờ xác nhận</span>':'<span class="dt-missing">Chưa báo cáo</span>'}</span>
+        </div>
+        <div class="dt-ca-row">
+          <span>Ca 2 (Thoa)</span>
+          <span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?'<span style="color:#b5813a">Chờ xác nhận</span>':'<span class="dt-missing">Chưa báo cáo</span>'}</span>
+        </div>
+      </div>`;
+    });
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+// ===================== INIT =====================
 document.getElementById('today-label').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Asia/Ho_Chi_Minh'});
-loadState();
-updateHome();
+load();
+
+const savedRole = localStorage.getItem('kl_role');
+if(savedRole && ROLES[savedRole]){
+  setRole(savedRole);
+} else {
+  showRoleSelect();
+}
 </script>
 </body>
 </html>
