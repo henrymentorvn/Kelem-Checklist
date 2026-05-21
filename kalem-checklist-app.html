@@ -506,7 +506,7 @@ function renderApp(){
   const tabs=r.type==="staff"
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    ?[{id:"checklist",label:"Checklist"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
@@ -526,6 +526,7 @@ function switchTab(tab){
   else if(tab==="xac-nhan")renderXacNhan();
   else if(tab==="cham-cong")renderChamCong();
   else if(tab==="nhap-cong")renderBackfill();
+  else if(tab==="ketca-hieu")renderKetCaHieu();
   else if(tab==="luong-admin")renderAdminLuong();
   else if(tab==="luong-nv")renderMyLuong();
   else if(tab==="cham-cong-admin")renderAttendance();
@@ -656,7 +657,7 @@ function renderXacNhan(){
   const dk=getDateKey();
   let h="<div class=\"wrap\">";
   h+="<div class=\"sec-title\">Xác nhận kết ca hôm nay</div>";
-  [["hanh","Kết ca 1 — Hạnh (14:30)"],["thoa","Kết ca 2 — Thoa (18:00/21:00)"]].forEach(([p,label])=>{
+  [["hanh","Kết ca 1 — Hạnh (14:30)"],["thoa","Kết ca 2 — Thoa (18:00/21:00)"],["hieu","Kết ca tối — Hiếu (22:00)"]].forEach(([p,label])=>{
     const r=ROLES[p],kc=ketcaState[dk]&&ketcaState[dk][p];
     h+=`<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px">${label}</div>`;
     if(!kc||!kc.submitted)
@@ -907,10 +908,11 @@ function renderDoanhThu(){
     const dk=d.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric"});
     const kc=ketcaState[dk];
     if(!kc&&d>today)continue;
-    const ca1=kc&&kc.hanh,ca2=kc&&kc.thoa;
+    const ca1=kc&&kc.hanh,ca2=kc&&kc.thoa,ca3=kc&&kc.hieu;
     const t1=ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
     const t2=ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
-    const dt=t1+t2;
+    const t3=ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
+    const dt=t1+t2+t3;
     if(dt>0){totalMonth+=dt;totalDays++;}
     if(kc||d<=today)dayCards.push({dk,ca1,ca2,t1,t2,dt});
   }
@@ -925,8 +927,9 @@ function renderDoanhThu(){
   else dayCards.reverse().forEach(({dk,ca1,ca2,t1,t2,dt})=>{
     h+=`<div class="dt-day-card">
       <div class="dt-day-header"><div class="dt-day-date">${dk}</div><div class="dt-day-total">${dt?fmtMoney(dt):"—"}</div></div>
-      <div class="dt-ca-row"><span>Ca 1 (Hạnh)</span><span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?"<span style=\"color:var(--brown)\">Chờ xác nhận</span>":"<span class=\"dt-missing\">Chưa báo cáo</span>"}</span></div>
-      <div class="dt-ca-row"><span>Ca 2 (Thoa)</span><span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?"<span style=\"color:var(--brown)\">Chờ xác nhận</span>":"<span class=\"dt-missing\">Chưa báo cáo</span>"}</span></div>
+      <div class="dt-ca-row"><span>Ca 1 — Hạnh</span><span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
+      <div class="dt-ca-row"><span>Ca 2 — Thoa</span><span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
+      <div class="dt-ca-row"><span>Ca tối — Hiếu</span><span>${ca3&&ca3.confirmed?fmtMoney(t3):ca3&&ca3.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
     </div>`;
   });
   h+="</div>";
@@ -1523,6 +1526,67 @@ function saveBFDay(dk, idx) {
   });
   saveCC();
   alert('Đã lưu ngày ' + dk);
+}
+
+
+// ===================== KẾT CA HIẾU =====================
+function renderKetCaHieu(){
+  const dk = getDateKey();
+  const kc = ketcaState[dk]&&ketcaState[dk]['hieu'];
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Kết ca — Hiếu (22:00)</div>';
+
+  if(kc && kc.confirmed){
+    h += renderReportCard('hieu', kc, true);
+    h += '<div style="font-size:13px;color:#2E7D32;text-align:center;margin-top:10px;padding:10px;background:#E8F5E9;border-radius:10px">✓ Đã xác nhận<br>Chụp màn hình gửi Zalo cho Henry/Ka</div>';
+  } else if(kc && kc.submitted){
+    h += renderReportCard('hieu', kc, false);
+    h += '<div style="font-size:13px;color:var(--brown);text-align:center;margin-top:10px;padding:10px;background:var(--brown-pale);border-radius:10px">⏳ Đã nộp — chờ Henry/Ka xác nhận</div>';
+    h += `<button class="confirm-btn" style="margin-top:8px" onclick="selfConfirmHieu()">✓ Xác nhận (nếu Henry/Ka uỷ quyền)</button>`;
+  } else {
+    h += `<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Báo cáo doanh thu ca tối — bao gồm doanh thu phát sinh sau khi Thoa và Hạnh đã về.</div>`;
+    h += `<div class="ketca-card">
+      <div class="ketca-title">📋 Báo cáo kết ca tối</div>
+      <div class="field-label">Tổng tiền mặt thu được (đồng)</div>
+      <input type="number" class="field-input" id="kch-tienmat" placeholder="Ví dụ: 500000">
+      <div class="field-label">Tổng chuyển khoản (đồng)</div>
+      <input type="number" class="field-input" id="kch-ck" placeholder="Ví dụ: 300000">
+      <div class="field-label">Số khách phục vụ ca tối (lượt)</div>
+      <input type="number" class="field-input" id="kch-khach" placeholder="Ví dụ: 8">
+      <div class="field-label">Ghi chú / Sự cố (nếu có)</div>
+      <textarea class="field-input" id="kch-ghichu" rows="3" placeholder="Thiết bị hỏng, khách phàn nàn..."></textarea>
+      <button class="submit-btn" onclick="submitKetCaHieu()">Nộp báo cáo kết ca tối ✓</button>
+    </div>`;
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function submitKetCaHieu(){
+  const tm = document.getElementById('kch-tienmat').value;
+  const ck = document.getElementById('kch-ck').value;
+  if(!tm && !ck){ alert('Vui lòng nhập ít nhất tiền mặt hoặc chuyển khoản'); return; }
+  const dk = getDateKey();
+  if(!ketcaState[dk]) ketcaState[dk] = {};
+  ketcaState[dk]['hieu'] = {
+    tienmat: tm, ck: ck,
+    khach: document.getElementById('kch-khach').value,
+    ghichu: document.getElementById('kch-ghichu').value,
+    submitted: true, confirmed: false,
+    submittedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})
+  };
+  saveKC();
+  renderKetCaHieu();
+}
+
+function selfConfirmHieu(){
+  const dk = getDateKey();
+  if(ketcaState[dk]&&ketcaState[dk]['hieu']){
+    ketcaState[dk]['hieu'].confirmed = true;
+    ketcaState[dk]['hieu'].confirmedAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    saveKC();
+    renderKetCaHieu();
+  }
 }
 
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
