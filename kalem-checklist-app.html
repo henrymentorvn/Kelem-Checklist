@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Kalem — Checklist Vận Hành</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#f5f4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1a1612}
+.app-header{background:#fff;border-bottom:1px solid #e8e2d8;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px}
+.logo{font-size:20px;font-weight:600;color:#1a1612;letter-spacing:-0.3px}
+.date-badge{margin-left:auto;font-size:12px;color:#888;background:#f5f4f1;padding:4px 10px;border-radius:20px;border:1px solid #e8e2d8;white-space:nowrap}
+.screen{display:none;min-height:calc(100vh - 52px)}
+.screen.active{display:block}
+.home-wrap{padding:16px}
+.section-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.8px;padding:12px 0 8px}
+.person-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.15s;-webkit-transition:border-color 0.15s;active:scale(0.98)}
+.person-card:active{background:#faf8f4}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0}
+.av-thoa{background:#f0ede8;color:#6b5740}
+.av-hanh{background:#e8ede8;color:#4a7a5a}
+.av-hieu{background:#ede8e0;color:#b5813a}
+.person-info{flex:1;min-width:0}
+.person-name{font-size:16px;font-weight:500;color:#1a1612}
+.person-role{font-size:12px;color:#888;margin-top:2px}
+.person-stats{text-align:right;flex-shrink:0}
+.stat-num{font-size:15px;font-weight:500;color:#1a1612}
+.stat-label{font-size:11px;color:#aaa;margin-top:1px}
+.mini-bar-wrap{height:3px;background:#e8e2d8;border-radius:2px;margin-top:6px;width:60px;margin-left:auto}
+.mini-bar{height:3px;border-radius:2px;transition:width 0.3s}
+.bar-thoa{background:#6b5740}
+.bar-hanh{background:#4a7a5a}
+.bar-hieu{background:#b5813a}
+
+.overview-card{background:#fff;border:1px solid #e8e2d8;border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.overview-title{font-size:13px;font-weight:500;color:#1a1612;margin-bottom:12px}
+.ov-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ov-row:last-child{margin-bottom:0}
+.ov-name{font-size:13px;color:#666;width:52px;flex-shrink:0}
+.ov-bar-wrap{flex:1;height:6px;background:#f0ece6;border-radius:3px}
+.ov-bar{height:6px;border-radius:3px;transition:width 0.4s}
+.ov-pct{font-size:12px;color:#888;width:34px;text-align:right;flex-shrink:0}
+
+.reset-btn{width:100%;padding:12px;border:1px solid #e8e2d8;border-radius:10px;background:#fff;color:#888;font-size:13px;cursor:pointer;margin-top:4px;font-family:inherit}
+.reset-btn:active{background:#f5f4f1}
+
+.checklist-wrap{padding:16px}
+.back-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#888;padding:4px 0;display:flex;align-items:center;gap:4px;font-family:inherit}
+.progress-text{margin-left:auto;font-size:13px;color:#888}
+.top-bar-wrap{height:4px;background:#e8e2d8;border-radius:2px;margin-bottom:18px}
+.top-bar{height:4px;border-radius:2px;transition:width 0.3s}
+
+.sec-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px;margin-top:4px}
+.task-card{background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:opacity 0.2s}
+.task-card:active{background:#faf8f4}
+.task-card.done{opacity:0.5}
+.task-card.done .task-name{text-decoration:line-through;color:#aaa}
+.task-card.priority{border-left:3px solid #b5813a}
+.check-wrap{flex-shrink:0;margin-top:1px}
+.check-circle{width:23px;height:23px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;transition:all 0.15s;background:#fff}
+.check-circle.checked-thoa{background:#6b5740;border-color:#6b5740}
+.check-circle.checked-hanh{background:#4a7a5a;border-color:#4a7a5a}
+.check-circle.checked-hieu{background:#b5813a;border-color:#b5813a}
+.check-icon{display:none;width:12px;height:9px}
+.check-circle.checked-thoa .check-icon,
+.check-circle.checked-hanh .check-icon,
+.check-circle.checked-hieu .check-icon{display:block}
+.task-body{flex:1;min-width:0}
+.task-name{font-size:14px;color:#1a1612;line-height:1.4;font-weight:400}
+.task-name.priority-star::before{content:'★ ';color:#b5813a;font-size:12px}
+.task-std{font-size:12px;color:#4a7a5a;margin-top:4px;line-height:1.4}
+.task-std::before{content:'✓ '}
+.task-note{font-size:12px;color:#b5813a;margin-top:4px;line-height:1.4}
+.task-note::before{content:'⚠ '}
+
+.done-banner{background:#eaf3de;border:1px solid #c0dd97;border-radius:10px;padding:12px 16px;text-align:center;font-size:13px;color:#3b6d11;margin-bottom:14px}
+
+@media(max-width:400px){
+  .person-role{font-size:11px}
+  .task-name{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo">Kalem</div>
+  <div class="date-badge" id="today-label"></div>
+</div>
+
+<div id="home-screen" class="screen active">
+  <div class="home-wrap">
+    <div class="section-title">Chọn ca của bạn</div>
+
+    <div class="person-card" onclick="openPerson('thoa')">
+      <div class="avatar av-thoa">TH</div>
+      <div class="person-info">
+        <div class="person-name">Thoa</div>
+        <div class="person-role">Vòng trong · 06:00–17:00</div>
+      </div>
+      <div class="person-stats">
+        <div class="stat-num" id="pn-thoa">0/0</div>
+        <div class="stat-label">hoàn thành</div>
+        <div class="mini-bar-wrap"><div class="mini-bar bar-thoa" id="mb-thoa" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="person-card" onclick="openPerson('hanh')">
+      <div class="avatar av-hanh">HN</div>
+      <div class="person-info">
+        <div class="person-name">Hạnh</div>
+        <div class="person-role">Vòng ngoài · 07:00–14:00</div>
+      </div>
+      <div class="person-stats">
+        <div class="stat-num" id="pn-hanh">0/0</div>
+        <div class="stat-label">hoàn thành</div>
+        <div class="mini-bar-wrap"><div class="mini-bar bar-hanh" id="mb-hanh" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="person-card" onclick="openPerson('hieu')">
+      <div class="avatar av-hieu">HI</div>
+      <div class="person-info">
+        <div class="person-name">Hiếu</div>
+        <div class="person-role">Ca trưởng · 07:00–22:00</div>
+      </div>
+      <div class="person-stats">
+        <div class="stat-num" id="pn-hieu">0/0</div>
+        <div class="stat-label">hoàn thành</div>
+        <div class="mini-bar-wrap"><div class="mini-bar bar-hieu" id="mb-hieu" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:8px">Tổng quan hôm nay</div>
+    <div class="overview-card">
+      <div class="ov-row">
+        <div class="ov-name">Thoa</div>
+        <div class="ov-bar-wrap"><div class="ov-bar bar-thoa" id="ob-thoa" style="width:0%"></div></div>
+        <div class="ov-pct" id="op-thoa">0%</div>
+      </div>
+      <div class="ov-row">
+        <div class="ov-name">Hạnh</div>
+        <div class="ov-bar-wrap"><div class="ov-bar bar-hanh" id="ob-hanh" style="width:0%"></div></div>
+        <div class="ov-pct" id="op-hanh">0%</div>
+      </div>
+      <div class="ov-row">
+        <div class="ov-name">Hiếu</div>
+        <div class="ov-bar-wrap"><div class="ov-bar bar-hieu" id="ob-hieu" style="width:0%"></div></div>
+        <div class="ov-pct" id="op-hieu">0%</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetDay()">↺ &nbsp;Đặt lại cho ngày mới</button>
+  </div>
+</div>
+
+<div id="checklist-screen" class="screen">
+  <div class="checklist-wrap" id="checklist-body"></div>
+</div>
+
+<script>
+const DATA = {
+  thoa: {
+    name:'Thoa', color:'thoa',
+    sections:[
+      {label:'06:00 — 08:00 · Mở quán', tasks:[
+        {id:'t01',name:'Mở máy tính + khởi động máy order (POS)',std:'Màn hình POS hiển thị, có thể nhận order ngay',priority:true},
+        {id:'t02',name:'Bật máy nước nóng + máy pha cà phê',std:'Đợi đèn báo xanh trước khi pha'},
+        {id:'t03',name:'Kiểm tra nguyên vật liệu tồn kho',std:'Đá, sữa, trà, sirup, bánh — ghi thiếu vào sổ báo cáo',note:'Thiếu nguyên liệu quan trọng: báo Hiếu trước 7h30',priority:true},
+        {id:'t04',name:'Bật đèn trong quầy + đèn bảng hiệu',std:'Đèn sáng đều, không bóng chập chờn'},
+        {id:'t05',name:'Mở nhạc nền',std:'Âm lượng vừa nghe — không quá to trước 8h'},
+        {id:'t06',name:'Lau toàn bộ bàn ghế trong quán',std:'Bề mặt sạch, không vết nước hoặc bụi, ghế thẳng hàng'},
+        {id:'t07',name:'Quét sàn toàn bộ khu vực trong quán',std:'Không còn lá khô, bụi — đặc biệt góc khuất dưới bàn'},
+        {id:'t08',name:'Lau sàn ướt',std:'Sàn khô trước khi mở cửa (tránh khách trượt ngã)'},
+        {id:'t09',name:'Mở cửa sổ + cửa chính',std:'Cửa mở đúng giờ, không để khách đứng đợi ngoài'},
+        {id:'t10',name:'Quét màng nhện (góc trần, cột)',std:'Không còn màng nhện nhìn thấy bằng mắt thường'},
+        {id:'t11',name:'Đem bàn ghế ra ban công (nếu trời không mưa)',std:'Sắp xếp gọn, đúng vị trí quy định'},
+        {id:'t12',name:'Lau kệ, tủ trưng bày + đem bánh ra trưng bày',std:'Bánh đẹp mắt, nhãn giá đúng vị trí, tủ kính không có vân tay'},
+        {id:'t13',name:'Dọn gọn ly, thìa, dụng cụ pha chế vào đúng vị trí',std:'Ly sạch úp ngược, thìa xếp gọn, tạp dề treo đúng móc'},
+        {id:'t14',name:'Thay túi rác trong quầy',std:'Túi rác mới, thùng rác không có mùi'},
+        {id:'t15',name:'Pha 2 ly cà phê phin',std:'Phin được vệ sinh sạch trước khi pha, đúng tỷ lệ tiêu chuẩn'},
+        {id:'t16',name:'[Chỉ T7, CN] Mang bình trà tự phục vụ ra khu khách',std:'Bình trà pha sẵn, có nhãn tên loại trà, đặt đúng vị trí'},
+      ]},
+      {label:'08:00 — 17:00 · Vận hành & Đóng ca', tasks:[
+        {id:'t17',name:'Pha chế đồ uống theo order POS',std:'Đúng tỷ lệ, đúng ly — ra trong 5 phút/đơn, 8 phút/phức tạp',priority:true},
+        {id:'t18',name:'Duy trì quầy pha chế gọn sạch liên tục',std:'Sau mỗi order: lau quầy, rửa tay, dụng cụ về đúng vị trí'},
+        {id:'t19',name:'Thu dọn bàn sau khi khách rời đi',std:'Lau bàn trong vòng 3 phút — không để bàn bẩn khi khách mới vào'},
+        {id:'t20',name:'Theo dõi đá, sữa, sirup — bổ sung liên tục',std:'Không để hết nguyên liệu giữa lúc đông khách'},
+        {id:'t21',name:'Lau dọn quầy giữa ca (khoảng 15h)',std:'Quầy luôn gọn trong giờ mở cửa'},
+        {id:'t22',name:'Bàn giao quầy pha chế cho Hiếu trước 17h',std:'Nguyên liệu còn bao nhiêu, thiếu gì, order đang chạy — bàn giao miệng + ghi sổ',priority:true},
+      ]},
+    ]
+  },
+  hanh:{
+    name:'Hạnh', color:'hanh',
+    sections:[
+      {label:'07:00 — 09:00 · Mở khu ngoài', tasks:[
+        {id:'h01',name:'Thổi lá toàn bộ khu vực ngoài',std:'Thứ tự: vườn nho → gốc cây sala → khu vui chơi → cầu thang → ngoài cổng',priority:true},
+        {id:'h02',name:'Dọn vệ sinh toilet',std:'Mở cửa sổ → bật máy xông tinh dầu → quét → cọ bồn cầu → lau gương → quét màng nhện → lau sàn',note:'Bổ sung giấy vệ sinh và xà phòng nếu sắp hết — khách phàn nàn nhiều nhất điều này',priority:true},
+        {id:'h03',name:'Lau bàn ghế khu vực ngoài',std:'Khu vui chơi, vườn nho, góc cây sala — mặt bàn khô, không bụi hoặc sương đêm'},
+        {id:'h04',name:'Trải khăn bàn khu cây sala',std:'Khăn phẳng, không nhăn, đúng màu quy định'},
+        {id:'h05',name:'Sắp xếp bàn ghế đúng layout',std:'Khu vui chơi + góc cây sala + vườn nho — theo sơ đồ mặt bằng'},
+        {id:'h06',name:'Treo võng khu vui chơi',std:'Võng căng đúng độ cao, kiểm tra móc treo an toàn trước khi cho khách dùng'},
+        {id:'h07',name:'Thay túi rác khu vực ngoài',std:'Tại: góc cây sala, khu vui chơi, cầu thang gần toilet — buộc kín túi cũ'},
+        {id:'h08',name:'Lau gương ngoài trời',std:'Gương khu vui chơi + gương gần lá cờ — không còn vệt nước mưa hay vân tay'},
+        {id:'h09',name:'Kiểm tra khu vật nuôi (thỏ, gà, ngỗng, cừu)',std:'Có đủ nước, thức ăn cơ bản; khu không có mùi nặng; chuồng khóa đúng',note:'Báo ngay Hiếu nếu con vật bệnh, bỏ ăn hoặc chuồng bị hư'},
+      ]},
+      {label:'09:00 — 13:30 · Vận hành', tasks:[
+        {id:'h10',name:'Đón khách tại cổng, hướng dẫn chỗ ngồi',std:'Chào tự nhiên, nụ cười — không để khách đứng chờ quá 1 phút',priority:true},
+        {id:'h11',name:'Phục vụ đồ uống đến tận bàn khu ngoài',std:'Đặt đúng người order, xác nhận tên món'},
+        {id:'h12',name:'Kiểm tra toilet định kỳ (mỗi 2 tiếng)',std:'Sàn khô, không mùi, giấy vệ sinh đủ, xà phòng có'},
+        {id:'h13',name:'Hỗ trợ khách chụp ảnh checkin',std:'Nhiệt tình, gợi ý góc đẹp — cơ hội tạo nội dung tự nhiên cho Kalem'},
+      ]},
+      {label:'13:30 — 14:00 · Bàn giao ca', tasks:[
+        {id:'h14',name:'Quét dọn lại toàn bộ khu vực ngoài',std:'Không còn cốc bẩn, khay chưa dọn, rác trên sàn khu ngoài',priority:true},
+        {id:'h15',name:'Nhặt rác quanh khu vật nuôi và cổng',std:'Bao gồm rác do khách bỏ không đúng chỗ, lá cây rơi sau giờ thổi sáng'},
+        {id:'h16',name:'Kiểm tra toilet lần cuối + bổ sung vật tư',std:'Để sẵn giấy vệ sinh dự phòng, bổ sung xà phòng đủ cho buổi chiều'},
+        {id:'h17',name:'Báo cáo bàn giao với Hiếu trước khi về',std:'Nói rõ tình trạng khu vực, vấn đề tồn đọng — Hiếu ký xác nhận',priority:true},
+      ]},
+    ]
+  },
+  hieu:{
+    name:'Hiếu', color:'hieu',
+    sections:[
+      {label:'07:00 — 09:00 · Mở quán & Kiểm tra', tasks:[
+        {id:'i01',name:'Kiểm tra trang phục toàn đội trước 8h30',std:'Áo đồng phục đúng màu, tạp dề đeo, tóc gọn — nhắc nhở nhẹ nếu chưa đúng',priority:true},
+        {id:'i02',name:'Đi vòng kiểm tra toàn quán (vòng trong + vòng ngoài)',std:'Dùng checklist Thoa và Hạnh để check — ghi lại điểm chưa đạt và yêu cầu bổ sung ngay',priority:true},
+        {id:'i03',name:'Chuẩn bị nguyên liệu pha chế đầu ngày',std:'Ủ trà trái cây, ủ trà sữa, nấu sirup đường, sên mãng cầu. Hoàn thành trước 9h00',priority:true},
+        {id:'i04',name:'Chấm công + xác nhận nhân sự có mặt đủ',std:'Ghi giờ vào của từng người. Nếu vắng, báo ngay Henry'},
+        {id:'i05',name:'Kiểm tra sổ đặt bàn / lịch hẹn hôm nay',std:'Biết trước có đoàn không, có sự kiện đặc biệt không — phân công chuẩn bị phù hợp'},
+        {id:'i06',name:'Kiểm tra tồn kho từ báo cáo Thoa + bổ sung thiếu hụt',std:'Sirup, mứt, sữa, trà, đá — đặt hàng nếu sắp hết. Không để hết hàng giữa ca'},
+      ]},
+      {label:'09:00 — 17:00 · Vận hành', tasks:[
+        {id:'i07',name:'Giám sát chất lượng phục vụ liên tục',std:'Khách có đồ uống trong 5–8 phút, bàn dọn nhanh, nhân viên không đứng túm tụm',priority:true},
+        {id:'i08',name:'Nhận và xử lý thanh toán qua POS',std:'Đọc lại tổng tiền trước khi thu — không nhận tiền ngoài POS',priority:true},
+        {id:'i09',name:'Tiếp nhận phàn nàn / yêu cầu đặc biệt từ khách',std:'Lắng nghe, xin lỗi ngay — không tranh luận. Báo Henry nếu vượt thẩm quyền'},
+        {id:'i10',name:'Nhận bàn giao từ Hạnh lúc 14h, ký xác nhận',std:'Ghi nhận vấn đề tồn đọng vào sổ ca'},
+        {id:'i11',name:'Tưới cây toàn bộ khu vực (15h–16h)',std:'Tưới đều gốc, không tưới lên mặt bàn ghế hoặc khu khách đang ngồi'},
+        {id:'i12',name:'Thổi lá khu vực ngoài (khoảng 16h)',std:'Ưu tiên khu chụp ảnh, cây sala, lối vào chính'},
+        {id:'i13',name:'Kiểm tra vật nuôi buổi chiều — bổ sung thức ăn/nước',std:'Ghi vào sổ nếu con nào có biểu hiện bất thường'},
+        {id:'i14',name:'Bật đèn chiều tối (17:00–17:30)',std:'Thứ tự: đèn ban công → đèn viền → đèn bảng hiệu → đèn gốc cây sala → đèn khu vui chơi',priority:true},
+        {id:'i15',name:'Kiểm tra bổ sung nguyên liệu cho ca tối',std:'Đá đủ không, trà còn không, sirup còn không — chuẩn bị trước giờ đông khách tối'},
+      ]},
+      {label:'20:30 — 22:00 · Đóng quán', tasks:[
+        {id:'i16',name:'Lau dọn quầy pha chế toàn bộ',std:'Lau mặt quầy, dụng cụ về đúng vị trí, không còn vệt cà phê hoặc sữa',priority:true},
+        {id:'i17',name:'Vệ sinh máy cà phê đúng quy trình',std:'Thứ tự: đổ bã cà phê → chà máy → xả máy → chà rửa khay + lau khô → chà tấm lót → lau bên ngoài máy',note:'Không vệ sinh đúng cách sẽ làm hỏng máy và ảnh hưởng chất lượng cà phê hôm sau',priority:true},
+        {id:'i18',name:'Xử lý đá và khay đá cuối ngày',std:'Cất đá vào bao đá trong tủ đông, rửa sạch khay đá, úp ngược cho ráo'},
+        {id:'i19',name:'Cất bánh vào tủ lạnh đúng cách',std:'Bọc hoặc đậy nắp, ghi ngày sản xuất — bánh hết hạn không được để lại bán'},
+        {id:'i20',name:'Quét và lau sàn toàn bộ bên trong quán',std:'Quét trước, lau sau — không lau ngược hướng ra cửa'},
+        {id:'i21',name:'Thu bàn ghế ban công vào trong (nếu dự báo mưa đêm)',std:'Kiểm tra thời tiết — nếu trời quang có thể để ngoài nhưng xếp gọn gàng'},
+        {id:'i22',name:'Tắt điện theo thứ tự quy định',std:'Thứ tự: đèn gốc cây sala → đèn khu vui chơi → đèn ban công → đèn trong quán → đèn bảng hiệu (tắt sau cùng)',priority:true},
+        {id:'i23',name:'Tắt máy tính + máy order (POS)',std:'Tắt đúng cách qua phần mềm — không rút điện đột ngột, tránh mất dữ liệu POS',priority:true},
+        {id:'i24',name:'Tắt máy nước nóng + máy pha cà phê (tắt điện nguồn)'},
+        {id:'i25',name:'Đóng tất cả cửa sổ + cửa chính',std:'Kiểm tra từng cửa đã khóa — kéo thử trước khi bước ra'},
+        {id:'i26',name:'Kiểm tra an toàn toàn khu trước khi khóa cổng',std:'Đi một vòng: không còn khách, không còn điện bật, không còn thiết bị chạy, chuồng vật nuôi đã khóa',note:'Bước quan trọng nhất — không được bỏ qua dù đã mệt',priority:true},
+        {id:'i27',name:'Khóa cổng chính',std:'Kiểm tra khóa lần 2 sau khi đóng'},
+        {id:'i28',name:'Chốt doanh thu POS + báo cáo ca cho Henry',std:'Chụp ảnh màn hình POS, đếm tiền mặt, ghi sự cố phát sinh (nếu có)',priority:true},
+      ]},
+    ]
+  }
+};
+
+let state = {date:'', thoa:{}, hanh:{}, hieu:{}};
+let currentPerson = null;
+
+function getToday(){
+  return new Date().toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('kalem_v1');
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s.date === getToday()){ state = s; return; }
+    }
+  }catch(e){}
+  state = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+}
+
+function saveState(){
+  try{ localStorage.setItem('kalem_v1', JSON.stringify(state)); }catch(e){}
+}
+
+function getTotal(p){ return DATA[p].sections.reduce((a,s)=>a+s.tasks.length,0); }
+function getDone(p){ return Object.values(state[p]||{}).filter(Boolean).length; }
+
+function updateHome(){
+  ['thoa','hanh','hieu'].forEach(p=>{
+    const total = getTotal(p);
+    const done = getDone(p);
+    const pct = total ? Math.round(done/total*100) : 0;
+    document.getElementById('pn-'+p).textContent = done+'/'+total;
+    document.getElementById('mb-'+p).style.width = pct+'%';
+    document.getElementById('ob-'+p).style.width = pct+'%';
+    document.getElementById('op-'+p).textContent = pct+'%';
+  });
+}
+
+function openPerson(p){
+  currentPerson = p;
+  const d = DATA[p];
+  const s = state[p]||{};
+  const total = getTotal(p);
+  const done = getDone(p);
+  const pct = total ? Math.round(done/total*100) : 0;
+  const color = p==='thoa'?'#6b5740':p==='hanh'?'#4a7a5a':'#b5813a';
+
+  let html = '';
+  if(done===total && total>0){
+    html += '<div class="done-banner">✓ Hoàn thành tất cả công việc hôm nay!</div>';
+  }
+  html += '<div class="back-row">';
+  html += '<button class="back-btn" onclick="goHome()">← Trang chủ</button>';
+  html += '<span class="progress-text">'+done+'/'+total+' việc</span>';
+  html += '</div>';
+  html += '<div class="top-bar-wrap"><div class="top-bar" style="width:'+pct+'%;background:'+color+'"></div></div>';
+
+  d.sections.forEach(sec=>{
+    html += '<div class="sec-label">'+sec.label+'</div>';
+    sec.tasks.forEach(task=>{
+      const isDone = !!s[task.id];
+      html += '<div class="task-card'+(isDone?' done':'')+(task.priority?' priority':'')+'" onclick="toggleTask(\''+task.id+'\')">';
+      html += '<div class="check-wrap"><div class="check-circle'+(isDone?' checked-'+p:'')+'">'+
+        (isDone?'<svg class="check-icon" viewBox="0 0 12 9" fill="none"><polyline points="1,4.5 4.5,8 11,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+
+        '</div></div>';
+      html += '<div class="task-body">';
+      html += '<div class="task-name'+(task.priority?' priority-star':'')+'">'+task.name+'</div>';
+      if(task.std) html += '<div class="task-std">'+task.std+'</div>';
+      if(task.note) html += '<div class="task-note">'+task.note+'</div>';
+      html += '</div></div>';
+    });
+  });
+
+  document.getElementById('checklist-body').innerHTML = html;
+  document.getElementById('home-screen').classList.remove('active');
+  document.getElementById('checklist-screen').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function toggleTask(id){
+  if(!state[currentPerson]) state[currentPerson]={};
+  state[currentPerson][id] = !state[currentPerson][id];
+  saveState();
+  updateHome();
+  openPerson(currentPerson);
+}
+
+function goHome(){
+  currentPerson = null;
+  document.getElementById('checklist-screen').classList.remove('active');
+  document.getElementById('home-screen').classList.add('active');
+  updateHome();
+  window.scrollTo(0,0);
+}
+
+function resetDay(){
+  if(!confirm('Đặt lại toàn bộ checklist cho ngày mới?')) return;
+  state = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+  saveState();
+  updateHome();
+}
+
+// Init
+document.getElementById('today-label').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Asia/Ho_Chi_Minh'});
+loadState();
+updateHome();
+</script>
+</body>
+</html>
