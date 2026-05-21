@@ -247,6 +247,54 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 .att-sum-item{flex:1;min-width:80px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
 .att-sum-num{font-size:18px;font-weight:700}
 .att-sum-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* LƯƠNG */
+.luong-wrap{padding:16px}
+.luong-person-card{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.luong-person-header{padding:14px 16px;background:var(--green);display:flex;align-items:center;gap:12px}
+.luong-person-header .lph-name{font-size:15px;font-weight:600;color:#fff}
+.luong-person-header .lph-period{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px}
+.luong-big{text-align:center;padding:16px 16px 10px}
+.luong-big-num{font-size:32px;font-weight:700;color:var(--green)}
+.luong-big-label{font-size:12px;color:var(--muted);margin-top:3px}
+.luong-rows{padding:0 16px 14px}
+.luong-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--cream-dark);font-size:13px}
+.luong-row:last-child{border-bottom:none}
+.luong-row-label{color:var(--muted)}
+.luong-row-val{font-weight:500;color:var(--ink)}
+.luong-row-val.plus{color:#2E7D32}
+.luong-row-val.minus{color:#C62828}
+.luong-row-val.total{color:var(--green);font-size:15px;font-weight:700}
+.luong-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* BẢNG NGÀY CÔNG */
+.cong-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px}
+.cong-table th{background:var(--green);color:#fff;padding:6px 8px;text-align:left;font-weight:500}
+.cong-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+.cong-table tr:nth-child(even) td{background:var(--cream)}
+.cong-badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+
+/* NHÂN VIÊN TỰ XEM */
+.my-luong-card{background:var(--white);border:2px solid var(--green);border-radius:16px;padding:20px;margin-bottom:12px}
+.my-luong-title{font-size:13px;color:var(--muted);margin-bottom:4px}
+.my-luong-num{font-size:36px;font-weight:700;color:var(--green);margin-bottom:4px}
+.my-luong-sub{font-size:12px;color:var(--muted)}
+.my-stat-row{display:flex;gap:8px;margin-top:12px}
+.my-stat{flex:1;background:var(--cream);border-radius:10px;padding:10px;text-align:center}
+.my-stat-num{font-size:18px;font-weight:700;color:var(--ink)}
+.my-stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* NHẬP CÔNG QUÁ KHỨ */
+.backfill-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.backfill-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:10px}
+.backfill-day-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--cream-dark)}
+.backfill-day-row:last-child{border-bottom:none}
+.backfill-date{font-size:13px;color:var(--ink);width:70px;flex-shrink:0}
+.backfill-dow{font-size:11px;color:var(--muted);width:30px;flex-shrink:0}
+.backfill-sel{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--cream)}
+.backfill-time{width:72px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--cream)}
+.backfill-reason{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--cream)}
+.backfill-save-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:12px}
 </style>
 </head>
 <body>
@@ -456,10 +504,10 @@ function setRole(role){
 function renderApp(){
   const r=ROLES[currentRole];
   const tabs=r.type==="staff"
-    ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"cham-cong",label:"Chấm công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
-    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
+    ?[{id:"checklist",label:"Checklist"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
   tb.classList.add("visible");
@@ -477,6 +525,9 @@ function switchTab(tab){
   else if(tab==="cham-diem")renderChamDiem();
   else if(tab==="xac-nhan")renderXacNhan();
   else if(tab==="cham-cong")renderChamCong();
+  else if(tab==="nhap-cong")renderBackfill();
+  else if(tab==="luong-admin")renderAdminLuong();
+  else if(tab==="luong-nv")renderMyLuong();
   else if(tab==="cham-cong-admin")renderAttendance();
   else if(tab==="tong-ket")renderTongKet();
   else if(tab==="doanh-thu")renderDoanhThu();
@@ -1081,6 +1132,397 @@ function renderAttendance(){
 function changeMonthAtt(d){
   currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
   renderAttendance();
+}
+
+
+// ===================== MODULE LƯƠNG =====================
+const LUONG_CONFIG = {
+  thoa: {name:'Thoa', luongThang:6500000, gioVao:'07:00', gioRa:'18:00', gioRaCN:'21:00'},
+  hanh: {name:'Hạnh', luongThang:4500000, gioVao:'07:00', gioRa:'14:30', gioRaCN:'14:30'},
+  hieu: {name:'Hiếu', luongThang:0, gioVao:'07:00', gioRa:'22:00', gioRaCN:'22:00'},
+};
+const NGAY_PHEP_CO_LUONG = 2;
+const TC_NGAY = 20000;  // tăng ca ban ngày /giờ
+const TC_TOI  = 30000;  // tăng ca tối /giờ (sau 18h)
+const NGAY_CONG = 28;
+
+// Lấy kỳ lương hiện tại (từ 15 tháng trước/hiện tại đến hôm nay)
+function getKyLuong() {
+  const today = new Date();
+  const day = today.getDate();
+  let startDate, endDate;
+  if(day >= 15) {
+    startDate = new Date(today.getFullYear(), today.getMonth(), 15);
+  } else {
+    startDate = new Date(today.getFullYear(), today.getMonth()-1, 15);
+  }
+  endDate = today;
+  return {startDate, endDate};
+}
+
+function formatDateVN(d) {
+  return d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function parseDateVN(str) {
+  const parts = str.split('/');
+  if(parts.length < 3) return null;
+  return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+}
+
+function isWeekendOrHoliday(d) {
+  const dow = d.getDay();
+  return dow === 0 || dow === 6;
+}
+
+function getDOW(d) {
+  return ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
+}
+
+function getStandardOut(p, d) {
+  const cfg = LUONG_CONFIG[p];
+  if(!cfg) return '22:00';
+  const dow = d.getDay();
+  if(dow === 0 || dow === 6) return cfg.gioRaCN;
+  return cfg.gioRa;
+}
+
+function timeToMinutes(t) {
+  if(!t || !t.includes(':')) return 0;
+  const [h,m] = t.split(':').map(Number);
+  return h*60 + m;
+}
+
+function minutesToHours(m) { return m/60; }
+
+function calcOT(p, d, outActual) {
+  const stdOut = getStandardOut(p, d);
+  const stdMin = timeToMinutes(stdOut);
+  const actMin = timeToMinutes(outActual);
+  if(actMin <= stdMin) return 0;
+  const extraMin = actMin - stdMin;
+  const extraHours = minutesToHours(extraMin);
+  // Tăng ca tối: giờ sau 18:00
+  const cutoffMin = 18*60;
+  if(stdMin >= cutoffMin) {
+    return extraHours * TC_TOI;
+  } else if(actMin > cutoffMin) {
+    const dayHours = minutesToHours(cutoffMin - stdMin);
+    const nightHours = minutesToHours(actMin - cutoffMin);
+    return dayHours * TC_NGAY + nightHours * TC_TOI;
+  } else {
+    return extraHours * TC_NGAY;
+  }
+}
+
+function calcEarlyDeduct(p, d, outActual) {
+  const stdOut = getStandardOut(p, d);
+  const stdMin = timeToMinutes(stdOut);
+  const actMin = timeToMinutes(outActual);
+  if(actMin >= stdMin) return 0;
+  const shortMin = stdMin - actMin;
+  const shortHours = minutesToHours(shortMin);
+  const cutoffMin = 18*60;
+  if(actMin >= cutoffMin || stdMin <= cutoffMin) {
+    const rate = stdMin <= cutoffMin ? TC_NGAY : TC_TOI;
+    return shortHours * rate;
+  } else {
+    const nightHours = minutesToHours(stdMin - cutoffMin);
+    const dayHours = shortHours - nightHours;
+    return dayHours * TC_NGAY + nightHours * TC_TOI;
+  }
+}
+
+function tinhLuong(p) {
+  if(!LUONG_CONFIG[p] || LUONG_CONFIG[p].luongThang === 0) return null;
+  const cfg = LUONG_CONFIG[p];
+  const {startDate, endDate} = getKyLuong();
+  const luongNgay = cfg.luongThang / NGAY_CONG;
+
+  let ngayLamDuoc = 0;
+  let ngayNghiKhongLy = 0;
+  let ngayNghiCo = 0;
+  let ngayPhepCoLuong = 0;
+  let tongOT = 0;
+  let tongTruSom = 0;
+  let ngayTruThem = 0; // nghỉ T7/CN/lễ sai
+  const chiTiet = [];
+
+  // Duyệt từng ngày trong kỳ
+  let cur = new Date(startDate);
+  while(cur <= endDate) {
+    const dk = formatDateVN(cur);
+    const rec = ccState[dk] && ccState[dk][p];
+    const isWE = isWeekendOrHoliday(cur);
+    const dow = getDOW(cur);
+
+    if(rec && rec.saved) {
+      const status = rec.status;
+      const outTime = rec.outTime || '';
+
+      if(status === 'ok' || status === 'late') {
+        ngayLamDuoc++;
+        if(outTime) {
+          const ot = calcOT(p, cur, outTime);
+          tongOT += ot;
+        }
+        chiTiet.push({dk, dow, status, inTime:rec.inTime, outTime, ly_do:rec.reason||'', cong:1, ot: outTime?calcOT(p,cur,outTime):0, tru:0});
+      } else if(status === 'early') {
+        ngayLamDuoc++;
+        const tru = outTime ? calcEarlyDeduct(p, cur, outTime) : 0;
+        tongTruSom += tru;
+        chiTiet.push({dk, dow, status, inTime:rec.inTime, outTime, ly_do:rec.reason||'', cong:1, ot:0, tru});
+      } else if(status === 'sick' || status === 'leave') {
+        if(isWE) {
+          // Nghỉ T7/CN không được tính phép có lương, trừ thêm 1 ngày
+          ngayTruThem++;
+          chiTiet.push({dk, dow, status:'wrong_leave', inTime:'', outTime:'', ly_do:rec.reason||'Nghỉ T7/CN', cong:0, ot:0, tru:luongNgay, warn:true});
+        } else {
+          if(ngayPhepCoLuong < NGAY_PHEP_CO_LUONG) {
+            ngayPhepCoLuong++;
+            chiTiet.push({dk, dow, status, inTime:'', outTime:'', ly_do:rec.reason||'', cong:'phép', ot:0, tru:0});
+          } else {
+            ngayNghiKhongLy++;
+            chiTiet.push({dk, dow, status:'no_pay', inTime:'', outTime:'', ly_do:rec.reason||'', cong:0, ot:0, tru:0});
+          }
+        }
+      }
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+
+  const luongCoBan = ngayLamDuoc * luongNgay;
+  const truSai = ngayTruThem * luongNgay;
+  const tongLuong = luongCoBan + tongOT - tongTruSom - truSai;
+
+  return {
+    p, cfg, luongNgay, ngayLamDuoc, ngayNghiKhongLy,
+    ngayPhepCoLuong, ngayTruThem, tongOT, tongTruSom,
+    luongCoBan, truSai, tongLuong, chiTiet,
+    startDate, endDate,
+  };
+}
+
+function fmtK(n) {
+  if(n === 0) return '0đ';
+  return Math.round(n).toLocaleString('vi-VN') + 'đ';
+}
+
+const STATUS_LUONG_LABEL = {
+  ok:          {label:'Đúng giờ',   badge:'att-ok'},
+  late:        {label:'Đi trễ',     badge:'att-late'},
+  early:       {label:'Về sớm',     badge:'att-early'},
+  sick:        {label:'Nghỉ ốm',    badge:'att-sick'},
+  leave:       {label:'Nghỉ phép',  badge:'att-leave'},
+  wrong_leave: {label:'Nghỉ sai ⚠', badge:'att-late'},
+  no_pay:      {label:'Nghỉ không phép', badge:'att-none'},
+};
+
+// ---- Nhân viên tự xem lương của mình ----
+function renderMyLuong() {
+  const p = currentRole;
+  if(!LUONG_CONFIG[p] || LUONG_CONFIG[p].luongThang === 0) {
+    document.getElementById('main-content').innerHTML =
+      '<div class="wrap"><div style="text-align:center;padding:48px 16px;color:var(--muted);font-size:14px">Chưa có thông tin lương.<br>Liên hệ Henry hoặc Ka để cập nhật.</div></div>';
+    return;
+  }
+  const kq = tinhLuong(p);
+  if(!kq) return;
+  const r = ROLES[p];
+  const {startDate, endDate} = getKyLuong();
+
+  let h = '<div class="luong-wrap">';
+  h += `<div class="sec-title">Lương của bạn — kỳ ${formatDateVN(startDate)} → ${formatDateVN(endDate)}</div>`;
+
+  h += `<div class="my-luong-card">
+    <div class="my-luong-title">Lương ước tính đến hôm nay</div>
+    <div class="my-luong-num">${fmtK(kq.tongLuong)}</div>
+    <div class="my-luong-sub">Chốt ngày 15 · Nhận ngày 25</div>
+    <div class="my-stat-row">
+      <div class="my-stat"><div class="my-stat-num">${kq.ngayLamDuoc}</div><div class="my-stat-label">Ngày công</div></div>
+      <div class="my-stat"><div class="my-stat-num">${kq.ngayPhepCoLuong}/${NGAY_PHEP_CO_LUONG}</div><div class="my-stat-label">Phép có lương</div></div>
+      <div class="my-stat"><div class="my-stat-num">${fmtK(kq.tongOT)}</div><div class="my-stat-label">Tăng ca</div></div>
+    </div>
+  </div>`;
+
+  // Chi tiết ngày công
+  h += '<div class="sec-title">Chi tiết từng ngày</div>';
+  if(!kq.chiTiet.length) {
+    h += '<div style="background:var(--cream);border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#aaa">Chưa có dữ liệu chấm công kỳ này</div>';
+  } else {
+    h += '<div style="overflow-x:auto"><table class="cong-table"><tr><th>Ngày</th><th>Thứ</th><th>Trạng thái</th><th>Giờ</th><th>Ghi chú</th></tr>';
+    kq.chiTiet.forEach(row => {
+      const st = STATUS_LUONG_LABEL[row.status] || {label:row.status, badge:'att-none'};
+      h += `<tr>
+        <td style="white-space:nowrap">${row.dk}</td>
+        <td>${row.dow}</td>
+        <td><span class="cong-badge ${st.badge}">${st.label}</span></td>
+        <td style="white-space:nowrap;font-size:11px">${row.inTime||'—'} → ${row.outTime||'—'}</td>
+        <td style="font-size:11px;color:#888">${row.ly_do||''} ${row.tru>0?'<span style="color:#C62828">-'+fmtK(row.tru)+'</span>':''} ${row.ot>0?'<span style="color:#2E7D32">+'+fmtK(row.ot)+'</span>':''}</td>
+      </tr>`;
+    });
+    h += '</table></div>';
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+// ---- Admin xem lương tất cả ----
+function renderAdminLuong() {
+  const {startDate, endDate} = getKyLuong();
+  let h = '<div class="luong-wrap">';
+  h += `<div class="sec-title">Bảng lương kỳ ${formatDateVN(startDate)} → ${formatDateVN(endDate)}</div>`;
+
+  ['thoa','hanh','hieu'].forEach(p => {
+    const cfg = LUONG_CONFIG[p];
+    const r = ROLES[p];
+    if(cfg.luongThang === 0) {
+      h += `<div class="luong-person-card">
+        <div class="luong-person-header">
+          <div class="avatar ${r.avClass}" style="width:36px;height:36px;font-size:13px">${r.avatar}</div>
+          <div><div class="lph-name">${r.name}</div><div class="lph-period">Chưa có mức lương</div></div>
+        </div>
+        <div style="padding:14px 16px;font-size:13px;color:#aaa;text-align:center">Chưa thiết lập lương — cập nhật sau</div>
+      </div>`;
+      return;
+    }
+    const kq = tinhLuong(p);
+    if(!kq) return;
+
+    h += `<div class="luong-person-card">
+      <div class="luong-person-header">
+        <div class="avatar ${r.avClass}" style="width:36px;height:36px;font-size:13px">${r.avatar}</div>
+        <div>
+          <div class="lph-name">${r.name}</div>
+          <div class="lph-period">${formatDateVN(startDate)} → ${formatDateVN(endDate)}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:22px;font-weight:700;color:#fff">${fmtK(kq.tongLuong)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7)">Ước tính đến hôm nay</div>
+        </div>
+      </div>
+      <div class="luong-rows">
+        <div class="luong-row"><div class="luong-row-label">Lương cơ bản (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
+        ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.ngayPhepCoLuong * kq.luongNgay)}</div></div>` : ''}
+        ${kq.tongOT > 0 ? `<div class="luong-row"><div class="luong-row-label">Tăng ca</div><div class="luong-row-val plus">+${fmtK(kq.tongOT)}</div></div>` : ''}
+        ${kq.tongTruSom > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ về sớm</div><div class="luong-row-val minus">-${fmtK(kq.tongTruSom)}</div></div>` : ''}
+        ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
+        ${kq.ngayNghiKhongLy > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ không phép (${kq.ngayNghiKhongLy} ngày)</div><div class="luong-row-val minus">Không tính công</div></div>` : ''}
+        <div class="luong-divider"></div>
+        <div class="luong-row"><div class="luong-row-label" style="font-weight:600">Tổng ước tính</div><div class="luong-row-val total">${fmtK(kq.tongLuong)}</div></div>
+      </div>`;
+
+    // Chi tiết ngày công thu gọn
+    if(kq.chiTiet.length) {
+      h += `<div style="padding:0 16px 14px">
+        <div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Chi tiết ngày công</div>
+        <div style="overflow-x:auto"><table class="cong-table">
+          <tr><th>Ngày</th><th>Thứ</th><th>Trạng thái</th><th>Giờ ra</th><th>+/- Tiền</th></tr>`;
+      kq.chiTiet.forEach(row => {
+        const st = STATUS_LUONG_LABEL[row.status] || {label:row.status, badge:'att-none'};
+        const money = row.ot > 0 ? `<span style="color:#2E7D32">+${fmtK(row.ot)}</span>` : row.tru > 0 ? `<span style="color:#C62828">-${fmtK(row.tru)}</span>` : '—';
+        h += `<tr>
+          <td style="white-space:nowrap">${row.dk}</td>
+          <td>${row.dow}</td>
+          <td><span class="cong-badge ${st.badge}">${st.label}</span>${row.warn?'<span style="font-size:10px;color:#C62828;display:block">Nghỉ T7/CN</span>':''}</td>
+          <td style="font-size:11px">${row.outTime||'—'}</td>
+          <td style="font-size:12px">${money}</td>
+        </tr>`;
+        if(row.ly_do) {
+          h += `<tr><td colspan="5" style="font-size:11px;color:#888;padding:2px 8px 6px">→ ${row.ly_do}</td></tr>`;
+        }
+      });
+      h += '</table></div></div>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+// ---- Nhập công quá khứ (Hiếu backfill từ 15/5) ----
+function renderBackfill() {
+  const {startDate, endDate} = getKyLuong();
+  let h = '<div class="luong-wrap">';
+  h += '<div class="sec-title">Nhập công từ đầu kỳ</div>';
+  h += `<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Nhập công cho các ngày từ <strong>${formatDateVN(startDate)}</strong> đến hôm nay. Các ngày đã chấm sẽ hiển thị sẵn.</div>`;
+
+  const days = [];
+  let cur = new Date(startDate);
+  while(cur <= endDate) {
+    days.push(new Date(cur));
+    cur.setDate(cur.getDate()+1);
+  }
+
+  h += '<div class="backfill-card">';
+  h += '<div class="backfill-title">Chọn trạng thái từng ngày</div>';
+
+  days.forEach((d, idx) => {
+    const dk = formatDateVN(d);
+    const dow = getDOW(d);
+    const isWE = isWeekendOrHoliday(d);
+    const rec_thoa = ccState[dk]&&ccState[dk]['thoa'];
+    const rec_hanh = ccState[dk]&&ccState[dk]['hanh'];
+    const rec_hieu = ccState[dk]&&ccState[dk]['hieu'];
+
+    h += `<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--cream-dark)">`;
+    h += `<div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">${dk} (${dow})${isWE?' 🔴':''}</div>`;
+
+    ['thoa','hanh','hieu'].forEach(p => {
+      const r = ROLES[p];
+      const rec = ccState[dk]&&ccState[dk][p];
+      const cfg = LUONG_CONFIG[p];
+      const stdOut = getStandardOut(p, d);
+
+      h += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+        <div style="width:46px;font-size:12px;color:var(--ink);font-weight:500">${r.name}</div>
+        <select class="backfill-sel" id="bf-status-${p}-${idx}" onchange="updateBFReason('${p}',${idx})">
+          <option value="ok" ${rec&&rec.status==='ok'?'selected':''}>Đúng giờ</option>
+          <option value="late" ${rec&&rec.status==='late'?'selected':''}>Đi trễ</option>
+          <option value="early" ${rec&&rec.status==='early'?'selected':''}>Về sớm</option>
+          <option value="sick" ${rec&&rec.status==='sick'?'selected':''}>Nghỉ ốm</option>
+          <option value="leave" ${rec&&rec.status==='leave'?'selected':''}>Nghỉ phép</option>
+        </select>
+        <span style="font-size:11px;color:#aaa">Ra:</span>
+        <input type="time" class="backfill-time" id="bf-out-${p}-${idx}" value="${rec&&rec.outTime||stdOut}">
+        <input class="backfill-reason" id="bf-reason-${p}-${idx}" placeholder="Lý do (nếu có)" value="${rec&&rec.reason||''}">
+      </div>`;
+    });
+
+    h += `<button style="padding:6px 14px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit" onclick="saveBFDay('${dk}',${idx})">Lưu ngày ${dk}</button>`;
+    h += `</div>`;
+  });
+
+  h += '</div></div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function updateBFReason(p, idx) {
+  // Không cần xử lý gì, chỉ để gọi khi select thay đổi
+}
+
+function saveBFDay(dk, idx) {
+  if(!ccState[dk]) ccState[dk] = {};
+  const today = new Date();
+  const d = parseDateVN(dk);
+  ['thoa','hanh','hieu'].forEach(p => {
+    const statusEl = document.getElementById(`bf-status-${p}-${idx}`);
+    const outEl    = document.getElementById(`bf-out-${p}-${idx}`);
+    const reasonEl = document.getElementById(`bf-reason-${p}-${idx}`);
+    if(!statusEl) return;
+    const status = statusEl.value;
+    const outTime = outEl ? outEl.value : '';
+    const reason  = reasonEl ? reasonEl.value.trim() : '';
+    const cfg = LUONG_CONFIG[p];
+    ccState[dk][p] = {
+      status, outTime,
+      inTime: cfg ? cfg.gioVao : '07:00',
+      reason, saved: true,
+      savedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+    };
+  });
+  saveCC();
+  alert('Đã lưu ngày ' + dk);
 }
 
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
