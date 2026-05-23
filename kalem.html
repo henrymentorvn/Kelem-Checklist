@@ -1256,32 +1256,45 @@ function renderDoanhThu(){
     h+="<div style=\"text-align:center;color:#aaa;padding:32px;font-size:13px\">Chưa có báo cáo kết ca tháng này</div>";
   else dayCards.reverse().forEach(({dk,ca1,ca2,ca3,t1,t2,t3,dt})=>{
     const dow = getDOW(parseDateVN(dk));
-    const hasAny = ca1||ca2||ca3;
-    h+=`<div class="history-day-card" id="dtcard-${dk}" onclick="toggleDTCard('${dk}')">
-      <div class="hdc-header">
+    const totalCK = (ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0);
+    const totalTM = (ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)+(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)+(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
+    h+=`<div class="history-day-card" id="dtcard-${dk}">
+      <div class="hdc-header" onclick="toggleDTCard('${dk}')">
         <div class="hdc-date">${dk} <span style="color:var(--muted);font-size:12px">(${dow})</span></div>
         <div class="hdc-total">${dt?fmtMoney(dt):'—'}</div>
         <div class="hdc-arrow" id="dtarrow-${dk}">›</div>
       </div>
       <div class="hdc-detail" id="dtdetail-${dk}">
-        <div class="hdc-row">
-          <span>Ca 1 — Hạnh (tiền mặt)</span>
-          <span>${ca1&&ca1.confirmed?fmtMoney(parseInt(ca1.tienmat||0)):ca1&&ca1.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
+        <div class="hdc-row"><span>Ca 1 — Hạnh (tiền mặt)</span>
+          <span>${ca1&&ca1.confirmed?fmtMoney(parseInt(ca1.tienmat||0)):ca1&&ca1.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
+        <div class="hdc-row"><span>Ca 2 — Thoa (tiền mặt)</span>
+          <span>${ca2&&ca2.confirmed?fmtMoney(parseInt(ca2.tienmat||0)):ca2&&ca2.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
+        <div class="hdc-row"><span>Ca tối — Hiếu (tiền mặt)</span>
+          <span>${ca3&&ca3.confirmed?fmtMoney(parseInt(ca3.tienmat||0)):ca3&&ca3.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
+        <div class="hdc-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
+          <span>Tổng tiền mặt</span>
+          <span style="font-weight:500">${fmtMoney(totalTM)}</span>
         </div>
-        <div class="hdc-row">
-          <span>Ca 2 — Thoa (tiền mặt)</span>
-          <span>${ca2&&ca2.confirmed?fmtMoney(parseInt(ca2.tienmat||0)):ca2&&ca2.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
+
+        <!-- Ka nhập chuyển khoản ngày này -->
+        <div style="background:var(--green-pale);border-radius:8px;padding:10px;margin-top:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px">Chuyển khoản ngày ${dk} — Ka nhập</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="ck-dt-${dk}"
+              value="${totalCK||''}"
+              placeholder="Nhập tổng CK ngày này"
+              style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff"
+              onclick="event.stopPropagation()">
+            <button onclick="event.stopPropagation();saveKaDayCK('${dk}')"
+              style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap">
+              Lưu
+            </button>
+          </div>
+          ${totalCK>0?`<div style="font-size:12px;color:var(--green);margin-top:5px">✓ Đã nhập: ${fmtMoney(totalCK)}</div>`:''}
         </div>
-        <div class="hdc-row">
-          <span>Ca tối — Hiếu (tiền mặt)</span>
-          <span>${ca3&&ca3.confirmed?fmtMoney(parseInt(ca3.tienmat||0)):ca3&&ca3.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
-        </div>
-        <div class="hdc-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
-          <span>Chuyển khoản (Ka nhập)</span>
-          <span style="color:var(--green);font-weight:500">${fmtMoney((ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0))}</span>
-        </div>
-        <div class="hdc-row" style="font-weight:600">
-          <span>Tổng cộng</span>
+
+        <div class="hdc-row" style="font-weight:600;margin-top:6px">
+          <span>Tổng cộng (TM + CK)</span>
           <span style="color:var(--green);font-size:15px">${fmtMoney(dt)}</span>
         </div>
         ${[ca1,ca2,ca3].filter(c=>c&&c.ghichu).map(c=>`<div class="hdc-note">Ghi chú: ${c.ghichu}</div>`).join('')}
@@ -2849,6 +2862,38 @@ function setWeekAssign(val) {
   renderWeekAssign();
   // Refresh checklist nếu đang xem
   if(currentTab === 'checklist') renderChecklist();
+}
+
+
+function saveKaDayCK(dk) {
+  const el = document.getElementById('ck-dt-'+dk);
+  if(!el) return;
+  const ck = el.value || '0';
+  if(!ketcaState[dk]) ketcaState[dk] = {};
+
+  // Lưu CK vào ca1 (Hạnh) — dùng làm đại diện CK cả ngày
+  if(!ketcaState[dk]['hanh']) ketcaState[dk]['hanh'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
+  if(!ketcaState[dk]['thoa']) ketcaState[dk]['thoa'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
+  if(!ketcaState[dk]['hieu']) ketcaState[dk]['hieu'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
+
+  // Đặt toàn bộ CK vào ca1, ca2 và ca3 = 0 để tránh tính trùng
+  ketcaState[dk]['hanh'].ck = ck;
+  ketcaState[dk]['thoa'].ck = '0';
+  ketcaState[dk]['hieu'].ck = '0';
+  ketcaState[dk]['hanh'].kaEnteredCK = true;
+  ketcaState[dk]['hanh'].kaEnteredAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+
+  saveKC();
+  renderDoanhThu();
+  // Mở lại card vừa nhập
+  setTimeout(()=>{
+    const card = document.getElementById('dtcard-'+dk);
+    const detail = document.getElementById('dtdetail-'+dk);
+    const arrow = document.getElementById('dtarrow-'+dk);
+    if(detail){detail.classList.add('show');}
+    if(arrow){arrow.classList.add('open');}
+    if(card){card.classList.add('expanded');}
+  }, 100);
 }
 
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
