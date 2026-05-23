@@ -613,7 +613,7 @@ let currentRole=null,currentPIN=localStorage.getItem("kl_pin")||"2025";
 let clState={date:"",thoa:{},hanh:{},hieu:{}};
 let scoreState={},ketcaState={},nlState={};
 let threshold=parseInt(localStorage.getItem("kl_th4"))||7;
-let currentMonth=new Date(),currentCLPerson=null,currentScorePerson=null,pinCallback=null,currentTab=null;
+let currentMonth=new Date(),currentCLPerson=null,currentScorePerson=null,currentTab=null;
 
 function getToday(){return new Date().toLocaleDateString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});}
 function getDateKey(){return new Date().toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Ho_Chi_Minh"});}
@@ -651,47 +651,51 @@ function saveSC(){dbSet("scores",scoreState);}
 function saveKC(){dbSet("ketca",ketcaState);}
 function saveNL(){dbSet("nguyen_lieu",nlState);}
 
-function showPIN(title,sub,cb){
-  pinCallback=cb;
-  document.getElementById("pin-title").textContent=title;
-  document.getElementById("pin-sub").textContent=sub;
-  document.getElementById("pin-input").value="";
-  document.getElementById("pin-error").style.display="none";
+// ===== HỆ THỐNG PIN 2 CẤP =====
+// pinIsAdmin=true -> kiểm tra ADMIN_PIN (963557)
+// pinIsAdmin=false -> kiểm tra currentPIN (mặc định 2025)
+
+function showPIN(title, sub, cb, isAdmin) {
+  pinCallback = cb;
+  pinIsAdmin = !!isAdmin;
+  document.getElementById("pin-title").textContent = title;
+  document.getElementById("pin-sub").textContent = sub;
+  document.getElementById("pin-input").value = "";
+  document.getElementById("pin-error").style.display = "none";
   document.getElementById("pin-modal").classList.add("open");
-  setTimeout(()=>document.getElementById("pin-input").focus(),100);
+  setTimeout(()=>document.getElementById("pin-input").focus(), 100);
 }
-function confirmPIN(){
-  const val=document.getElementById("pin-input").value;
-  // Kiểm tra đúng PIN tương ứng
-  const isAdmin=window._adminPINCheck;
-  const correct=isAdmin?(val===ADMIN_PIN):(val===currentPIN);
-  if(correct){
-    window._adminPINCheck=false;
+
+function confirmPIN() {
+  const val = document.getElementById("pin-input").value.trim();
+  const correct = pinIsAdmin ? (val === ADMIN_PIN) : (val === currentPIN);
+  if(correct) {
     document.getElementById("pin-modal").classList.remove("open");
-    if(pinCallback)pinCallback();
+    document.getElementById("pin-input").value = "";
+    if(pinCallback) { const cb = pinCallback; pinCallback = null; cb(); }
   } else {
-    document.getElementById("pin-error").style.display="block";
-    document.getElementById("pin-input").value="";
-    setTimeout(()=>document.getElementById("pin-input").focus(),100);
+    document.getElementById("pin-error").style.display = "block";
+    document.getElementById("pin-input").value = "";
+    setTimeout(()=>document.getElementById("pin-input").focus(), 200);
   }
 }
-function closePIN(){document.getElementById("pin-modal").classList.remove("open");}
-document.getElementById("pin-input").addEventListener("keydown",e=>{if(e.key==="Enter")confirmPIN();});
+
+function closePIN() {
+  document.getElementById("pin-modal").classList.remove("open");
+  document.getElementById("pin-input").value = "";
+  pinCallback = null;
+}
+
+document.getElementById("pin-input").addEventListener("keydown", e=>{
+  if(e.key==="Enter") confirmPIN();
+});
 
 function showChangePIN(){
-  // Xác định PIN dựa trên vai trò hiện tại
   const isAdmin = currentRole && ROLES[currentRole] && ROLES[currentRole].type==="admin";
   if(isAdmin){
-    window._adminPINCheck=true;
-    pinCallback=()=>{ window._adminPINCheck=false; showRoleSelect(); };
-    document.getElementById("pin-title").textContent="Đổi vai trò";
-    document.getElementById("pin-sub").textContent="Nhập PIN quản trị để tiếp tục";
-    document.getElementById("pin-input").value="";
-    document.getElementById("pin-error").style.display="none";
-    document.getElementById("pin-modal").classList.add("open");
-    setTimeout(()=>document.getElementById("pin-input").focus(),100);
+    showPIN("Đổi vai trò", "Nhập PIN quản trị để tiếp tục", ()=>showRoleSelect(), true);
   } else {
-    showPIN("Đổi vai trò","Nhập PIN để đổi vai trò",()=>{showRoleSelect();});
+    showPIN("Đổi vai trò", "Nhập PIN để tiếp tục", ()=>showRoleSelect(), false);
   }
 }
 
@@ -711,43 +715,24 @@ function showRoleSelect(){
     </div>`;}
 
 function showChangePINSetting(){
-  // Chỉ admin mới đổi được PIN của Hiếu
-  window._adminPINCheck=true;
-  pinCallback=()=>{
-    window._adminPINCheck=false;
-    const np=prompt("Nhập mã PIN mới cho Hiếu (4 số):");
-    if(np&&/^\d{4}$/.test(np)){
-      currentPIN=np;
-      localStorage.setItem("kl_pin",np);
-      alert("Đã đổi PIN ca trưởng (Hiếu) thành: "+np);
+  showPIN("Đổi PIN ca trưởng", "Nhập PIN quản trị (963557) để xác nhận", ()=>{
+    const np = prompt("Nhập mã PIN mới cho Hiếu (4 số):");
+    if(np && np.length===4 && !isNaN(np)){
+      currentPIN = np;
+      localStorage.setItem("kl_pin", np);
+      alert("Đã đổi PIN ca trưởng (Hiếu) thành: " + np);
     } else if(np) {
       alert("PIN phải là 4 chữ số!");
     }
-  };
-  document.getElementById("pin-title").textContent="Đổi PIN ca trưởng";
-  document.getElementById("pin-sub").textContent="Nhập PIN quản trị (963557) để xác nhận";
-  document.getElementById("pin-input").value="";
-  document.getElementById("pin-error").style.display="none";
-  document.getElementById("pin-modal").classList.add("open");
-  setTimeout(()=>document.getElementById("pin-input").focus(),100);
+  }, true);
 }
 
 function selectRole(role){
   const r=ROLES[role];
   if(r.type==="admin"){
-    // Admin dùng PIN cấp 2
-    pinCallback=null;
-    document.getElementById("pin-title").textContent="Xác nhận vai trò "+r.name;
-    document.getElementById("pin-sub").textContent="Nhập mã PIN quản trị để tiếp tục";
-    document.getElementById("pin-input").value="";
-    document.getElementById("pin-error").style.display="none";
-    document.getElementById("pin-modal").classList.add("open");
-    setTimeout(()=>document.getElementById("pin-input").focus(),100);
-    pinCallback=()=>setRole(role);
-    // Override confirmPIN tạm thời cho admin
-    window._adminPINCheck=true;
+    showPIN("Xác nhận — "+r.name, "Nhập PIN quản trị để tiếp tục", ()=>setRole(role), true);
   } else if(r.type==="lead"){
-    showPIN("Xác nhận vai trò "+r.name,"Nhập PIN ca trưởng để tiếp tục",()=>{setRole(role);});
+    showPIN("Xác nhận — "+r.name, "Nhập PIN ca trưởng để tiếp tục", ()=>setRole(role), false);
   } else {
     setRole(role);
   }
@@ -2588,21 +2573,13 @@ function lockKK(freq) {
 }
 
 function unlockKK(freq) {
-  window._adminPINCheck=true;
-  pinCallback=()=>{
-    window._adminPINCheck=false;
-    const pk=getKKPeriodKey(freq);
-    if(kkLockState[pk]) kkLockState[pk].locked=false;
+  showPIN("Mở khóa kiểm kê", "Nhập PIN quản trị (963557) để xác nhận", ()=>{
+    const pk = getKKPeriodKey(freq);
+    if(kkLockState[pk]) kkLockState[pk].locked = false;
     saveKKLock();
-    alert('Đã mở khóa. Ka có thể chỉnh sửa lại.');
+    alert("Đã mở khóa. Ka có thể chỉnh sửa lại.");
     renderKiemKe();
-  };
-  document.getElementById("pin-title").textContent="Mở khóa kiểm kê";
-  document.getElementById("pin-sub").textContent="Nhập PIN quản trị (963557) để xác nhận";
-  document.getElementById("pin-input").value="";
-  document.getElementById("pin-error").style.display="none";
-  document.getElementById("pin-modal").classList.add("open");
-  setTimeout(()=>document.getElementById("pin-input").focus(),100);
+  }, true);
 }
 
 // So sánh kỳ hiện tại với kỳ trước đã khóa
