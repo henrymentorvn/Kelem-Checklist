@@ -935,7 +935,7 @@ function renderReportCard(p,kc,confirmed){
       <div class="report-date">${getDateKey()}</div>
     </div>
     <div class="report-row"><div class="report-label">Tiền mặt</div><div class="report-value">${fmtMoney(tm)}</div></div>
-    <div class="report-row"><div class="report-label">Chuyển khoản</div><div class="report-value">${fmtMoney(ck)}</div></div>
+    ${ck>0?`<div class="report-row"><div class="report-label">Chuyển khoản (Ka nhập)</div><div class="report-value">${fmtMoney(ck)}</div></div>`:''}
     <div class="report-row"><div class="report-label">Số khách</div><div class="report-value">${kc.khach||0} lượt</div></div>
     ${kc.ghichu?`<div class="report-row"><div class="report-label">Ghi chú</div><div class="report-value" style="font-size:13px;color:var(--muted)">${kc.ghichu}</div></div>`:""}
     <div class="report-total"><div class="report-total-label">Tổng doanh thu ca</div><div class="report-total-value">${fmtMoney(total)}</div></div>
@@ -1245,7 +1245,7 @@ function renderDoanhThu(){
     const t3=ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
     const dt=t1+t2+t3;
     if(dt>0){totalMonth+=dt;totalDays++;}
-    if(kc||d<=today)dayCards.push({dk,ca1,ca2,t1,t2,dt});
+    if(kc||d<=today)dayCards.push({dk,ca1,ca2,ca3,t1,t2,t3,dt});
   }
   let h="<div class=\"wrap\">";
   h+=`<div class="month-picker"><button class="month-nav" onclick="changeMonth(-1)">‹</button><div style="font-size:14px;font-weight:500">${mk}</div><button class="month-nav" onclick="changeMonth(1)">›</button></div>`;
@@ -1255,14 +1255,53 @@ function renderDoanhThu(){
   </div>`;
   if(!dayCards.length)
     h+="<div style=\"text-align:center;color:#aaa;padding:32px;font-size:13px\">Chưa có báo cáo kết ca tháng này</div>";
-  else dayCards.reverse().forEach(({dk,ca1,ca2,t1,t2,dt})=>{
-    h+=`<div class="dt-day-card">
-      <div class="dt-day-header"><div class="dt-day-date">${dk}</div><div class="dt-day-total">${dt?fmtMoney(dt):"—"}</div></div>
-      <div class="dt-ca-row"><span>Ca 1 — Hạnh</span><span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
-      <div class="dt-ca-row"><span>Ca 2 — Thoa</span><span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
-      <div class="dt-ca-row"><span>Ca tối — Hiếu</span><span>${ca3&&ca3.confirmed?fmtMoney(t3):ca3&&ca3.submitted?"<span style=\"color:var(--brown)\">Chờ XN</span>":"<span class=\"dt-missing\">Chưa báo</span>"}</span></div>
+  else dayCards.reverse().forEach(({dk,ca1,ca2,ca3,t1,t2,t3,dt})=>{
+    const dow = getDOW(parseDateVN(dk));
+    const hasAny = ca1||ca2||ca3;
+    h+=`<div class="history-day-card" id="dtcard-${dk}" onclick="toggleDTCard('${dk}')">
+      <div class="hdc-header">
+        <div class="hdc-date">${dk} <span style="color:var(--muted);font-size:12px">(${dow})</span></div>
+        <div class="hdc-total">${dt?fmtMoney(dt):'—'}</div>
+        <div class="hdc-arrow" id="dtarrow-${dk}">›</div>
+      </div>
+      <div class="hdc-detail" id="dtdetail-${dk}">
+        <div class="hdc-row">
+          <span>Ca 1 — Hạnh (tiền mặt)</span>
+          <span>${ca1&&ca1.confirmed?fmtMoney(parseInt(ca1.tienmat||0)):ca1&&ca1.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
+        </div>
+        <div class="hdc-row">
+          <span>Ca 2 — Thoa (tiền mặt)</span>
+          <span>${ca2&&ca2.confirmed?fmtMoney(parseInt(ca2.tienmat||0)):ca2&&ca2.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
+        </div>
+        <div class="hdc-row">
+          <span>Ca tối — Hiếu (tiền mặt)</span>
+          <span>${ca3&&ca3.confirmed?fmtMoney(parseInt(ca3.tienmat||0)):ca3&&ca3.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span>
+        </div>
+        <div class="hdc-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
+          <span>Chuyển khoản (Ka nhập)</span>
+          <span style="color:var(--green);font-weight:500">${fmtMoney((ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0))}</span>
+        </div>
+        <div class="hdc-row" style="font-weight:600">
+          <span>Tổng cộng</span>
+          <span style="color:var(--green);font-size:15px">${fmtMoney(dt)}</span>
+        </div>
+        ${[ca1,ca2,ca3].filter(c=>c&&c.ghichu).map(c=>`<div class="hdc-note">Ghi chú: ${c.ghichu}</div>`).join('')}
+        ${[ca1,ca2,ca3].filter(c=>c&&c.khach).length?`<div class="hdc-row"><span>Tổng khách</span><span>${[ca1,ca2,ca3].reduce((a,c)=>a+parseInt(c&&c.khach||0),0)} lượt</span></div>`:''}
+      </div>
     </div>`;
   });
+
+// Hàm toggle chi tiết ngày trong doanh thu
+function toggleDTCard(dk){
+  const detail=document.getElementById('dtdetail-'+dk);
+  const arrow=document.getElementById('dtarrow-'+dk);
+  const card=document.getElementById('dtcard-'+dk);
+  if(!detail)return;
+  const isOpen=detail.classList.contains('show');
+  detail.classList.toggle('show',!isOpen);
+  if(arrow)arrow.classList.toggle('open',!isOpen);
+  if(card)card.classList.toggle('expanded',!isOpen);
+}
   h+="</div>";
   document.getElementById("main-content").innerHTML=h;
 }
@@ -1878,8 +1917,7 @@ function renderKetCaHieu(){
       <div class="ketca-title">📋 Báo cáo kết ca tối</div>
       <div class="field-label">Tổng tiền mặt thu được (đồng)</div>
       <input type="number" class="field-input" id="kch-tienmat" placeholder="Ví dụ: 500000">
-      <div class="field-label">Tổng chuyển khoản (đồng)</div>
-      <input type="number" class="field-input" id="kch-ck" placeholder="Ví dụ: 300000">
+
       <div class="field-label">Số khách phục vụ ca tối (lượt)</div>
       <input type="number" class="field-input" id="kch-khach" placeholder="Ví dụ: 8">
       <div class="field-label">Ghi chú / Sự cố (nếu có)</div>
@@ -1893,12 +1931,11 @@ function renderKetCaHieu(){
 
 function submitKetCaHieu(){
   const tm = document.getElementById('kch-tienmat').value;
-  const ck = document.getElementById('kch-ck').value;
-  if(!tm && !ck){ alert('Vui lòng nhập ít nhất tiền mặt hoặc chuyển khoản'); return; }
+  if(!tm || parseInt(tm) <= 0){ alert('Vui lòng nhập tiền mặt đếm được'); return; }
   const dk = getDateKey();
   if(!ketcaState[dk]) ketcaState[dk] = {};
   ketcaState[dk]['hieu'] = {
-    tienmat: tm, ck: ck,
+    tienmat: tm, ck: '0',
     khach: document.getElementById('kch-khach').value,
     ghichu: document.getElementById('kch-ghichu').value,
     submitted: true, confirmed: false,
