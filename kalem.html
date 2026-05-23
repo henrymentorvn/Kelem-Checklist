@@ -1237,14 +1237,14 @@ function renderDoanhThu(){
     if(d.getMonth()!==currentMonth.getMonth())break;
     const dk=d.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric"});
     const kc=ketcaState[dk];
-    if(!kc&&d>today)continue;
+    if(d>today)continue; // chỉ bỏ ngày tương lai
     const ca1=kc&&kc.hanh,ca2=kc&&kc.thoa,ca3=kc&&kc.hieu;
     const t1=ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
     const t2=ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
     const t3=ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
     const dt=t1+t2+t3;
     if(dt>0){totalMonth+=dt;totalDays++;}
-    if(kc||d<=today)dayCards.push({dk,ca1,ca2,ca3,t1,t2,t3,dt});
+    dayCards.push({dk,ca1,ca2,ca3,t1,t2,t3,dt}); // luôn push mọi ngày đã qua
   }
   let h="<div class=\"wrap\">";
   h+=`<div class="month-picker"><button class="month-nav" onclick="changeMonth(-1)">‹</button><div style="font-size:14px;font-weight:500">${mk}</div><button class="month-nav" onclick="changeMonth(1)">›</button></div>`;
@@ -1252,9 +1252,7 @@ function renderDoanhThu(){
     <div class="summary-stat"><div class="summary-stat-num">${fmtMoney(totalMonth)}</div><div class="summary-stat-label">Tổng doanh thu tháng</div></div>
     <div class="summary-stat"><div class="summary-stat-num">${totalDays} ngày</div><div class="summary-stat-label">Có doanh thu</div></div>
   </div>`;
-  if(!dayCards.length)
-    h+="<div style=\"text-align:center;color:#aaa;padding:32px;font-size:13px\">Chưa có báo cáo kết ca tháng này</div>";
-  else dayCards.reverse().forEach(({dk,ca1,ca2,ca3,t1,t2,t3,dt})=>{
+  dayCards.reverse().forEach(({dk,ca1,ca2,ca3,t1,t2,t3,dt})=>{
     const dow = getDOW(parseDateVN(dk));
     const totalCK = (ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0);
     const totalTM = (ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)+(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)+(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
