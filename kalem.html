@@ -911,11 +911,10 @@ function renderKetCa(){
     h+="<div style=\"font-size:13px;color:var(--brown);text-align:center;margin-top:10px;padding:10px;background:var(--brown-pale);border-radius:10px\">⏳ Đã nộp — đang chờ Hiếu xác nhận</div>";
   }else{
     h+=`<div class="ketca-card">
-      <div class="ketca-title">📋 Báo cáo doanh thu ca</div>
-      <div class="field-label">Tổng tiền mặt thu được (đồng)</div>
+      <div class="ketca-title">📋 Báo cáo kết ca</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Chỉ báo tiền mặt đếm được trong két. Chuyển khoản do Ka nhập khi xác nhận.</div>
+      <div class="field-label">Tiền mặt đếm được trong két (đồng) ★</div>
       <input type="number" class="field-input" id="kc-tienmat" placeholder="Ví dụ: 1500000">
-      <div class="field-label">Tổng chuyển khoản (đồng)</div>
-      <input type="number" class="field-input" id="kc-ck" placeholder="Ví dụ: 800000">
       <div class="field-label">Số khách phục vụ (lượt)</div>
       <input type="number" class="field-input" id="kc-khach" placeholder="Ví dụ: 25">
       <div class="field-label">Ghi chú / Sự cố (nếu có)</div>
