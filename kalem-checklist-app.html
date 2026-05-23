@@ -6,8 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Kalem — Vận Hành</title>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1673,29 +1672,39 @@ function selfConfirmHieu(){
 
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
 
-// Hiển thị loading
-document.getElementById("main-content").innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px"><div style="font-size:28px;font-weight:700;color:#1B4332">Kalem</div><div style="font-size:13px;color:#888">Đang kết nối...</div></div>';
-
-try { initDB(); } catch(e) { console.warn('initDB error:', e); }
-
-load().then(() => {
-  try {
-    const savedRole = localStorage.getItem("kl_role");
-    if(savedRole && ROLES[savedRole]) setRole(savedRole);
-    else showRoleSelect();
-
-    if(savedRole && (ROLES[savedRole].type === "admin" || ROLES[savedRole].type === "lead")) {
-      setupRealtimeListeners();
-    }
-  } catch(e) {
-    console.warn('Init error:', e);
-    showRoleSelect();
-  }
-}).catch(e => {
-  console.warn('load() failed:', e);
-  clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+// Khởi động app ngay lập tức bằng localStorage, không chờ Supabase
+clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+try {
+  const savedRole = localStorage.getItem('kl_role');
+  if(savedRole && ROLES[savedRole]) setRole(savedRole);
+  else showRoleSelect();
+} catch(e) {
   showRoleSelect();
-});
+}
+
+// Load Supabase sau — không block UI
+function startSupabase() {
+  try {
+    initDB();
+    load().then(() => {
+      // Refresh UI sau khi có dữ liệu từ Supabase
+      try {
+        if(currentTab) switchTab(currentTab);
+        const savedRole = localStorage.getItem('kl_role');
+        if(savedRole && (ROLES[savedRole].type === 'admin' || ROLES[savedRole].type === 'lead')) {
+          setupRealtimeListeners();
+        }
+      } catch(e) { console.warn('Post-load error:', e); }
+    }).catch(e => console.warn('load error:', e));
+  } catch(e) { console.warn('Supabase start error:', e); }
+}
+
+// Load Supabase SDK động sau khi app đã hiện lên
+const sbScript = document.createElement('script');
+sbScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+sbScript.onload = () => startSupabase();
+sbScript.onerror = () => console.warn('Supabase CDN failed, using localStorage only');
+document.head.appendChild(sbScript);
 
 function setupRealtimeListeners() {
   dbListen((key, val) => {
