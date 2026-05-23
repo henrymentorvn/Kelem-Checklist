@@ -1295,8 +1295,8 @@ function renderDoanhThu(){
           <span>Tổng cộng (TM + CK)</span>
           <span style="color:var(--green);font-size:15px">${fmtMoney(dt)}</span>
         </div>
-        ${[ca1,ca2,ca3].filter(c=>c&&c.ghichu).map(c=>`<div class="hdc-note">Ghi chú: ${c.ghichu}</div>`).join('')}
-        ${[ca1,ca2,ca3].filter(c=>c&&c.khach).length?`<div class="hdc-row"><span>Tổng khách</span><span>${[ca1,ca2,ca3].reduce((a,c)=>a+parseInt(c&&c.khach||0),0)} lượt</span></div>`:''}
+        ${[ca1,ca2,ca3].filter(c=>c&&c.ghichu).map(c=>'<div class="hdc-note">Ghi chú: '+c.ghichu+'</div>').join('')}
+        ${(()=>{const k=[ca1,ca2,ca3].reduce((a,c)=>a+parseInt(c&&c.khach||0),0);return k>0?'<div class="hdc-row"><span>Tổng khách</span><span>'+k+' lượt</span></div>':'';})()} 
       </div>
     </div>`;
   });
