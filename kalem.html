@@ -434,7 +434,7 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
   <div class="modal-box">
     <div class="modal-title" id="pin-title">Xác nhận PIN</div>
     <div class="modal-sub" id="pin-sub">Nhập mã PIN để tiếp tục</div>
-    <input type="password" inputmode="numeric" maxlength="6" class="pin-input" id="pin-input" placeholder="••••">
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pin-input" placeholder="••••">
     <div class="modal-error" id="pin-error">PIN không đúng, thử lại</div>
     <button class="modal-btn primary" onclick="confirmPIN()">Xác nhận</button>
     <button class="modal-btn secondary" onclick="closePIN()">Huỷ</button>
@@ -610,6 +610,7 @@ const DATA={
 };
 
 let currentRole=null,currentPIN=localStorage.getItem("kl_pin")||"2025";
+const ADMIN_PIN="0561";
 let clState={date:"",thoa:{},hanh:{},hieu:{}};
 let scoreState={},ketcaState={},nlState={};
 let threshold=parseInt(localStorage.getItem("kl_th4"))||7;
@@ -652,7 +653,7 @@ function saveKC(){dbSet("ketca",ketcaState);}
 function saveNL(){dbSet("nguyen_lieu",nlState);}
 
 // ===== HỆ THỐNG PIN 2 CẤP =====
-// pinIsAdmin=true -> kiểm tra ADMIN_PIN (963557)
+// pinIsAdmin=true -> kiểm tra ADMIN_PIN (0561)
 // pinIsAdmin=false -> kiểm tra currentPIN (mặc định 2025)
 
 function showPIN(title, sub, cb, isAdmin) {
@@ -715,7 +716,7 @@ function showRoleSelect(){
     </div>`;}
 
 function showChangePINSetting(){
-  showPIN("Đổi PIN ca trưởng", "Nhập PIN quản trị (963557) để xác nhận", ()=>{
+  showPIN("Đổi PIN ca trưởng", "Nhập PIN quản trị để xác nhận", ()=>{
     const np = prompt("Nhập mã PIN mới cho Hiếu (4 số):");
     if(np && np.length===4 && !isNaN(np)){
       currentPIN = np;
@@ -2573,7 +2574,7 @@ function lockKK(freq) {
 }
 
 function unlockKK(freq) {
-  showPIN("Mở khóa kiểm kê", "Nhập PIN quản trị (963557) để xác nhận", ()=>{
+  showPIN("Mở khóa kiểm kê", "Nhập PIN quản trị để xác nhận", ()=>{
     const pk = getKKPeriodKey(freq);
     if(kkLockState[pk]) kkLockState[pk].locked = false;
     saveKKLock();
