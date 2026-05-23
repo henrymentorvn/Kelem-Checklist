@@ -298,6 +298,67 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 .backfill-time{width:72px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--cream)}
 .backfill-reason{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--cream)}
 .backfill-save-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:12px}
+
+/* KIỂM KÊ */
+.kk-wrap{padding:16px}
+.kk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kk-stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
+.kk-stat-num{font-size:20px;font-weight:700}
+.kk-stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.kk-group-label{font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.kk-item-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.kk-item-card.warn{border-color:#FFC107;background:#FFFDE7}
+.kk-item-card.danger{border-color:#EF9A9A;background:#FFEBEE}
+.kk-item-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.kk-item-name{font-size:14px;font-weight:500;color:var(--ink);flex:1}
+.kk-item-badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.badge-ngay{background:var(--brown-pale);color:var(--brown)}
+.badge-tuan{background:var(--green-pale);color:var(--green)}
+.kk-item-meta{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.kk-chatlg-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.kk-chatlg-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;background:var(--white);color:var(--muted)}
+.kk-chatlg-btn.sel-tot{background:#E8F5E9;border-color:#4CAF50;color:#2E7D32;font-weight:500}
+.kk-chatlg-btn.sel-theo{background:#FFF8E1;border-color:#FFC107;color:#E65100;font-weight:500}
+.kk-chatlg-btn.sel-hu{background:#FFEBEE;border-color:#EF9A9A;color:#C62828;font-weight:500}
+.kk-chatlg-btn.sel-thay{background:var(--brown-pale);border-color:var(--brown);color:var(--brown);font-weight:500}
+.kk-qty-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.kk-qty-label{font-size:12px;color:var(--muted);width:90px;flex-shrink:0}
+.kk-qty-input{width:70px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center;font-family:inherit;background:var(--cream)}
+.kk-qty-input:focus{outline:none;border-color:var(--brown)}
+.kk-qty-unit{font-size:12px;color:var(--muted)}
+.kk-qty-diff{font-size:12px;font-weight:500;margin-left:4px}
+.kk-note-input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--cream);margin-bottom:8px}
+.kk-note-input:focus{outline:none;border-color:var(--brown)}
+.kk-dexuat-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.kk-dexuat-btn{padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:11px;cursor:pointer;font-family:inherit;background:var(--white);color:var(--muted)}
+.kk-dexuat-btn.sel{background:var(--green);border-color:var(--green);color:#fff}
+.kk-save-item-btn{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.kk-saved-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;color:#2E7D32}
+.kk-edit-btn{background:none;border:none;color:var(--brown);font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;margin-left:auto}
+.kk-warn-box{background:#FFEBEE;border:1px solid #EF9A9A;border-radius:8px;padding:8px 12px;font-size:12px;color:#C62828;margin-top:6px}
+.kk-add-btn{width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:10px;background:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px}
+
+/* SETUP FORM */
+.setup-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.setup-title{font-size:14px;font-weight:600;color:var(--green);margin-bottom:14px}
+.setup-field{margin-bottom:10px}
+.setup-label{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.setup-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--cream);color:var(--ink)}
+.setup-input:focus{outline:none;border-color:var(--brown)}
+.setup-row{display:flex;gap:8px}
+.setup-row .setup-field{flex:1}
+.setup-select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--cream);color:var(--ink)}
+.setup-save-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:6px}
+
+/* DASHBOARD KIỂM KÊ ADMIN */
+.kk-dash-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.kk-dash-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.kk-dash-name{font-size:13px;font-weight:500;flex:1}
+.kk-dash-status{font-size:11px;padding:2px 8px;border-radius:20px}
+.kk-dash-meta{font-size:12px;color:var(--muted);line-height:1.5}
+.kk-alert-card{background:#FFEBEE;border:1px solid #EF9A9A;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.kk-alert-title{font-size:13px;font-weight:600;color:#C62828;margin-bottom:4px}
+.kk-alert-meta{font-size:12px;color:#C62828}
 </style>
 </head>
 <body>
@@ -513,6 +574,7 @@ async function load(){
 
     if(cl && cl.date === getToday()) clState = cl;
     else clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+loadKK();
 
     if(sc) scoreState = sc;
     if(kc) ketcaState = kc;
@@ -521,6 +583,7 @@ async function load(){
   } catch(e) {
     console.warn('load() error, using defaults:', e);
     clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+loadKK();
   }
 }
 function saveCL(){dbSet("checklist",clState);}
@@ -589,8 +652,8 @@ function renderApp(){
   const tabs=r.type==="staff"
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
-    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
+    ?[{id:"checklist",label:"Checklist"},{id:"kiem-ke",label:"Kiểm kê"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"kiem-ke",label:"Kiểm kê"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
   tb.classList.add("visible");
@@ -608,6 +671,7 @@ function switchTab(tab){
   else if(tab==="cham-diem")renderChamDiem();
   else if(tab==="xac-nhan")renderXacNhan();
   else if(tab==="cham-cong")renderChamCong();
+  else if(tab==="kiem-ke")renderKiemKe();
   else if(tab==="nhap-cong")renderBackfill();
   else if(tab==="ketca-hieu")renderKetCaHieu();
   else if(tab==="luong-admin")renderAdminLuong();
@@ -1670,10 +1734,420 @@ function selfConfirmHieu(){
   }
 }
 
+
+// ===================== KIỂM KÊ =====================
+let kkItems = []; // Danh sách vật dụng (setup bởi Hiếu)
+let kkRecords = {}; // Lịch sử kiểm kê theo ngày/tuần
+
+const KK_GROUPS = {
+  phache: 'Nguyên liệu pha chế',
+  bep: 'Nguyên liệu bếp',
+  dungcu: 'Dụng cụ & Ly chén',
+  decor: 'Đồ trang trí & Nội thất',
+  vattu: 'Vật tư & Tiêu hao',
+};
+
+const KK_CHATLG = {
+  tot: {label:'Tốt', cls:'sel-tot'},
+  theo: {label:'Cần theo dõi', cls:'sel-theo'},
+  hu: {label:'Hư hỏng', cls:'sel-hu'},
+  thay: {label:'Cần thay', cls:'sel-thay'},
+};
+
+const KK_DEXUAT = ['Mua thêm','Sửa chữa','Thanh lý','Báo Henry/Ka','Không cần xử lý'];
+
+function loadKK() {
+  try { const d=localStorage.getItem('kl_kk_items');if(d)kkItems=JSON.parse(d); } catch(e){}
+  try { const d=localStorage.getItem('kl_kk_records');if(d)kkRecords=JSON.parse(d); } catch(e){}
+}
+
+function saveKKItems() {
+  try { localStorage.setItem('kl_kk_items',JSON.stringify(kkItems)); } catch(e){}
+  if(typeof dbSet === "function") dbSet('kk_items', kkItems);
+}
+
+function saveKKRecords() {
+  try { localStorage.setItem('kl_kk_records',JSON.stringify(kkRecords)); } catch(e){}
+  if(typeof dbSet === "function") dbSet('kk_records', kkRecords);
+}
+
+function getKKPeriodKey(freq) {
+  const today = new Date();
+  if(freq === 'ngay') return formatDateVN(today);
+  // Tuần: lấy ngày thứ 2 đầu tuần
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  return 'W_' + formatDateVN(monday);
+}
+
+// ---- HIẾU: Setup danh sách vật dụng ----
+function renderKKSetup() {
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Thiết lập danh sách kiểm kê</div>';
+  h += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Nhập tất cả vật dụng, nguyên liệu cần kiểm kê. Chỉ cần làm 1 lần, sau đó chỉ cập nhật số lượng mỗi kỳ.</div>';
+
+  // Nhóm các item theo group
+  const groups = {};
+  kkItems.forEach((item, idx) => {
+    if(!groups[item.group]) groups[item.group] = [];
+    groups[item.group].push({...item, idx});
+  });
+
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = groups[gkey] || [];
+    h += `<div class="kk-group-label">${glabel} (${items.length} mục)</div>`;
+    items.forEach(({idx, name, donvi, soluongChuan, nguong, tanSuat, mucDich}) => {
+      h += `<div class="kk-dash-card">
+        <div class="kk-dash-header">
+          <div class="kk-dash-name">${name}</div>
+          <span class="kk-item-badge ${tanSuat==='ngay'?'badge-ngay':'badge-tuan'}">${tanSuat==='ngay'?'Mỗi ngày':'Mỗi tuần'}</span>
+          <button style="background:none;border:none;color:#C62828;cursor:pointer;font-size:12px" onclick="deleteKKItem(${idx})">✕</button>
+        </div>
+        <div class="kk-dash-meta">
+          Mục đích: ${mucDich||'—'} · Chuẩn: ${soluongChuan} ${donvi} · Ngưỡng cảnh báo: -${nguong} ${donvi}
+        </div>
+      </div>`;
+    });
+  });
+
+  h += '<div class="setup-card">';
+  h += '<div class="setup-title">+ Thêm vật dụng / nguyên liệu mới</div>';
+  h += `<div class="setup-field"><div class="setup-label">Tên vật dụng / nguyên liệu ★</div><input class="setup-input" id="kk-new-name" placeholder="VD: Ly thủy tinh 250ml, Sữa tươi không đường..."></div>`;
+  h += `<div class="setup-field"><div class="setup-label">Nhóm ★</div><select class="setup-select" id="kk-new-group">${Object.entries(KK_GROUPS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>`;
+  h += `<div class="setup-field"><div class="setup-label">Mục đích sử dụng</div><input class="setup-input" id="kk-new-mucdich" placeholder="VD: Phục vụ đồ uống lạnh, Nguyên liệu pha trà sữa..."></div>`;
+  h += `<div class="setup-row">
+    <div class="setup-field"><div class="setup-label">Đơn vị tính ★</div><input class="setup-input" id="kk-new-donvi" placeholder="cái / kg / lít / gói"></div>
+    <div class="setup-field"><div class="setup-label">Số lượng chuẩn ★</div><input type="number" class="setup-input" id="kk-new-chuan" placeholder="VD: 24"></div>
+  </div>`;
+  h += `<div class="setup-row">
+    <div class="setup-field"><div class="setup-label">Ngưỡng cảnh báo hao hụt</div><input type="number" class="setup-input" id="kk-new-nguong" placeholder="VD: 3 (mất >3 cái là cảnh báo)"></div>
+    <div class="setup-field"><div class="setup-label">Tần suất kiểm</div><select class="setup-select" id="kk-new-tanSuat"><option value="ngay">Mỗi ngày</option><option value="tuan">Mỗi tuần</option></select></div>
+  </div>`;
+  h += `<div class="setup-field"><div class="setup-label">Ghi chú thêm</div><input class="setup-input" id="kk-new-ghichu" placeholder="VD: Kiểm sau mỗi ca, đếm kỹ trong tủ..."></div>`;
+  h += `<button class="setup-save-btn" onclick="addKKItem()">Thêm vào danh sách</button>`;
+  h += '</div>';
+  h += `<div style="margin-top:8px;font-size:13px;color:var(--muted);text-align:center">Tổng: ${kkItems.length} mục đã thiết lập</div>`;
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function addKKItem() {
+  const name = document.getElementById('kk-new-name').value.trim();
+  const group = document.getElementById('kk-new-group').value;
+  const mucDich = document.getElementById('kk-new-mucdich').value.trim();
+  const donvi = document.getElementById('kk-new-donvi').value.trim();
+  const soluongChuan = parseFloat(document.getElementById('kk-new-chuan').value) || 0;
+  const nguong = parseFloat(document.getElementById('kk-new-nguong').value) || 1;
+  const tanSuat = document.getElementById('kk-new-tanSuat').value;
+  const ghichu = document.getElementById('kk-new-ghichu').value.trim();
+
+  if(!name || !donvi || !soluongChuan) {
+    alert('Vui lòng điền đủ: Tên, Đơn vị, Số lượng chuẩn');
+    return;
+  }
+  kkItems.push({name, group, mucDich, donvi, soluongChuan, nguong, tanSuat, ghichu, createdAt: getDateKey()});
+  saveKKItems();
+  renderKKSetup();
+}
+
+function deleteKKItem(idx) {
+  if(!confirm('Xoá "' + kkItems[idx].name + '" khỏi danh sách?')) return;
+  kkItems.splice(idx, 1);
+  saveKKItems();
+  renderKKSetup();
+}
+
+// ---- HIẾU: Thực hiện kiểm kê ----
+function renderKKCheck(freq) {
+  // freq: 'ngay' hoặc 'tuan'
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  const rec = kkRecords[periodKey];
+
+  const freqLabel = freq === 'ngay' ? 'Kiểm kê hàng ngày' : 'Kiểm kê hàng tuần';
+  const filteredItems = kkItems.filter(item => item.tanSuat === freq);
+
+  if(!filteredItems.length) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="kk-wrap"><div class="sec-title">${freqLabel}</div><div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">Chưa có vật dụng nào được thiết lập kiểm kê ${freq==='ngay'?'hàng ngày':'hàng tuần'}.<br><br>Vào tab <strong>Thiết lập</strong> để thêm vào.</div></div>`;
+    return;
+  }
+
+  // Đếm stats
+  const total = filteredItems.length;
+  const done = filteredItems.filter((item,i) => rec[kkItems.indexOf(item)] && rec[kkItems.indexOf(item)].saved).length;
+  const warns = filteredItems.filter((item) => {
+    const idx = kkItems.indexOf(item);
+    const r = rec[idx];
+    if(!r || !r.saved) return false;
+    return (item.soluongChuan - (r.soLuongThucTe||0)) > item.nguong || r.chatLuong === 'hu' || r.chatLuong === 'thay';
+  }).length;
+
+  let h = `<div class="kk-wrap">`;
+  h += `<div class="sec-title">${freqLabel} — ${periodKey.startsWith('W_') ? 'Tuần từ ' + periodKey.replace('W_','') : periodKey}</div>`;
+
+  // Stats
+  h += `<div class="kk-stats">
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--green)">${done}/${total}</div><div class="kk-stat-label">Đã kiểm</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:#C62828">${warns}</div><div class="kk-stat-label">Cảnh báo</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--brown)">${total-done}</div><div class="kk-stat-label">Chưa kiểm</div></div>
+  </div>`;
+
+  // Group items
+  const groups = {};
+  filteredItems.forEach(item => {
+    const idx = kkItems.indexOf(item);
+    if(!groups[item.group]) groups[item.group] = [];
+    groups[item.group].push({...item, idx});
+  });
+
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = groups[gkey];
+    if(!items || !items.length) return;
+    h += `<div class="kk-group-label">${glabel}</div>`;
+
+    items.forEach(({idx, name, donvi, soluongChuan, nguong, mucDich, ghichu}) => {
+      const r = rec[idx] || {};
+      const isSaved = r.saved;
+      const diff = soluongChuan - (r.soLuongThucTe || 0);
+      const isWarn = isSaved && (diff > nguong || r.chatLuong === 'hu' || r.chatLuong === 'thay');
+      const isDanger = isSaved && (r.chatLuong === 'hu' || diff > nguong * 2);
+
+      h += `<div class="kk-item-card${isDanger?' danger':isWarn?' warn':''}">`;
+      h += `<div class="kk-item-header">
+        <div class="kk-item-name">${name}</div>
+        ${isWarn ? '<span style="font-size:18px">⚠️</span>' : isSaved ? '<span style="color:#2E7D32;font-size:16px">✓</span>' : ''}
+      </div>`;
+
+      if(mucDich) h += `<div class="kk-item-meta">Mục đích: ${mucDich} · Chuẩn: ${soluongChuan} ${donvi}${ghichu?' · '+ghichu:''}</div>`;
+
+      if(isSaved) {
+        const clObj = KK_CHATLG[r.chatLuong] || KK_CHATLG.tot;
+        h += `<div class="kk-saved-row">
+          <span class="kk-item-badge ${clObj.cls.replace('sel-','badge-')}" style="font-size:12px">${clObj.label}</span>
+          <span style="margin-left:8px">Thực tế: <strong>${r.soLuongThucTe} ${donvi}</strong></span>
+          ${diff !== 0 ? `<span class="kk-qty-diff" style="color:${diff>0?'#C62828':'#2E7D32'}">${diff>0?'−'+diff:'+'+Math.abs(diff)} ${donvi}</span>` : ''}
+          <button class="kk-edit-btn" onclick="editKKRecord(${idx},'${freq}')">Sửa</button>
+        </div>`;
+        if(r.ghiChuThucTe) h += `<div style="font-size:12px;color:#666;margin-top:4px">Ghi chú: ${r.ghiChuThucTe}</div>`;
+        if(r.deXuat && r.deXuat !== 'Không cần xử lý') h += `<div style="font-size:12px;color:var(--brown);margin-top:2px">Đề xuất: ${r.deXuat}</div>`;
+        if(isWarn) h += `<div class="kk-warn-box">⚠ Hao hụt vượt ngưỡng ${nguong} ${donvi} — Đã báo cáo cho Henry/Ka</div>`;
+      } else {
+        // Form kiểm
+        const curCL = r.chatLuong || 'tot';
+        h += `<div class="kk-chatlg-row">`;
+        Object.entries(KK_CHATLG).forEach(([key,val]) => {
+          h += `<button class="kk-chatlg-btn ${curCL===key?val.cls:''}" onclick="setKKCL(${idx},'${key}','${freq}')">${val.label}</button>`;
+        });
+        h += `</div>`;
+
+        h += `<div class="kk-qty-row">
+          <div class="kk-qty-label">Số lượng thực tế</div>
+          <input type="number" class="kk-qty-input" id="kk-qty-${idx}" value="${r.soLuongThucTe!==undefined?r.soLuongThucTe:soluongChuan}" step="0.5">
+          <span class="kk-qty-unit">${donvi}</span>
+          <span class="kk-qty-diff" id="kk-diff-${idx}" style="color:${diff>0?'#C62828':'var(--green)'}">${diff!==0?(diff>0?'−'+diff:'+'+Math.abs(diff))+' '+donvi:''}</span>
+        </div>`;
+
+        h += `<input class="kk-note-input" id="kk-note-${idx}" placeholder="Ghi chú: lý do hao hụt, tình trạng cụ thể..." value="${r.ghiChuThucTe||''}">`;
+
+        h += `<div class="kk-dexuat-row">`;
+        KK_DEXUAT.forEach(dx => {
+          h += `<button class="kk-dexuat-btn ${r.deXuat===dx?'sel':''}" onclick="setKKDeXuat(${idx},'${dx}','${freq}')">${dx}</button>`;
+        });
+        h += `</div>`;
+
+        h += `<button class="kk-save-item-btn" onclick="saveKKRecord(${idx},'${freq}')">Lưu kiểm kê</button>`;
+      }
+      h += `</div>`;
+    });
+  });
+
+  // Nút hoàn tất kiểm kê
+  if(done === total && total > 0) {
+    h += `<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#2E7D32;margin-top:8px">✓ Đã kiểm kê đầy đủ ${total} mục hôm nay!<br>${warns>0?'<span style="color:#C62828">⚠ '+warns+' mục cần chú ý — đã báo cáo Henry/Ka</span>':''}</div>`;
+  }
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function setKKCL(idx, cl, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  kkRecords[periodKey][idx].chatLuong = cl;
+  saveKKRecords();
+  renderKKCheck(freq);
+}
+
+function setKKDeXuat(idx, dx, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  kkRecords[periodKey][idx].deXuat = dx;
+  saveKKRecords();
+  renderKKCheck(freq);
+}
+
+function saveKKRecord(idx, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  const qtyEl = document.getElementById('kk-qty-'+idx);
+  const noteEl = document.getElementById('kk-note-'+idx);
+  const soLuong = parseFloat(qtyEl ? qtyEl.value : 0) || 0;
+  const note = noteEl ? noteEl.value.trim() : '';
+  const item = kkItems[idx];
+  const diff = item.soluongChuan - soLuong;
+
+  kkRecords[periodKey][idx] = {
+    ...kkRecords[periodKey][idx],
+    soLuongThucTe: soLuong,
+    ghiChuThucTe: note,
+    saved: true,
+    savedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+    haoHut: diff,
+    isWarn: diff > item.nguong || kkRecords[periodKey][idx].chatLuong === 'hu',
+  };
+  saveKKRecords();
+  renderKKCheck(freq);
+}
+
+function editKKRecord(idx, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(kkRecords[periodKey] && kkRecords[periodKey][idx]) {
+    kkRecords[periodKey][idx].saved = false;
+    saveKKRecords();
+    renderKKCheck(freq);
+  }
+}
+
+// ---- ADMIN: Dashboard kiểm kê ----
+function renderKKAdmin() {
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Tổng quan kiểm kê</div>';
+
+  // Cảnh báo hiện tại
+  const alerts = [];
+  const todayKey = getKKPeriodKey('ngay');
+  const weekKey = getKKPeriodKey('tuan');
+
+  kkItems.forEach((item, idx) => {
+    const periodKey = item.tanSuat === 'ngay' ? todayKey : weekKey;
+    const r = kkRecords[periodKey] && kkRecords[periodKey][idx];
+    if(r && r.saved && r.isWarn) {
+      alerts.push({item, r, idx});
+    }
+  });
+
+  if(alerts.length) {
+    h += `<div style="font-size:12px;font-weight:600;color:#C62828;text-transform:uppercase;letter-spacing:0.5px;padding:6px 0">⚠ Cảnh báo hao hụt (${alerts.length} mục)</div>`;
+    alerts.forEach(({item, r}) => {
+      h += `<div class="kk-alert-card">
+        <div class="kk-alert-title">${item.name}</div>
+        <div class="kk-alert-meta">
+          Chuẩn: ${item.soluongChuan} ${item.donvi} · Thực tế: ${r.soLuongThucTe} ${item.donvi} · Hao hụt: ${r.haoHut} ${item.donvi}<br>
+          ${r.ghiChuThucTe ? 'Ghi chú: '+r.ghiChuThucTe : ''}
+          ${r.deXuat && r.deXuat !== 'Không cần xử lý' ? ' · Đề xuất: '+r.deXuat : ''}
+        </div>
+      </div>`;
+    });
+  } else {
+    h += `<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:12px;text-align:center;font-size:13px;color:#2E7D32;margin-bottom:12px">✓ Không có cảnh báo hao hụt hiện tại</div>`;
+  }
+
+  // Tình trạng kiểm kê hôm nay
+  h += `<div class="kk-group-label" style="margin-top:8px">Kiểm kê hàng ngày — ${todayKey}</div>`;
+  const ngayItems = kkItems.filter(i => i.tanSuat === 'ngay');
+  const ngayDone = ngayItems.filter((item,i) => {
+    const idx = kkItems.indexOf(item);
+    return kkRecords[todayKey] && kkRecords[todayKey][idx] && kkRecords[todayKey][idx].saved;
+  }).length;
+
+  h += `<div class="kk-stats" style="margin-bottom:12px">
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--green)">${ngayDone}/${ngayItems.length}</div><div class="kk-stat-label">Đã kiểm hôm nay</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:#C62828">${alerts.filter(a=>a.item.tanSuat==='ngay').length}</div><div class="kk-stat-label">Cảnh báo ngày</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--brown)">${kkItems.length}</div><div class="kk-stat-label">Tổng mục</div></div>
+  </div>`;
+
+  // Chi tiết từng mục hôm nay
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = ngayItems.filter(i => i.group === gkey);
+    if(!items.length) return;
+    h += `<div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;padding:6px 0 4px">${glabel}</div>`;
+    items.forEach(item => {
+      const idx = kkItems.indexOf(item);
+      const r = kkRecords[todayKey] && kkRecords[todayKey][idx];
+      const isWarn = r && r.isWarn;
+      const cl = r && KK_CHATLG[r.chatLuong];
+      h += `<div class="kk-dash-card${isWarn?' danger':''}">
+        <div class="kk-dash-header">
+          <div class="kk-dash-name">${item.name}</div>
+          ${r && r.saved
+            ? `<span class="kk-dash-status ${isWarn?'att-late':'att-ok'}">${isWarn?'⚠ Cảnh báo':'✓ Đã kiểm'}</span>`
+            : `<span class="kk-dash-status att-none">Chưa kiểm</span>`}
+        </div>
+        ${r && r.saved ? `<div class="kk-dash-meta">
+          Thực tế: ${r.soLuongThucTe} / ${item.soluongChuan} ${item.donvi}
+          ${r.haoHut > 0 ? ` · <span style="color:#C62828">Thiếu ${r.haoHut} ${item.donvi}</span>` : ''}
+          ${cl ? ` · ${cl.label}` : ''}
+          ${r.ghiChuThucTe ? `<br>${r.ghiChuThucTe}` : ''}
+          ${r.deXuat && r.deXuat !== 'Không cần xử lý' ? ` · Đề xuất: ${r.deXuat}` : ''}
+        </div>` : ''}
+      </div>`;
+    });
+  });
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+// ---- Main render cho tab kiểm kê ----
+function renderKiemKe() {
+  const r = ROLES[currentRole];
+  if(r.type === 'admin') {
+    renderKKAdmin();
+    return;
+  }
+
+  // Hiếu: menu chọn loại kiểm kê
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Kiểm kê kho</div>';
+
+  const todayKey = getKKPeriodKey('ngay');
+  const weekKey = getKKPeriodKey('tuan');
+  const ngayTotal = kkItems.filter(i=>i.tanSuat==='ngay').length;
+  const tuanTotal = kkItems.filter(i=>i.tanSuat==='tuan').length;
+  const ngayDone = kkItems.filter((item,idx)=>item.tanSuat==='ngay' && kkRecords[todayKey]&&kkRecords[todayKey][idx]&&kkRecords[todayKey][idx].saved).length;
+  const tuanDone = kkItems.filter((item,idx)=>item.tanSuat==='tuan' && kkRecords[weekKey]&&kkRecords[weekKey][idx]&&kkRecords[weekKey][idx].saved).length;
+
+  h += `<div class="person-card" onclick="renderKKCheck('ngay')">
+    <div class="avatar" style="background:var(--brown-pale);color:var(--brown);width:44px;height:44px;font-size:13px;font-weight:600">NG</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng ngày</div><div class="person-role">Nguyên liệu, ly chén, dụng cụ</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${ngayDone}/${ngayTotal}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+
+  h += `<div class="person-card" onclick="renderKKCheck('tuan')">
+    <div class="avatar" style="background:var(--green-pale);color:var(--green);width:44px;height:44px;font-size:13px;font-weight:600">TU</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng tuần</div><div class="person-role">Bàn ghế, khăn rèm, đồ decor, vật tư</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${tuanDone}/${tuanTotal}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+
+  h += `<div class="person-card" onclick="renderKKSetup()">
+    <div class="avatar" style="background:var(--cream-dark);color:var(--muted);width:44px;height:44px;font-size:13px;font-weight:600">⚙</div>
+    <div class="person-info"><div class="person-name">Thiết lập danh sách</div><div class="person-role">Thêm / sửa / xoá vật dụng cần kiểm kê</div></div>
+  </div>`;
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
 
 // Khởi động app ngay lập tức bằng localStorage, không chờ Supabase
 clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
+loadKK();
 try {
   const savedRole = localStorage.getItem('kl_role');
   if(savedRole && ROLES[savedRole]) setRole(savedRole);
