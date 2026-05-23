@@ -359,6 +359,51 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 .kk-alert-card{background:#FFEBEE;border:1px solid #EF9A9A;border-radius:12px;padding:12px 14px;margin-bottom:8px}
 .kk-alert-title{font-size:13px;font-weight:600;color:#C62828;margin-bottom:4px}
 .kk-alert-meta{font-size:12px;color:#C62828}
+
+/* LỊCH SỬ & KHÓA KIỂM KÊ */
+.history-day-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.history-day-card:active{background:var(--cream)}
+.history-day-card.expanded{border-color:var(--green)}
+.hdc-header{display:flex;align-items:center;gap:10px}
+.hdc-date{font-size:13px;font-weight:500;color:var(--ink);flex:1}
+.hdc-total{font-size:15px;font-weight:700;color:var(--green)}
+.hdc-arrow{font-size:12px;color:var(--muted);transition:transform 0.2s}
+.hdc-arrow.open{transform:rotate(90deg)}
+.hdc-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:none}
+.hdc-detail.show{display:block}
+.hdc-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--muted)}
+.hdc-row span:last-child{font-weight:500;color:var(--ink)}
+.hdc-missing{font-size:12px;color:#C62828}
+.hdc-note{font-size:12px;color:#888;font-style:italic;margin-top:4px}
+
+.nl-history-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.nl-history-card:active{background:var(--cream)}
+.nl-history-card.expanded{border-color:var(--green)}
+.nlhc-header{display:flex;align-items:center;gap:10px}
+.nlhc-date{font-size:13px;font-weight:500;color:var(--ink);flex:1}
+.nlhc-count{font-size:12px;color:var(--muted)}
+.nlhc-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:none}
+.nlhc-detail.show{display:block}
+.nlhc-item{padding:5px 0;border-bottom:1px solid var(--cream-dark);font-size:12px}
+.nlhc-item:last-child{border-bottom:none}
+.nlhc-name{font-weight:500;color:var(--ink)}
+.nlhc-status{color:var(--muted);margin-top:2px}
+
+.lock-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px}
+.lock-banner.locked{background:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32}
+.lock-banner.unlocked{background:var(--brown-pale);border:1px solid #D4A574;color:var(--brown)}
+.lock-btn{padding:6px 14px;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;margin-left:auto;white-space:nowrap}
+.lock-btn.do-lock{background:var(--green);color:#fff}
+.lock-btn.do-unlock{background:var(--brown);color:#fff}
+
+.kk-compare-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--cream-dark);font-size:12px}
+.kk-compare-row:last-child{border-bottom:none}
+.kk-compare-name{flex:1;color:var(--ink)}
+.kk-compare-prev{color:var(--muted);width:60px;text-align:center}
+.kk-compare-cur{font-weight:500;width:60px;text-align:center}
+.kk-compare-diff{width:60px;text-align:right;font-weight:500}
+.kk-compare-diff.plus{color:#2E7D32}
+.kk-compare-diff.minus{color:#C62828}
 </style>
 </head>
 <body>
@@ -588,6 +633,7 @@ async function load(){
     if(cl && cl.date === getToday()) clState = cl;
     else clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
 loadKK();
+loadKKLock();
 
     if(sc) scoreState = sc;
     if(kc) ketcaState = kc;
@@ -597,6 +643,7 @@ loadKK();
     console.warn('load() error, using defaults:', e);
     clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
 loadKK();
+loadKKLock();
   }
 }
 function saveCL(){dbSet("checklist",clState);}
@@ -615,13 +662,38 @@ function showPIN(title,sub,cb){
 }
 function confirmPIN(){
   const val=document.getElementById("pin-input").value;
-  if(val===currentPIN){document.getElementById("pin-modal").classList.remove("open");if(pinCallback)pinCallback();}
-  else{document.getElementById("pin-error").style.display="block";document.getElementById("pin-input").value="";}
+  // Kiểm tra đúng PIN tương ứng
+  const isAdmin=window._adminPINCheck;
+  const correct=isAdmin?(val===ADMIN_PIN):(val===currentPIN);
+  if(correct){
+    window._adminPINCheck=false;
+    document.getElementById("pin-modal").classList.remove("open");
+    if(pinCallback)pinCallback();
+  } else {
+    document.getElementById("pin-error").style.display="block";
+    document.getElementById("pin-input").value="";
+    setTimeout(()=>document.getElementById("pin-input").focus(),100);
+  }
 }
 function closePIN(){document.getElementById("pin-modal").classList.remove("open");}
 document.getElementById("pin-input").addEventListener("keydown",e=>{if(e.key==="Enter")confirmPIN();});
 
-function showChangePIN(){showPIN("Đổi vai trò","Nhập PIN để đổi vai trò",()=>{showRoleSelect();});}
+function showChangePIN(){
+  // Xác định PIN dựa trên vai trò hiện tại
+  const isAdmin = currentRole && ROLES[currentRole] && ROLES[currentRole].type==="admin";
+  if(isAdmin){
+    window._adminPINCheck=true;
+    pinCallback=()=>{ window._adminPINCheck=false; showRoleSelect(); };
+    document.getElementById("pin-title").textContent="Đổi vai trò";
+    document.getElementById("pin-sub").textContent="Nhập PIN quản trị để tiếp tục";
+    document.getElementById("pin-input").value="";
+    document.getElementById("pin-error").style.display="none";
+    document.getElementById("pin-modal").classList.add("open");
+    setTimeout(()=>document.getElementById("pin-input").focus(),100);
+  } else {
+    showPIN("Đổi vai trò","Nhập PIN để đổi vai trò",()=>{showRoleSelect();});
+  }
+}
 
 function showRoleSelect(){
   document.getElementById("app-header").style.display="none";
@@ -639,17 +711,46 @@ function showRoleSelect(){
     </div>`;}
 
 function showChangePINSetting(){
-  showPIN("Đổi mã PIN","Nhập PIN hiện tại để xác nhận",()=>{
-    const np=prompt("Nhập mã PIN mới (4 số):");
-    if(np&&/^\d{4}$/.test(np)){currentPIN=np;localStorage.setItem("kl_pin",np);alert("Đã đổi PIN!");}
-    else if(np)alert("PIN phải là 4 chữ số!");
-  });
+  // Chỉ admin mới đổi được PIN của Hiếu
+  window._adminPINCheck=true;
+  pinCallback=()=>{
+    window._adminPINCheck=false;
+    const np=prompt("Nhập mã PIN mới cho Hiếu (4 số):");
+    if(np&&/^\d{4}$/.test(np)){
+      currentPIN=np;
+      localStorage.setItem("kl_pin",np);
+      alert("Đã đổi PIN ca trưởng (Hiếu) thành: "+np);
+    } else if(np) {
+      alert("PIN phải là 4 chữ số!");
+    }
+  };
+  document.getElementById("pin-title").textContent="Đổi PIN ca trưởng";
+  document.getElementById("pin-sub").textContent="Nhập PIN quản trị (963557) để xác nhận";
+  document.getElementById("pin-input").value="";
+  document.getElementById("pin-error").style.display="none";
+  document.getElementById("pin-modal").classList.add("open");
+  setTimeout(()=>document.getElementById("pin-input").focus(),100);
 }
 
 function selectRole(role){
   const r=ROLES[role];
-  if(r.type==="admin"||r.type==="lead"){showPIN("Xác nhận vai trò "+r.name,"Nhập PIN để tiếp tục",()=>{setRole(role);});}
-  else setRole(role);
+  if(r.type==="admin"){
+    // Admin dùng PIN cấp 2
+    pinCallback=null;
+    document.getElementById("pin-title").textContent="Xác nhận vai trò "+r.name;
+    document.getElementById("pin-sub").textContent="Nhập mã PIN quản trị để tiếp tục";
+    document.getElementById("pin-input").value="";
+    document.getElementById("pin-error").style.display="none";
+    document.getElementById("pin-modal").classList.add("open");
+    setTimeout(()=>document.getElementById("pin-input").focus(),100);
+    pinCallback=()=>setRole(role);
+    // Override confirmPIN tạm thời cho admin
+    window._adminPINCheck=true;
+  } else if(r.type==="lead"){
+    showPIN("Xác nhận vai trò "+r.name,"Nhập PIN ca trưởng để tiếp tục",()=>{setRole(role);});
+  } else {
+    setRole(role);
+  }
 }
 
 function setRole(role){
@@ -666,7 +767,7 @@ function renderApp(){
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
     ?[{id:"checklist",label:"Checklist"},{id:"kiem-ke",label:"Kiểm kê"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
-    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"kiem-ke",label:"Kiểm kê"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
+    :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"lich-su-kc",label:"Lịch sử ca"},{id:"luong-admin",label:"Lương"},{id:"kiem-ke",label:"Kiểm kê"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"lich-su-nl",label:"Lịch sử NL"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
   tb.classList.add("visible");
@@ -691,6 +792,8 @@ function switchTab(tab){
   else if(tab==="luong-nv")renderMyLuong();
   else if(tab==="cham-cong-admin")renderAttendance();
   else if(tab==="tong-ket")renderTongKet();
+  else if(tab==="lich-su-kc")renderKetCaHistory();
+  else if(tab==="lich-su-nl")renderNLHistory2();
   else if(tab==="doanh-thu")renderDoanhThu();
 }
 
@@ -1955,13 +2058,13 @@ function deleteKKItem(idx) {
 
 // ---- HIẾU: Thực hiện kiểm kê ----
 function renderKKCheck(freq) {
-  // freq: 'ngay' hoặc 'tuan'
   const periodKey = getKKPeriodKey(freq);
   if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
   const rec = kkRecords[periodKey];
-
   const freqLabel = freq === 'ngay' ? 'Kiểm kê hàng ngày' : 'Kiểm kê hàng tuần';
   const filteredItems = kkItems.filter(item => item.tanSuat === freq);
+  const locked = isKKLocked(freq);
+  const isAdmin = ROLES[currentRole] && ROLES[currentRole].type === 'admin';
 
   if(!filteredItems.length) {
     document.getElementById('main-content').innerHTML =
@@ -1988,6 +2091,21 @@ function renderKKCheck(freq) {
     <div class="kk-stat"><div class="kk-stat-num" style="color:#C62828">${warns}</div><div class="kk-stat-label">Cảnh báo</div></div>
     <div class="kk-stat"><div class="kk-stat-num" style="color:var(--brown)">${total-done}</div><div class="kk-stat-label">Chưa kiểm</div></div>
   </div>`;
+
+  // Lock banner
+  if(locked) {
+    const lk = kkLockState[getKKPeriodKey(freq)];
+    h += `<div class="lock-banner locked">
+      🔒 Đã khóa bởi Ka lúc ${lk.lockedAt}
+      ${isAdmin ? `<button class="lock-btn do-unlock" onclick="unlockKK('${freq}')">Mở khóa</button>` : ''}
+    </div>`;
+    h += renderKKCompare(freq);
+  } else if(isAdmin && done === total && total > 0) {
+    h += `<div class="lock-banner unlocked">
+      Chưa khóa — Ka xác nhận xong thì bấm Khóa để bảo toàn dữ liệu
+      <button class="lock-btn do-lock" onclick="lockKK('${freq}')">Khóa kỳ này</button>
+    </div>`;
+  }
 
   // Group items
   const groups = {};
@@ -2086,6 +2204,10 @@ function setKKDeXuat(idx, dx, freq) {
 }
 
 function saveKKRecord(idx, freq) {
+  if(isKKLocked(freq)) {
+    alert('Kỳ kiểm kê này đã được Ka khóa. Liên hệ Ka để mở khóa nếu cần sửa.');
+    return;
+  }
   const periodKey = getKKPeriodKey(freq);
   if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
   if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
@@ -2110,6 +2232,10 @@ function saveKKRecord(idx, freq) {
 }
 
 function editKKRecord(idx, freq) {
+  if(isKKLocked(freq)) {
+    alert('Kỳ kiểm kê này đã được Ka khóa. Liên hệ Ka để mở khóa nếu cần sửa.');
+    return;
+  }
   const periodKey = getKKPeriodKey(freq);
   if(kkRecords[periodKey] && kkRecords[periodKey][idx]) {
     kkRecords[periodKey][idx].saved = false;
@@ -2238,11 +2364,292 @@ function renderKiemKe() {
   document.getElementById('main-content').innerHTML = h;
 }
 
+
+// ===================== LỊCH SỬ KẾT CA =====================
+function renderKetCaHistory() {
+  const {startDate} = getKyLuong();
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Lịch sử kết ca theo ngày</div>';
+
+  // Month picker
+  h += `<div class="month-picker">
+    <button class="month-nav" onclick="changeMonthKC(-1)">‹</button>
+    <div style="font-size:14px;font-weight:500" id="kc-month-label">${getMonthKey(currentMonth)}</div>
+    <button class="month-nav" onclick="changeMonthKC(1)">›</button>
+  </div>`;
+
+  // Tổng tháng
+  let totalMonth = 0;
+  const days = [];
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0).getDate();
+  const today = new Date();
+
+  for(let i = daysInMonth; i >= 1; i--) {
+    const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+    if(d > today) continue;
+    const dk = formatDateVN(d);
+    const kc = ketcaState[dk];
+    const ca1 = kc&&kc.hanh, ca2 = kc&&kc.thoa, ca3 = kc&&kc.hieu;
+    const t1 = ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
+    const t2 = ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
+    const t3 = ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
+    const total = t1+t2+t3;
+    if(total > 0) totalMonth += total;
+    days.push({dk, d, kc, ca1, ca2, ca3, t1, t2, t3, total});
+  }
+
+  // Summary
+  const daysWithData = days.filter(d=>d.total>0).length;
+  const avgDay = daysWithData ? Math.round(totalMonth/daysWithData) : 0;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="summary-stat"><div class="summary-stat-num">${fmtMoney(totalMonth)}</div><div class="summary-stat-label">Tổng tháng</div></div>
+    <div class="summary-stat"><div class="summary-stat-num">${fmtMoney(avgDay)}</div><div class="summary-stat-label">Trung bình/ngày</div></div>
+  </div>`;
+
+  if(!days.length) {
+    h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có dữ liệu tháng này</div>';
+  } else {
+    days.forEach(({dk, d, ca1, ca2, ca3, t1, t2, t3, total}) => {
+      const dow = getDOW(d);
+      const isWE = isWeekendOrHoliday(d);
+      const hasData = ca1||ca2||ca3;
+      h += `<div class="history-day-card" id="hdc-${dk}" onclick="toggleHDC('${dk}')">
+        <div class="hdc-header">
+          <div class="hdc-date">${dk} <span style="color:${isWE?'#C62828':'var(--muted)'};font-size:12px">(${dow})</span></div>
+          ${hasData
+            ? `<div class="hdc-total">${total?fmtMoney(total):'—'}</div>`
+            : `<div class="hdc-missing">Chưa báo cáo</div>`}
+          <div class="hdc-arrow" id="arrow-${dk}">›</div>
+        </div>
+        <div class="hdc-detail" id="detail-${dk}">
+          <div class="hdc-row"><span>Ca 1 — Hạnh</span><span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
+          <div class="hdc-row"><span>Ca 2 — Thoa</span><span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
+          <div class="hdc-row"><span>Ca tối — Hiếu</span><span>${ca3&&ca3.confirmed?fmtMoney(t3):ca3&&ca3.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
+          ${ca1&&ca1.khach?`<div class="hdc-row"><span>Số khách</span><span>${parseInt(ca1.khach||0)+parseInt(ca2&&ca2.khach||0)+parseInt(ca3&&ca3.khach||0)} lượt</span></div>`:''}
+          ${(ca1&&ca1.ghichu)||(ca2&&ca2.ghichu)||(ca3&&ca3.ghichu)
+            ?`<div class="hdc-note">Ghi chú: ${[ca1&&ca1.ghichu,ca2&&ca2.ghichu,ca3&&ca3.ghichu].filter(Boolean).join(' | ')}</div>`:''}
+        </div>
+      </div>`;
+    });
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function toggleHDC(dk) {
+  const detail = document.getElementById('detail-'+dk);
+  const arrow = document.getElementById('arrow-'+dk);
+  const card = document.getElementById('hdc-'+dk);
+  if(!detail) return;
+  const isOpen = detail.classList.contains('show');
+  detail.classList.toggle('show', !isOpen);
+  if(arrow) arrow.classList.toggle('open', !isOpen);
+  if(card) card.classList.toggle('expanded', !isOpen);
+}
+
+function changeMonthKC(d) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
+  renderKetCaHistory();
+}
+
+// ===================== LỊCH SỬ NGUYÊN LIỆU =====================
+function renderNLHistory2() {
+  let h = '<div class="wrap">';
+  h += '<div class="sec-title">Lịch sử báo cáo nguyên liệu</div>';
+
+  h += `<div class="month-picker">
+    <button class="month-nav" onclick="changeMonthNL(-1)">‹</button>
+    <div style="font-size:14px;font-weight:500" id="nl-month-label">${getMonthKey(currentMonth)}</div>
+    <button class="month-nav" onclick="changeMonthNL(1)">›</button>
+  </div>`;
+
+  const today = new Date();
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0).getDate();
+  const days = [];
+
+  for(let i = daysInMonth; i >= 1; i--) {
+    const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+    if(d > today) continue;
+    const dk = formatDateVN(d);
+    const data = nlState[dk];
+    if(!data) continue;
+    const thoaItems = data.thoa||[];
+    const hanhItems = data.hanh||[];
+    if(!thoaItems.length && !hanhItems.length) continue;
+    days.push({dk, d, thoaItems, hanhItems});
+  }
+
+  if(!days.length) {
+    h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có dữ liệu tháng này</div>';
+  } else {
+    // Phân tích xu hướng — mặt hàng nào hay thiếu
+    const shortage = {};
+    days.forEach(({thoaItems, hanhItems}) => {
+      [...thoaItems, ...hanhItems].forEach(item => {
+        if(item.submitted && item.status) {
+          const s = item.status.toLowerCase();
+          if(s.includes('hết')||s.includes('thiếu')||s.includes('sắp hết')||s.includes('ít')) {
+            shortage[item.name] = (shortage[item.name]||0) + 1;
+          }
+        }
+      });
+    });
+    const topShortage = Object.entries(shortage).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    if(topShortage.length) {
+      h += `<div style="background:var(--brown-pale);border:1px solid #D4A574;border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:6px">⚠ Hay thiếu trong tháng này</div>`;
+      topShortage.forEach(([name, count]) => {
+        h += `<div style="font-size:12px;color:var(--ink);padding:2px 0">${name} <span style="color:var(--brown)">(${count} lần báo thiếu)</span></div>`;
+      });
+      h += '</div>';
+    }
+
+    days.forEach(({dk, d, thoaItems, hanhItems}) => {
+      const dow = getDOW(d);
+      const thoaDone = thoaItems.filter(i=>i.submitted).length;
+      const hanhDone = hanhItems.filter(i=>i.submitted).length;
+      h += `<div class="nl-history-card" id="nlhc-${dk}" onclick="toggleNLHC('${dk}')">
+        <div class="nlhc-header">
+          <div class="nlhc-date">${dk} <span style="color:var(--muted);font-size:12px">(${dow})</span></div>
+          <div class="nlhc-count">Thoa: ${thoaDone} mục · Hạnh: ${hanhDone} mục</div>
+          <div class="hdc-arrow" id="nlarrow-${dk}">›</div>
+        </div>
+        <div class="nlhc-detail" id="nldetail-${dk}">`;
+
+      if(thoaItems.length) {
+        h += `<div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin:6px 0 4px">Pha chế (Thoa)</div>`;
+        thoaItems.forEach(item => {
+          h += `<div class="nlhc-item">
+            <div class="nlhc-name">${item.name} <span class="nl-type ${item.type==='tuoi'?'nl-tuoi':'nl-kho'}">${item.type==='tuoi'?'Tươi':'Khô'}</span></div>
+            <div class="nlhc-status">${item.submitted?'✓ '+item.status:'⏳ Chưa báo'}</div>
+          </div>`;
+        });
+      }
+      if(hanhItems.length) {
+        h += `<div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Bếp (Hạnh)</div>`;
+        hanhItems.forEach(item => {
+          h += `<div class="nlhc-item">
+            <div class="nlhc-name">${item.name} <span class="nl-type ${item.type==='tuoi'?'nl-tuoi':'nl-kho'}">${item.type==='tuoi'?'Tươi':'Khô'}</span></div>
+            <div class="nlhc-status">${item.submitted?'✓ '+item.status:'⏳ Chưa báo'}</div>
+          </div>`;
+        });
+      }
+      h += `</div></div>`;
+    });
+  }
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function toggleNLHC(dk) {
+  const detail = document.getElementById('nldetail-'+dk);
+  const arrow = document.getElementById('nlarrow-'+dk);
+  const card = document.getElementById('nlhc-'+dk);
+  if(!detail) return;
+  const isOpen = detail.classList.contains('show');
+  detail.classList.toggle('show', !isOpen);
+  if(arrow) arrow.classList.toggle('open', !isOpen);
+  if(card) card.classList.toggle('expanded', !isOpen);
+}
+
+function changeMonthNL(d) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
+  renderNLHistory2();
+}
+
+// ===================== KHÓA KIỂM KÊ =====================
+let kkLockState = {}; // {periodKey: {locked: bool, lockedAt, lockedBy}}
+
+function loadKKLock() {
+  try { const d=localStorage.getItem('kl_kk_lock');if(d)kkLockState=JSON.parse(d); } catch(e){}
+}
+
+function saveKKLock() {
+  try { localStorage.setItem('kl_kk_lock',JSON.stringify(kkLockState)); } catch(e){}
+  if(typeof dbSet==='function') dbSet('kk_lock', kkLockState);
+}
+
+function isKKLocked(freq) {
+  const pk = getKKPeriodKey(freq);
+  return !!(kkLockState[pk] && kkLockState[pk].locked);
+}
+
+function lockKK(freq) {
+  const pk = getKKPeriodKey(freq);
+  kkLockState[pk] = {
+    locked: true,
+    lockedAt: new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}),
+    lockedBy: 'Ka',
+    snapshot: JSON.parse(JSON.stringify(kkRecords[pk]||{})),
+  };
+  saveKKLock();
+  alert('Đã khóa kiểm kê kỳ này. Nhân viên không thể sửa lịch sử.');
+  renderKiemKe();
+}
+
+function unlockKK(freq) {
+  window._adminPINCheck=true;
+  pinCallback=()=>{
+    window._adminPINCheck=false;
+    const pk=getKKPeriodKey(freq);
+    if(kkLockState[pk]) kkLockState[pk].locked=false;
+    saveKKLock();
+    alert('Đã mở khóa. Ka có thể chỉnh sửa lại.');
+    renderKiemKe();
+  };
+  document.getElementById("pin-title").textContent="Mở khóa kiểm kê";
+  document.getElementById("pin-sub").textContent="Nhập PIN quản trị (963557) để xác nhận";
+  document.getElementById("pin-input").value="";
+  document.getElementById("pin-error").style.display="none";
+  document.getElementById("pin-modal").classList.add("open");
+  setTimeout(()=>document.getElementById("pin-input").focus(),100);
+}
+
+// So sánh kỳ hiện tại với kỳ trước đã khóa
+function renderKKCompare(freq) {
+  const pk = getKKPeriodKey(freq);
+  const lock = kkLockState[pk];
+  if(!lock || !lock.snapshot) return '';
+
+  const cur = kkRecords[pk]||{};
+  const prev = lock.snapshot;
+  const diffs = [];
+
+  kkItems.forEach((item, idx) => {
+    if(item.tanSuat !== freq) return;
+    const curRec = cur[idx];
+    const prevRec = prev[idx];
+    if(!curRec || !prevRec) return;
+    const curQty = curRec.soLuongThucTe || 0;
+    const prevQty = prevRec.soLuongThucTe || 0;
+    const diff = curQty - prevQty;
+    if(diff !== 0) diffs.push({name:item.name, donvi:item.donvi, prevQty, curQty, diff});
+  });
+
+  if(!diffs.length) return '';
+  let h = `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:8px">
+    <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">So sánh với kỳ đã khóa (${lock.lockedAt})</div>
+    <div style="display:flex;font-size:11px;color:#aaa;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <span style="flex:1">Vật dụng</span><span style="width:60px;text-align:center">Kỳ trước</span><span style="width:60px;text-align:center">Hiện tại</span><span style="width:60px;text-align:right">Chênh lệch</span>
+    </div>`;
+  diffs.forEach(({name, donvi, prevQty, curQty, diff}) => {
+    h += `<div class="kk-compare-row">
+      <span class="kk-compare-name">${name}</span>
+      <span class="kk-compare-prev">${prevQty} ${donvi}</span>
+      <span class="kk-compare-cur">${curQty} ${donvi}</span>
+      <span class="kk-compare-diff ${diff>0?'plus':'minus'}">${diff>0?'+':''}${diff} ${donvi}</span>
+    </div>`;
+  });
+  h += '</div>';
+  return h;
+}
+
 document.getElementById("today-label").textContent=new Date().toLocaleDateString("vi-VN",{weekday:"short",day:"numeric",month:"numeric",timeZone:"Asia/Ho_Chi_Minh"});
 
 // Khởi động app ngay lập tức bằng localStorage, không chờ Supabase
 clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
 loadKK();
+loadKKLock();
 try {
   const savedRole = localStorage.getItem('kl_role');
   if(savedRole && ROLES[savedRole]) setRole(savedRole);
