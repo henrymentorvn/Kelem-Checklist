@@ -1231,108 +1231,99 @@ function changeMonth(d){
 
 function renderDoanhThu(){
   const mk=getMonthKey(currentMonth);
-  let totalMonth=0,totalDays=0;const dayCards=[];const today=new Date();
+  let totalMonth=0,totalDays=0;
+  const dayCards=[];
+  const today=new Date();
   for(let i=0;i<31;i++){
     const d=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),i+1);
     if(d.getMonth()!==currentMonth.getMonth())break;
-    const dk=d.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric"});
+    if(d>today)continue;
+    const dk=d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
     const kc=ketcaState[dk];
-    if(d>today)continue; // chỉ bỏ ngày tương lai
     const ca1=kc&&kc.hanh,ca2=kc&&kc.thoa,ca3=kc&&kc.hieu;
     const t1=ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
     const t2=ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
     const t3=ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
     const dt=t1+t2+t3;
     if(dt>0){totalMonth+=dt;totalDays++;}
-    dayCards.push({dk,ca1,ca2,ca3,t1,t2,t3,dt}); // luôn push mọi ngày đã qua
+    dayCards.push({dk,d,ca1,ca2,ca3,t1,t2,t3,dt});
   }
-  let h="<div class=\"wrap\">";
-  h+=`<div class="month-picker"><button class="month-nav" onclick="changeMonth(-1)">‹</button><div style="font-size:14px;font-weight:500">${mk}</div><button class="month-nav" onclick="changeMonth(1)">›</button></div>`;
-  h+=`<div class="summary-stats">
-    <div class="summary-stat"><div class="summary-stat-num">${fmtMoney(totalMonth)}</div><div class="summary-stat-label">Tổng doanh thu tháng</div></div>
-    <div class="summary-stat"><div class="summary-stat-num">${totalDays} ngày</div><div class="summary-stat-label">Có doanh thu</div></div>
-  </div>`;
-  dayCards.reverse().forEach(({dk,ca1,ca2,ca3,t1,t2,t3,dt})=>{
-    const dow = getDOW(parseDateVN(dk));
-    const totalCK = (ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0);
-    const totalTM = (ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)+(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)+(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
-    h+=`<div class="history-day-card" id="dtcard-${dk}">
-      <div class="hdc-header" onclick="toggleDTCard('${dk}')">
-        <div class="hdc-date">${dk} <span style="color:var(--muted);font-size:12px">(${dow})</span></div>
-        <div class="hdc-total">${dt?fmtMoney(dt):'—'}</div>
-        <div class="hdc-arrow" id="dtarrow-${dk}">›</div>
-      </div>
-      <div class="hdc-detail" id="dtdetail-${dk}">
-        <div class="hdc-row"><span>Ca 1 — Hạnh (tiền mặt)</span>
-          <span>${ca1&&ca1.confirmed?fmtMoney(parseInt(ca1.tienmat||0)):ca1&&ca1.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
-        <div class="hdc-row"><span>Ca 2 — Thoa (tiền mặt)</span>
-          <span>${ca2&&ca2.confirmed?fmtMoney(parseInt(ca2.tienmat||0)):ca2&&ca2.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
-        <div class="hdc-row"><span>Ca tối — Hiếu (tiền mặt)</span>
-          <span>${ca3&&ca3.confirmed?fmtMoney(parseInt(ca3.tienmat||0)):ca3&&ca3.submitted?'<span style="color:var(--brown)">Chờ XN</span>':'<span class="dt-missing">Chưa báo</span>'}</span></div>
-        <div class="hdc-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
-          <span>Tổng tiền mặt</span>
-          <span style="font-weight:500">${fmtMoney(totalTM)}</span>
-        </div>
 
-        <!-- Ka nhập chuyển khoản ngày này -->
-        <div style="background:var(--green-pale);border-radius:8px;padding:10px;margin-top:8px">
-          <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px">Chuyển khoản ngày ${dk} — Ka nhập</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="number" id="ck-dt-${dk}"
-              value="${totalCK||''}"
-              placeholder="Nhập tổng CK ngày này"
-              style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff"
-              onclick="event.stopPropagation()">
-            <button onclick="event.stopPropagation();saveKaDayCK('${dk}')"
-              style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap">
-              Lưu
-            </button>
-          </div>
-          ${totalCK>0?`<div style="font-size:12px;color:var(--green);margin-top:5px">✓ Đã nhập: ${fmtMoney(totalCK)}</div>`:''}
-        </div>
+  let h='<div class="wrap">';
+  h+='<div class="month-picker">'
+    +'<button class="month-nav" onclick="changeMonth(-1)">‹</button>'
+    +'<div style="font-size:14px;font-weight:500">'+mk+'</div>'
+    +'<button class="month-nav" onclick="changeMonth(1)">›</button>'
+    +'</div>';
+  h+='<div class="summary-stats">'
+    +'<div class="summary-stat"><div class="summary-stat-num">'+fmtMoney(totalMonth)+'</div><div class="summary-stat-label">Tổng doanh thu tháng</div></div>'
+    +'<div class="summary-stat"><div class="summary-stat-num">'+totalDays+' ngày</div><div class="summary-stat-label">Có doanh thu</div></div>'
+    +'</div>';
 
-        <div class="hdc-row" style="font-weight:600;margin-top:6px">
-          <span>Tổng cộng (TM + CK)</span>
-          <span style="color:var(--green);font-size:15px">${fmtMoney(dt)}</span>
-        </div>
-        ${[ca1,ca2,ca3].filter(c=>c&&c.ghichu).map(c=>'<div class="hdc-note">Ghi chú: '+c.ghichu+'</div>').join('')}
-        ${(()=>{const k=[ca1,ca2,ca3].reduce((a,c)=>a+parseInt(c&&c.khach||0),0);return k>0?'<div class="hdc-row"><span>Tổng khách</span><span>'+k+' lượt</span></div>':'';})()} 
-      </div>
-    </div>`;
-  });
+  if(!dayCards.length){
+    h+='<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có dữ liệu tháng này</div>';
+  } else {
+    dayCards.reverse().forEach(function(item){
+      const dk=item.dk, ca1=item.ca1, ca2=item.ca2, ca3=item.ca3, dt=item.dt;
+      const dow=getDOW(parseDateVN(dk));
+      const totalCK=(ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0);
+      const totalTM=(ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)
+                   +(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)
+                   +(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
 
-// Hàm toggle chi tiết ngày trong doanh thu
-function toggleDTCard(dk){
-  const detail=document.getElementById('dtdetail-'+dk);
-  const arrow=document.getElementById('dtarrow-'+dk);
-  const card=document.getElementById('dtcard-'+dk);
-  if(!detail)return;
-  const isOpen=detail.classList.contains('show');
-  detail.classList.toggle('show',!isOpen);
-  if(arrow)arrow.classList.toggle('open',!isOpen);
-  if(card)card.classList.toggle('expanded',!isOpen);
+      // Ca rows
+      var ca1txt = ca1&&ca1.confirmed ? fmtMoney(parseInt(ca1.tienmat||0))
+                 : ca1&&ca1.submitted ? '<span style="color:var(--brown)">Chờ XN</span>'
+                 : '<span style="color:#C62828">Chưa báo</span>';
+      var ca2txt = ca2&&ca2.confirmed ? fmtMoney(parseInt(ca2.tienmat||0))
+                 : ca2&&ca2.submitted ? '<span style="color:var(--brown)">Chờ XN</span>'
+                 : '<span style="color:#C62828">Chưa báo</span>';
+      var ca3txt = ca3&&ca3.confirmed ? fmtMoney(parseInt(ca3.tienmat||0))
+                 : ca3&&ca3.submitted ? '<span style="color:var(--brown)">Chờ XN</span>'
+                 : '<span style="color:#C62828">Chưa báo</span>';
+
+      // Ghi chú
+      var ghichus='';
+      [ca1,ca2,ca3].forEach(function(c){ if(c&&c.ghichu) ghichus+='<div style="font-size:12px;color:#888;font-style:italic;margin-top:3px">'+c.ghichu+'</div>'; });
+
+      // Tổng khách
+      var totalKhach=[ca1,ca2,ca3].reduce(function(a,c){return a+parseInt(c&&c.khach||0);},0);
+      var khachRow=totalKhach>0?'<div class="hdc-row"><span>Tổng khách</span><span>'+totalKhach+' lượt</span></div>':'';
+
+      // CK đã nhập
+      var ckSaved=totalCK>0?'<div style="font-size:12px;color:var(--green);margin-top:4px">✓ Đã nhập: '+fmtMoney(totalCK)+'</div>':'';
+
+      h+='<div class="history-day-card" id="dtcard-'+dk+'">'
+        +'<div class="hdc-header" onclick="toggleDTCard(\''+dk+'\')">'
+        +'<div class="hdc-date">'+dk+' <span style="color:var(--muted);font-size:12px">('+dow+')</span></div>'
+        +'<div class="hdc-total">'+(dt?fmtMoney(dt):'—')+'</div>'
+        +'<div class="hdc-arrow" id="dtarrow-'+dk+'">›</div>'
+        +'</div>'
+        +'<div class="hdc-detail" id="dtdetail-'+dk+'">'
+        +'<div class="hdc-row"><span>Ca 1 — Hạnh (tiền mặt)</span><span>'+ca1txt+'</span></div>'
+        +'<div class="hdc-row"><span>Ca 2 — Thoa (tiền mặt)</span><span>'+ca2txt+'</span></div>'
+        +'<div class="hdc-row"><span>Ca tối — Hiếu (tiền mặt)</span><span>'+ca3txt+'</span></div>'
+        +'<div class="hdc-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">'
+        +'<span>Tổng tiền mặt</span><span style="font-weight:500">'+fmtMoney(totalTM)+'</span></div>'
+        +'<div style="background:var(--green-pale);border-radius:8px;padding:10px;margin-top:8px">'
+        +'<div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px">Chuyển khoản — Ka nhập</div>'
+        +'<div style="display:flex;gap:8px;align-items:center">'
+        +'<input type="number" id="ck-dt-'+dk+'" value="'+(totalCK||'')+'" placeholder="Tổng CK ngày này" '
+        +'style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff" '
+        +'onclick="event.stopPropagation()">'
+        +'<button onclick="event.stopPropagation();saveKaDayCK(\''+dk+'\')" '
+        +'style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Lưu</button>'
+        +'</div>'+ckSaved+'</div>'
+        +'<div class="hdc-row" style="font-weight:600;margin-top:6px">'
+        +'<span>Tổng cộng</span><span style="color:var(--green);font-size:15px">'+fmtMoney(dt)+'</span></div>'
+        +ghichus+khachRow
+        +'</div></div>';
+    });
+  }
+  h+='</div>';
+  document.getElementById('main-content').innerHTML=h;
 }
-  h+="</div>";
-  document.getElementById("main-content").innerHTML=h;
-}
 
-
-// ===================== CHẤM CÔNG =====================
-const CC_STATUSES = {
-  ok:    {label:'Đúng giờ', cls:'selected-ok',    badge:'att-ok',    short:'✓'},
-  late:  {label:'Đi trễ',   cls:'selected-late',   badge:'att-late',  short:'Trễ'},
-  sick:  {label:'Nghỉ ốm',  cls:'selected-sick',   badge:'att-sick',  short:'Ốm'},
-  leave: {label:'Nghỉ phép',cls:'selected-leave',  badge:'att-leave', short:'Phép'},
-  early: {label:'Về sớm',   cls:'selected-early',  badge:'att-early', short:'Sớm'},
-};
-const CC_PEOPLE = {
-  thoa:  {name:'Thoa',  shift:'07:00–18:00',   inTime:'07:00', outTime:'18:00'},
-  hanh:  {name:'Hạnh',  shift:'07:00–14:30',   inTime:'07:00', outTime:'14:30'},
-  hieu:  {name:'Hiếu',  shift:'07:00–22:00',   inTime:'07:00', outTime:'22:00'},
-};
-let ccState = {};
-
-// loadCC merged into load()
 function saveCC(){dbSet("chamcong",ccState);}
 
 function renderChamCong(){
@@ -2862,6 +2853,18 @@ function setWeekAssign(val) {
   if(currentTab === 'checklist') renderChecklist();
 }
 
+
+
+function toggleDTCard(dk){
+  const detail=document.getElementById('dtdetail-'+dk);
+  const arrow=document.getElementById('dtarrow-'+dk);
+  const card=document.getElementById('dtcard-'+dk);
+  if(!detail)return;
+  const isOpen=detail.classList.contains('show');
+  detail.classList.toggle('show',!isOpen);
+  if(arrow)arrow.classList.toggle('open',!isOpen);
+  if(card)card.classList.toggle('expanded',!isOpen);
+}
 
 function saveKaDayCK(dk) {
   const el = document.getElementById('ck-dt-'+dk);
