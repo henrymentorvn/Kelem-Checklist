@@ -856,7 +856,10 @@ function renderNLForm(p,dk){
     h+=`<div class="nl-card">
       <div class="nl-header"><div class="nl-name">${item.name}</div><span class="nl-type ${item.type==="tuoi"?"nl-tuoi":"nl-kho"}">${item.type==="tuoi"?"Tươi":"Khô/lâu"}</span></div>
       ${item.submitted
-        ?`<div class="nl-submitted">✓ Đã báo lúc ${item.submittedAt}: ${item.status||""}</div>`
+        ?`<div class="nl-submitted" style="display:flex;align-items:center;gap:8px">
+            <span style="flex:1">✓ Đã báo lúc ${item.submittedAt}: ${item.status||""}</span>
+            <button onclick="editNLItem('${p}',${idx})" style="background:none;border:none;color:var(--brown);font-size:12px;cursor:pointer;text-decoration:underline;white-space:nowrap;font-family:inherit">Sửa</button>
+          </div>`
         :`<div class="nl-input-row">
            <input class="nl-input" placeholder="Tình trạng / số lượng còn lại" value="${item.status||""}" oninput="updateNLItem('${p}',${idx},'status',this.value)">
            <button class="nl-save-btn" onclick="submitNLItem('${p}',${idx})">Báo</button>
@@ -1830,6 +1833,85 @@ function renderKKSetup() {
   h += `<div style="margin-top:8px;font-size:13px;color:var(--muted);text-align:center">Tổng: ${kkItems.length} mục đã thiết lập</div>`;
   h += '</div>';
   document.getElementById('main-content').innerHTML = h;
+}
+
+function editKKItem(idx) {
+  const item = kkItems[idx];
+  if(!item) return;
+
+  // Hiện modal sửa
+  const overlay = document.createElement('div');
+  overlay.id = 'kk-edit-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:flex-end;justify-content:center';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
+      <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:14px">Sửa vật dụng</div>
+
+      <div class="setup-field"><div class="setup-label">Tên vật dụng / nguyên liệu ★</div>
+        <input class="setup-input" id="kk-edit-name" value="${item.name}"></div>
+
+      <div class="setup-field"><div class="setup-label">Nhóm ★</div>
+        <select class="setup-select" id="kk-edit-group">
+          ${Object.entries(KK_GROUPS).map(([k,v])=>'<option value="'+k+'"'+(item.group===k?' selected':'')+'>'+v+'</option>').join('')}
+        </select></div>
+
+      <div class="setup-field"><div class="setup-label">Mục đích sử dụng</div>
+        <input class="setup-input" id="kk-edit-mucdich" value="${item.mucDich||''}"></div>
+
+      <div style="display:flex;gap:8px">
+        <div class="setup-field" style="flex:1"><div class="setup-label">Đơn vị ★</div>
+          <input class="setup-input" id="kk-edit-donvi" value="${item.donvi}"></div>
+        <div class="setup-field" style="flex:1"><div class="setup-label">Số lượng chuẩn ★</div>
+          <input type="number" class="setup-input" id="kk-edit-chuan" value="${item.soluongChuan}"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div class="setup-field" style="flex:1"><div class="setup-label">Ngưỡng cảnh báo</div>
+          <input type="number" class="setup-input" id="kk-edit-nguong" value="${item.nguong}"></div>
+        <div class="setup-field" style="flex:1"><div class="setup-label">Tần suất kiểm</div>
+          <select class="setup-select" id="kk-edit-tanSuat">
+            <option value="ngay"${item.tanSuat==='ngay'?' selected':''}>Mỗi ngày</option>
+            <option value="tuan"${item.tanSuat==='tuan'?' selected':''}>Mỗi tuần</option>
+          </select></div>
+      </div>
+
+      <div class="setup-field"><div class="setup-label">Ghi chú thêm</div>
+        <input class="setup-input" id="kk-edit-ghichu" value="${item.ghichu||''}"></div>
+
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button onclick="saveKKEdit(${idx})" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Lưu thay đổi</button>
+        <button onclick="closeKKEdit()" style="padding:12px 20px;background:var(--cream-dark);color:var(--muted);border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">Huỷ</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target === overlay) closeKKEdit(); });
+}
+
+function closeKKEdit() {
+  const el = document.getElementById('kk-edit-overlay');
+  if(el) el.remove();
+}
+
+function saveKKEdit(idx) {
+  const name = document.getElementById('kk-edit-name').value.trim();
+  const group = document.getElementById('kk-edit-group').value;
+  const mucDich = document.getElementById('kk-edit-mucdich').value.trim();
+  const donvi = document.getElementById('kk-edit-donvi').value.trim();
+  const soluongChuan = parseFloat(document.getElementById('kk-edit-chuan').value) || 0;
+  const nguong = parseFloat(document.getElementById('kk-edit-nguong').value) || 1;
+  const tanSuat = document.getElementById('kk-edit-tanSuat').value;
+  const ghichu = document.getElementById('kk-edit-ghichu').value.trim();
+
+  if(!name || !donvi || !soluongChuan) {
+    alert('Vui lòng điền đủ: Tên, Đơn vị, Số lượng chuẩn');
+    return;
+  }
+  kkItems[idx] = {...kkItems[idx], name, group, mucDich, donvi, soluongChuan, nguong, tanSuat, ghichu};
+  saveKKItems();
+  closeKKEdit();
+  renderKKSetup();
 }
 
 function addKKItem() {
