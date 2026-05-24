@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi-VN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1382,6 +1382,67 @@ function renderChamCong(){
   document.getElementById('main-content').innerHTML = h;
 }
 
+
+
+// Time selector 24h tự build — không phụ thuộc locale máy
+function buildTimeSelect(id, defaultVal) {
+  var hours = '<option value="">--</option>';
+  for(var h = 0; h <= 23; h++) {
+    var hh = (h < 10 ? '0' : '') + h;
+    hours += '<option value="' + hh + '">' + hh + 'h</option>';
+  }
+  var mins = '<option value="">--</option><option value="00">00</option><option value="30">30</option>';
+
+  return '<div style="display:flex;align-items:center;gap:4px">'
+    + '<select class="cc-time-input" id="' + id + '-h" style="flex:1;padding:8px 6px" data-timeid="' + id + '" onchange="syncTimeVal(this.dataset.timeid)">'
+    + hours + '</select>'
+    + '<span style="font-weight:600;color:var(--muted)">:</span>'
+    + '<select class="cc-time-input" id="' + id + '-m" style="width:70px;padding:8px 6px" data-timeid="' + id + '" onchange="syncTimeVal(this.dataset.timeid)">'
+    + mins + '</select>'
+    + '<input type="hidden" id="' + id + '">'
+    + '</div>';
+}
+
+function syncTimeVal(id) {
+  var h = document.getElementById(id + '-h');
+  var m = document.getElementById(id + '-m');
+  var hidden = document.getElementById(id);
+  if(h && m && hidden) {
+    hidden.value = (h.value && m.value) ? h.value + ':' + m.value : '';
+  }
+}
+
+function setTimeSelect(id, val) {
+  if(!val) return;
+  var parts = val.split(':');
+  var hEl = document.getElementById(id + '-h');
+  var mEl = document.getElementById(id + '-m');
+  var hidden = document.getElementById(id);
+  if(hEl) hEl.value = parts[0] || '';
+  var mVal = parts[1] ? (parseInt(parts[1]) >= 30 ? '30' : '00') : '00';
+  if(mEl) mEl.value = mVal;
+  if(hidden) hidden.value = (parts[0] && mVal) ? parts[0] + ':' + mVal : '';
+}
+
+function getTimeVal(id) {
+  var hidden = document.getElementById(id);
+  return hidden ? hidden.value : '';
+}
+
+// Fix: force 24h display cho tất cả input time
+function fixTimeInputs() {
+  document.querySelectorAll('input[type="time"]').forEach(function(el) {
+    el.setAttribute('lang', 'vi-VN');
+    // Nếu browser vẫn dùng 12h, đổi sang text+pattern
+    const val = el.value;
+    if(val) {
+      const temp = el.value;
+      el.value = '';
+      el.value = temp;
+    }
+  });
+}
+
 function toggleCCDayEl(el){
   var body = el.nextElementSibling;
   var arrow = el.querySelector('.cc-day-arrow');
@@ -1424,11 +1485,15 @@ function buildCCBlock(p, dk){
       h += '<button class="cc-status-btn'+sel+'" data-p="'+p+'" data-dk="'+dk+'" data-key="'+key+'" onclick="setCCStatusDK(this.dataset.p,this.dataset.key,this.dataset.dk)">'+st.label+'</button>';
     });
     h += '</div>';
+    var inId = 'cc-in-'+p+'-'+dk;
+    var outId = 'cc-out-'+p+'-'+dk;
     h += '<div class="cc-time-row">';
     h += '<div class="cc-time-group"><div class="cc-time-label">Giờ vào ca</div>';
-    h += '<input type="time" class="cc-time-input" id="cc-in-'+p+'-'+dk+'" value="'+(rec.inTime||info.inTime)+'"></div>';
+    h += buildTimeSelect(inId, rec.inTime||info.inTime);
+    h += '</div>';
     h += '<div class="cc-time-group"><div class="cc-time-label">Giờ ra ca</div>';
-    h += '<input type="time" class="cc-time-input" id="cc-out-'+p+'-'+dk+'" value="'+(rec.outTime||'')+'"></div>';
+    h += buildTimeSelect(outId, rec.outTime||'');
+    h += '</div>';
     h += '</div>';
     if(needReason){
       h += '<div class="cc-reason-wrap">';
@@ -1459,11 +1524,9 @@ function saveCCRecordDK(p,dk){
   if(!ccState[dk]) ccState[dk]={};
   var status=(ccState[dk][p]&&ccState[dk][p].status)||'ok';
   var needReason=['late','sick','leave','early'].indexOf(status)>=0;
-  var inEl=document.getElementById('cc-in-'+p+'-'+dk);
-  var outEl=document.getElementById('cc-out-'+p+'-'+dk);
   var reasonEl=document.getElementById('cc-reason-'+p+'-'+dk);
-  var inTime=inEl?inEl.value:'';
-  var outTime=outEl?outEl.value:'';
+  var inTime=getTimeVal('cc-in-'+p+'-'+dk);
+  var outTime=getTimeVal('cc-out-'+p+'-'+dk);
   var reason=reasonEl?reasonEl.value.trim():'';
   if(needReason&&!reason){alert('Vui lòng nhập lý do');return;}
   ccState[dk][p]={status,inTime,outTime,reason,saved:true,
