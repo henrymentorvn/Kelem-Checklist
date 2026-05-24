@@ -786,7 +786,7 @@ function renderApp(){
   const tabs=r.type==="staff"
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"phan-cong",label:"Phân công"},{id:"kiem-ke",label:"Kiểm kê"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    ?[{id:"checklist",label:"Checklist"},{id:"phan-cong",label:"Phân công"},{id:"kiem-ke",label:"Kiểm kê"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"lich-su-kc",label:"Lịch sử ca"},{id:"luong-admin",label:"Lương"},{id:"kiem-ke",label:"Kiểm kê"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"lich-su-nl",label:"Lịch sử NL"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
@@ -807,7 +807,6 @@ function switchTab(tab){
   else if(tab==="cham-cong")renderChamCong();
   else if(tab==="kiem-ke")renderKiemKe();
   else if(tab==="phan-cong")renderWeekAssign();
-  else if(tab==="nhap-cong")renderBackfill();
   else if(tab==="ketca-hieu")renderKetCaHieu();
   else if(tab==="luong-admin")renderAdminLuong();
   else if(tab==="luong-nv")renderMyLuong();
@@ -1328,106 +1327,159 @@ function saveCC(){dbSet("chamcong",ccState);}
 
 function renderChamCong(){
   const dk = getDateKey();
-  if(!ccState[dk]) ccState[dk]={};
+  if(!ccState[dk]) ccState[dk] = {};
+  const {startDate} = getKyLuong();
+
   let h = '<div class="cc-wrap">';
-  h += '<div class="sec-title">Chấm công hôm nay — '+dk+'</div>';
 
-  Object.entries(CC_PEOPLE).forEach(([p, info])=>{
-    const r = ROLES[p];
-    const rec = ccState[dk][p] || {};
-    const isSaved = rec.saved;
+  // ===== PHẦN 1: CHẤM CÔNG HÔM NAY =====
+  h += '<div class="sec-title">Chấm công hôm nay — ' + dk + '</div>';
 
-    h += `<div class="cc-person-block" id="cc-block-${p}">
-      <div class="cc-person-header">
-        <div class="avatar ${r.avClass}" style="width:38px;height:38px;font-size:13px">${r.avatar}</div>
-        <div>
-          <div class="cc-person-name">${info.name}</div>
-          <div class="cc-person-shift">${info.shift}</div>
-        </div>
-      </div>`;
+  Object.entries(CC_PEOPLE).forEach(([p, info]) => {
+    h += renderCCBlock(p, info, dk);
+  });
 
-    if(isSaved){
-      const st = CC_STATUSES[rec.status]||CC_STATUSES.ok;
-      h += `<div class="cc-saved-banner">
-        <span class="att-badge ${st.badge}">${st.label}</span>
-        &nbsp; Vào: <strong>${rec.inTime||'—'}</strong> &nbsp; Ra: <strong>${rec.outTime||'—'}</strong>
-        ${rec.reason ? `<br><span style="color:#555;font-size:12px;margin-top:4px;display:block">Lý do: ${rec.reason}</span>` : ''}
-        <button class="cc-edit-btn" onclick="editCC('${p}')">Sửa</button>
-      </div>`;
-    } else {
-      const status = rec.status || 'ok';
-      const needReason = ['late','sick','leave','early'].includes(status);
-      h += `<div class="cc-status-row">`;
-      Object.entries(CC_STATUSES).forEach(([key,st])=>{
-        h += `<button class="cc-status-btn${status===key?' '+st.cls:''}" onclick="setCCStatus('${p}','${key}')">${st.label}</button>`;
-      });
-      h += `</div>`;
-      h += `<div class="cc-time-row">
-        <div class="cc-time-group">
-          <div class="cc-time-label">Giờ vào ca</div>
-          <input type="time" class="cc-time-input" id="cc-in-${p}" value="${rec.inTime||info.inTime}">
-        </div>
-        <div class="cc-time-group">
-          <div class="cc-time-label">Giờ ra ca</div>
-          <input type="time" class="cc-time-input" id="cc-out-${p}" value="${rec.outTime||''}">
-        </div>
-      </div>`;
-      if(needReason){
-        h += `<div class="cc-reason-wrap">
-          <input class="cc-reason-input" id="cc-reason-${p}" placeholder="Nhập lý do..." value="${rec.reason||''}">
-        </div>`;
-      } else {
-        h += `<div id="cc-reason-wrap-${p}"></div>`;
-      }
-      h += `<div class="cc-save-row">
-        <button class="cc-save-btn" onclick="saveCCRecord('${p}')">Lưu chấm công ${info.name}</button>
-      </div>`;
-    }
-    h += `</div>`;
+  // ===== PHẦN 2: CÁC NGÀY TRƯỚC TRONG KỲ =====
+  h += '<div class="sec-title" style="margin-top:8px">Các ngày trong kỳ lương</div>';
+  h += '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Bấm vào ngày chưa chấm để bổ sung.</div>';
+
+  // Liệt kê từng ngày từ đầu kỳ đến hôm qua
+  const today = new Date();
+  let cur = new Date(startDate);
+  const days = [];
+  while(cur < today) {
+    days.push(new Date(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  // Hiển thị mới nhất trước
+  days.reverse().forEach(d => {
+    const ddk = formatDateVN(d);
+    const dow = getDOW(d);
+    const isWE = isWeekendOrHoliday(d);
+    const dayRec = ccState[ddk] || {};
+    const allDone = ['thoa','hanh','hieu'].every(p => dayRec[p] && dayRec[p].saved);
+    const anyDone = ['thoa','hanh','hieu'].some(p => dayRec[p] && dayRec[p].saved);
+
+    h += '<div style="background:var(--white);border:1px solid '
+       + (allDone ? 'var(--border)' : 'var(--brown)') + ';border-radius:12px;margin-bottom:8px;overflow:hidden">'
+       + '<div onclick="toggleCCDay(\'' + ddk + '\')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer">'
+       + '<div style="flex:1">'
+       + '<div style="font-size:13px;font-weight:500;color:var(--ink)">' + ddk
+       + ' <span style="color:' + (isWE ? '#C62828' : 'var(--muted)') + ';font-size:12px">(' + dow + ')</span></div>'
+       + '<div style="font-size:12px;color:var(--muted);margin-top:2px">'
+       + (allDone ? '✓ Đã chấm đủ 3 người' : anyDone ? '⚠ Chấm chưa đủ' : '✗ Chưa chấm') + '</div>'
+       + '</div>'
+       + '<div style="font-size:18px;color:var(--muted)" id="ccd-arrow-' + ddk + '">›</div>'
+       + '</div>'
+       + '<div id="ccd-body-' + ddk + '" style="display:none;padding:0 14px 14px">';
+
+    Object.entries(CC_PEOPLE).forEach(([p, info]) => {
+      h += renderCCBlock(p, info, ddk);
+    });
+
+    h += '</div></div>';
   });
 
   h += '</div>';
   document.getElementById('main-content').innerHTML = h;
 }
 
-function setCCStatus(p, status){
-  const dk = getDateKey();
-  if(!ccState[dk]) ccState[dk]={};
-  if(!ccState[dk][p]) ccState[dk][p]={};
+function toggleCCDay(dk) {
+  const body = document.getElementById('ccd-body-' + dk);
+  const arrow = document.getElementById('ccd-arrow-' + dk);
+  if(!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function renderCCBlock(p, info, dk) {
+  if(!ccState[dk]) ccState[dk] = {};
+  const rec = ccState[dk][p] || {};
+  const isSaved = rec.saved;
+  const r = ROLES[p];
+  const status = rec.status || 'ok';
+  const needReason = ['late','sick','leave','early'].includes(status);
+
+  let h = '<div class="cc-person-block" id="cc-block-' + p + '-' + dk + '">'
+    + '<div class="cc-person-header">'
+    + '<div class="avatar ' + r.avClass + '" style="width:38px;height:38px;font-size:13px">' + r.avatar + '</div>'
+    + '<div><div class="cc-person-name">' + info.name + '</div><div class="cc-person-shift">' + info.shift + '</div></div>'
+    + '</div>';
+
+  if(isSaved) {
+    const st = CC_STATUSES[rec.status] || CC_STATUSES.ok;
+    h += '<div class="cc-saved-banner">'
+      + '<span class="att-badge ' + st.badge + '">' + st.label + '</span>'
+      + ' &nbsp; Vào: <strong>' + (rec.inTime || '—') + '</strong>'
+      + ' &nbsp; Ra: <strong>' + (rec.outTime || '—') + '</strong>'
+      + (rec.reason ? '<br><span style="color:#555;font-size:12px;margin-top:4px;display:block">Lý do: ' + rec.reason + '</span>' : '')
+      + '<button class="cc-edit-btn" onclick="editCCDK(\'' + p + '\',\'' + dk + '\')">Sửa</button>'
+      + '</div>';
+  } else {
+    h += '<div class="cc-status-row">';
+    Object.entries(CC_STATUSES).forEach(([key, st]) => {
+      h += '<button class="cc-status-btn' + (status === key ? ' ' + st.cls : '') + '" '
+        + 'onclick="setCCStatusDK(\'' + p + '\',\'' + key + '\',\'' + dk + '\')">' + st.label + '</button>';
+    });
+    h += '</div>';
+    h += '<div class="cc-time-row">'
+      + '<div class="cc-time-group"><div class="cc-time-label">Giờ vào ca</div>'
+      + '<input type="time" class="cc-time-input" id="cc-in-' + p + '-' + dk + '" value="' + (rec.inTime || info.inTime) + '"></div>'
+      + '<div class="cc-time-group"><div class="cc-time-label">Giờ ra ca</div>'
+      + '<input type="time" class="cc-time-input" id="cc-out-' + p + '-' + dk + '" value="' + (rec.outTime || '') + '"></div>'
+      + '</div>';
+    if(needReason) {
+      h += '<div class="cc-reason-wrap">'
+        + '<input class="cc-reason-input" id="cc-reason-' + p + '-' + dk + '" placeholder="Nhập lý do..." value="' + (rec.reason || '') + '">'
+        + '</div>';
+    }
+    h += '<div class="cc-save-row">'
+      + '<button class="cc-save-btn" onclick="saveCCRecordDK(\'' + p + '\',\'' + dk + '\')">Lưu chấm công ' + info.name + '</button>'
+      + '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function setCCStatusDK(p, status, dk) {
+  if(!ccState[dk]) ccState[dk] = {};
+  if(!ccState[dk][p]) ccState[dk][p] = {};
   ccState[dk][p].status = status;
   saveCC();
   renderChamCong();
 }
 
-function saveCCRecord(p){
-  const dk = getDateKey();
-  if(!ccState[dk]) ccState[dk]={};
-  const status = ccState[dk][p]&&ccState[dk][p].status || 'ok';
+function editCCDK(p, dk) {
+  if(ccState[dk] && ccState[dk][p]) ccState[dk][p].saved = false;
+  saveCC();
+  renderChamCong();
+}
+
+function saveCCRecordDK(p, dk) {
+  if(!ccState[dk]) ccState[dk] = {};
+  const status = (ccState[dk][p] && ccState[dk][p].status) || 'ok';
   const needReason = ['late','sick','leave','early'].includes(status);
-  const inEl = document.getElementById('cc-in-'+p);
-  const outEl = document.getElementById('cc-out-'+p);
-  const reasonEl = document.getElementById('cc-reason-'+p);
+  const inEl = document.getElementById('cc-in-' + p + '-' + dk);
+  const outEl = document.getElementById('cc-out-' + p + '-' + dk);
+  const reasonEl = document.getElementById('cc-reason-' + p + '-' + dk);
   const inTime = inEl ? inEl.value : '';
   const outTime = outEl ? outEl.value : '';
   const reason = reasonEl ? reasonEl.value.trim() : '';
-  if(needReason && !reason){
+  if(needReason && !reason) {
     alert('Vui lòng nhập lý do cho trạng thái này');
     return;
   }
-  ccState[dk][p] = {status, inTime, outTime, reason, saved:true,
-    savedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})};
+  ccState[dk][p] = {
+    status, inTime, outTime, reason, saved: true,
+    savedAt: new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})
+  };
   saveCC();
   renderChamCong();
 }
 
-function editCC(p){
-  const dk = getDateKey();
-  if(ccState[dk]&&ccState[dk][p]) ccState[dk][p].saved = false;
-  saveCC();
-  renderChamCong();
-}
 
-// ADMIN: xem bảng chấm công
 function renderAttendance(){
   const mk = getMonthKey(currentMonth);
   let h = '<div class="wrap">';
