@@ -1039,72 +1039,52 @@ function confirmKetCaWithCK(p){
 }
 
 function renderNguyenLieu(){
-  const dk=getDateKey();
-  if(!nlState[dk])nlState[dk]={thoa:[],hanh:[]};
-  let h="<div class=\"wrap\">";
-  if(currentRole==="thoa"){
-    h+="<div class=\"sec-title\">Nguyên liệu pha chế</div>";
-    h+="<div style=\"font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6\">Báo đồ tươi mỗi ngày. Nguyên liệu khô báo khi còn 3–5 ngày.</div>";
-    h+=renderNLForm("thoa",dk);
-  }else if(currentRole==="hanh"){
-    h+="<div class=\"sec-title\">Nguyên liệu bếp</div>";
-    h+="<div style=\"font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6\">Báo đồ tươi sống mỗi ngày. Nguyên liệu khô báo khi còn 3–5 ngày.</div>";
-    h+=renderNLForm("hanh",dk);
-  }else{
-    h+="<div class=\"sec-title\">Tổng hợp nguyên liệu hôm nay</div>";
-    h+=renderNLSummary(dk);
-    h+="<div class=\"sec-title\" style=\"margin-top:8px\">Lịch sử 7 ngày</div>";
-    h+=renderNLHistory();
+  const dk = getDateKey();
+  if(!nlState[dk]) nlState[dk] = {thoa:[], hanh:[]};
+
+  let h = '<div class="wrap">';
+
+  if(currentRole === 'thoa' || currentRole === 'hanh'){
+    // Xác định nhóm theo phân công tuần
+    // Vòng trong -> báo bếp (bep), vòng ngoài -> báo pha chế (phache)
+    const actualRole = getActualRole(currentRole); // 'thoa' = vòng trong gốc, 'hanh' = vòng ngoài gốc
+    const isVongTrong = (actualRole === 'thoa'); // thoa = vòng trong
+    const nhomKK = isVongTrong ? 'bep' : 'phache';
+    const nhomLabel = isVongTrong ? 'Nguyên liệu bếp' : 'Nguyên liệu pha chế';
+    const nhomSub = isVongTrong
+      ? 'Báo đồ tươi sống mỗi ngày. Nguyên liệu khô báo khi còn 3–5 ngày.'
+      : 'Báo đồ tươi mỗi ngày. Nguyên liệu khô báo khi còn 3–5 ngày.';
+
+    h += '<div class="sec-title">' + nhomLabel + '</div>';
+    h += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">' + nhomSub + '</div>';
+
+    // Lấy danh sách từ kkItems theo nhóm
+    const kkList = kkItems.filter(function(item){ return item.group === nhomKK; });
+
+    if(!kkList.length){
+      h += '<div style="background:var(--cream);border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#aaa">Hiếu chưa setup danh sách nguyên liệu.<br>Vào tab <strong>Kiểm kê → Thiết lập</strong> để thêm vào.</div>';
+    } else {
+      // Khởi tạo danh sách từ kkItems nếu chưa có
+      if(!nlState[dk][currentRole] || !nlState[dk][currentRole].length){
+        nlState[dk][currentRole] = kkList.map(function(item){
+          return {name: item.name, type: item.group === 'bep' ? 'tuoi' : 'kho', status: '', submitted: false, kkGroup: item.group};
+        });
+        saveNL();
+      }
+      h += renderNLForm(currentRole, dk);
+    }
+  } else {
+    // Hiếu/Admin xem tổng hợp
+    h += '<div class="sec-title">Tổng hợp nguyên liệu hôm nay</div>';
+    h += renderNLSummary(dk);
+    h += '<div class="sec-title" style="margin-top:8px">Lịch sử 7 ngày</div>';
+    h += renderNLHistory();
   }
-  h+="</div>";
-  document.getElementById("main-content").innerHTML=h;
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
 }
 
-function renderNLForm(p,dk){
-  const items=nlState[dk][p]||[];
-  let h="";
-  items.forEach((item,idx)=>{
-    h+=`<div class="nl-card">
-      <div class="nl-header"><div class="nl-name">${item.name}</div><span class="nl-type ${item.type==="tuoi"?"nl-tuoi":"nl-kho"}">${item.type==="tuoi"?"Tươi":"Khô/lâu"}</span></div>
-      ${item.submitted
-        ?`<div class="nl-submitted" style="display:flex;align-items:center;gap:8px">
-            <span style="flex:1">✓ Đã báo lúc ${item.submittedAt}: ${item.status||""}</span>
-            <button onclick="editNLItem('${p}',${idx})" style="background:none;border:none;color:var(--brown);font-size:12px;cursor:pointer;text-decoration:underline;white-space:nowrap;font-family:inherit">Sửa</button>
-          </div>`
-        :`<div class="nl-input-row">
-           <input class="nl-input" placeholder="Tình trạng / số lượng còn lại" value="${item.status||""}" oninput="updateNLItem('${p}',${idx},'status',this.value)">
-           <button class="nl-save-btn" onclick="submitNLItem('${p}',${idx})">Báo</button>
-          </div>`}
-    </div>`;
-  });
-  h+=`<button class="nl-add-btn" onclick="addNLItem('${p}','tuoi')">+ Thêm đồ tươi sống</button>`;
-  h+=`<button class="nl-add-btn" style="margin-top:6px" onclick="addNLItem('${p}','kho')">+ Thêm nguyên liệu khô</button>`;
-  return h;
-}
-
-function addNLItem(p,type){
-  const dk=getDateKey();
-  if(!nlState[dk])nlState[dk]={thoa:[],hanh:[]};
-  if(!nlState[dk][p])nlState[dk][p]=[];
-  const name=prompt("Tên nguyên liệu:");if(!name)return;
-  nlState[dk][p].push({name,type,status:"",submitted:false});
-  saveNL();renderNguyenLieu();
-}
-
-function updateNLItem(p,idx,field,val){
-  const dk=getDateKey();
-  if(nlState[dk]&&nlState[dk][p]&&nlState[dk][p][idx])nlState[dk][p][idx][field]=val;
-  saveNL();
-}
-
-function submitNLItem(p,idx){
-  const dk=getDateKey();
-  if(nlState[dk]&&nlState[dk][p]&&nlState[dk][p][idx]){
-    nlState[dk][p][idx].submitted=true;
-    nlState[dk][p][idx].submittedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-  }
-  saveNL();renderNguyenLieu();
-}
 
 function renderNLSummary(dk){
   let h="";
