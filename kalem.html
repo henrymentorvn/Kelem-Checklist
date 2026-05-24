@@ -30,6 +30,10 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 /* HEADER */
 .app-header{background:var(--green);padding:10px 16px;position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:10px}
 .header-logo{height:36px;width:auto;object-fit:contain}
+.refresh-btn{background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.85);font-size:16px;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;flex-shrink:0}
+.refresh-btn:active{background:rgba(255,255,255,0.3)}
+.refresh-btn.spinning{animation:spin 0.6s linear}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .role-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);cursor:pointer;border:1px solid rgba(255,255,255,0.25);margin-left:4px;white-space:nowrap}
 .date-badge{margin-left:auto;font-size:11px;color:rgba(255,255,255,0.75);white-space:nowrap}
 
@@ -772,6 +776,32 @@ function selectRole(role){
   } else {
     setRole(role);
   }
+}
+
+
+async function doRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  if(btn) { btn.classList.add('spinning'); btn.disabled = true; }
+
+  try {
+    // Load lại toàn bộ data từ Supabase
+    await load();
+    // Reload tab hiện tại
+    if(currentTab) switchTab(currentTab);
+    // Hiện thông báo nhỏ
+    const pill = document.getElementById('role-pill');
+    if(pill) {
+      const orig = pill.textContent;
+      pill.textContent = '✓ Đã đồng bộ';
+      setTimeout(() => { pill.textContent = orig; }, 1500);
+    }
+  } catch(e) {
+    console.warn('Refresh error:', e);
+  }
+
+  setTimeout(() => {
+    if(btn) { btn.classList.remove('spinning'); btn.disabled = false; }
+  }, 800);
 }
 
 function setRole(role){
