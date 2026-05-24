@@ -1086,6 +1086,39 @@ function renderNguyenLieu(){
 }
 
 
+function renderNLForm(p, dk){
+  const items = nlState[dk][p] || [];
+  let h = '';
+  items.forEach(function(item, idx){
+    h += '<div class="nl-card">'
+      + '<div class="nl-header"><div class="nl-name">'+item.name+'</div>'
+      + '<span class="nl-type '+(item.type==='tuoi'?'nl-tuoi':'nl-kho')+'">'+(item.type==='tuoi'?'Tươi':'Khô/lâu')+'</span></div>';
+    if(item.submitted){
+      h += '<div class="nl-submitted" style="display:flex;align-items:center;gap:8px">'
+        + '<span style="flex:1">✓ Đã báo lúc '+item.submittedAt+': '+(item.status||'')+'</span>'
+        + '<button data-p="'+p+'" data-idx="'+idx+'" onclick="editNLItem(this.dataset.p,this.dataset.idx)" style="background:none;border:none;color:var(--brown);font-size:12px;cursor:pointer;text-decoration:underline;white-space:nowrap;font-family:inherit">Sửa</button>'
+        + '</div>';
+    } else {
+      h += '<div class="nl-input-row">'
+        + '<input class="nl-input" placeholder="Tình trạng / số lượng còn lại" value="'+(item.status||'')+'" data-p="'+p+'" data-idx="'+idx+'" oninput="updateNLStatus(this)">'
+        + '<button class="nl-save-btn" data-p="'+p+'" data-idx="'+idx+'" onclick="submitNLItem(this.dataset.p,this.dataset.idx)">Báo</button>'
+        + '</div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+
+function editNLItem(p, idx){
+  idx = parseInt(idx);
+  const dk = getDateKey();
+  if(nlState[dk] && nlState[dk][p] && nlState[dk][p][idx]){
+    nlState[dk][p][idx].submitted = false;
+    saveNL();
+    renderNguyenLieu();
+  }
+}
+
 function renderNLSummary(dk){
   let h="";
   [["thoa","Pha chế (Thoa)"],["hanh","Bếp (Hạnh)"]].forEach(([p,label])=>{
