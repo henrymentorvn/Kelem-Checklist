@@ -1557,6 +1557,21 @@ const LUONG_CONFIG = {
   hanh: {name:'Hạnh', luongThang:4500000, gioVao:'07:00', gioRa:'14:30', gioRaCN:'14:30'},
   hieu: {name:'Hiếu', luongThang:0, gioVao:'07:00', gioRa:'22:00', gioRaCN:'22:00'},
 };
+
+const CC_PEOPLE = {
+  thoa: {name:'Thoa', shift:'Vòng trong · 07:00–18:00 (T7/CN đến 21:00)', inTime:'07:00'},
+  hanh: {name:'Hạnh', shift:'Vòng ngoài · 07:00–14:30', inTime:'07:00'},
+  hieu: {name:'Hiếu', shift:'Ca trưởng · 07:00–22:00', inTime:'07:00'},
+};
+
+const CC_STATUSES = {
+  ok:    {label:'Đúng giờ', badge:'att-ok',    cls:'sel-ok'},
+  late:  {label:'Đi trễ',  badge:'att-late',   cls:'sel-late'},
+  early: {label:'Về sớm',  badge:'att-early',  cls:'sel-early'},
+  sick:  {label:'Nghỉ ốm', badge:'att-sick',   cls:'sel-sick'},
+  leave: {label:'Nghỉ phép',badge:'att-leave', cls:'sel-leave'},
+};
+
 const NGAY_PHEP_CO_LUONG = 2;
 const TC_NGAY = 20000;  // tăng ca ban ngày /giờ
 const TC_TOI  = 30000;  // tăng ca tối /giờ (sau 18h)
