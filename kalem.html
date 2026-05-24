@@ -525,7 +525,7 @@ function dbListen(cb) {
   _pollInterval = setInterval(async () => {
     if(!dbReady) return;
     try {
-      const keys = ['checklist','ketca','chamcong','scores','nguyen_lieu','week_assignment'];
+      const keys = ['checklist','ketca','chamcong','scores','nguyen_lieu','week_assignment','kk_items','kk_records','kk_lock'];
       for(const key of keys) {
         const {data, error} = await _sbClient.from('kalem_data').select('value,updated_at').eq('key',key).single();
         if(!error && data) {
@@ -661,30 +661,43 @@ function fmtMoney(n){return parseInt(n||0).toLocaleString("vi-VN")+"đ";}
 
 async function load(){
   try {
-    const [cl, sc, kc, nl, cc] = await Promise.all([
+    const [cl, sc, kc, nl, cc, kkI, kkR, kkL, wkA] = await Promise.all([
       dbGet("checklist"),
       dbGet("scores"),
       dbGet("ketca"),
       dbGet("nguyen_lieu"),
       dbGet("chamcong"),
+      dbGet("kk_items"),
+      dbGet("kk_records"),
+      dbGet("kk_lock"),
+      dbGet("week_assignment"),
     ]);
 
     if(cl && cl.date === getToday()) clState = cl;
     else clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
-loadKK();
-loadKKLock();
-loadWeekAssignment();
 
     if(sc) scoreState = sc;
     if(kc) ketcaState = kc;
     if(nl) nlState = nl;
     if(cc) ccState = cc;
+    if(kkI) kkItems = kkI;
+    if(kkR) kkRecords = kkR;
+    if(kkL) kkLockState = kkL;
+    if(wkA) weekAssignment = wkA;
+
+    // Backup vào localStorage
+    if(kkI) try{localStorage.setItem('kl_kk_items',JSON.stringify(kkI));}catch(e){}
+    if(kkR) try{localStorage.setItem('kl_kk_records',JSON.stringify(kkR));}catch(e){}
+    if(kkL) try{localStorage.setItem('kl_kk_lock',JSON.stringify(kkL));}catch(e){}
+    if(wkA) try{localStorage.setItem('kl_week_assign',JSON.stringify(wkA));}catch(e){}
+
   } catch(e) {
-    console.warn('load() error, using defaults:', e);
+    console.warn('load() error, using localStorage fallback:', e);
     clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
-loadKK();
-loadKKLock();
-loadWeekAssignment();
+    // Fallback: đọc localStorage
+    loadKK();
+    loadKKLock();
+    loadWeekAssignment();
   }
 }
 function saveCL(){dbSet("checklist",clState);}
@@ -3113,6 +3126,10 @@ function setupRealtimeListeners() {
     else if(key === "chamcong"){ ccState = val; if(currentTab==="cham-cong"||currentTab==="cham-cong-admin") renderChamCong(); }
     else if(key === "scores"){ scoreState = val; }
     else if(key === "nguyen_lieu"){ nlState = val; }
+    else if(key === "kk_items"){ kkItems = val; try{localStorage.setItem('kl_kk_items',JSON.stringify(val));}catch(e){} }
+    else if(key === "kk_records"){ kkRecords = val; try{localStorage.setItem('kl_kk_records',JSON.stringify(val));}catch(e){} }
+    else if(key === "kk_lock"){ kkLockState = val; try{localStorage.setItem('kl_kk_lock',JSON.stringify(val));}catch(e){} }
+    else if(key === "week_assignment"){ weekAssignment = val; try{localStorage.setItem('kl_week_assign',JSON.stringify(val));}catch(e){} }
   });
 }
 </script>
