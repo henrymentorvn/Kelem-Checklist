@@ -643,8 +643,9 @@ const DATA={
 
 let currentRole=null,currentPIN=localStorage.getItem("kl_pin")||"2025";
 const ADMIN_PIN="0561";
+let pinCallback=null,pinIsAdmin=false;
 let clState={date:"",thoa:{},hanh:{},hieu:{}};
-let scoreState={},ketcaState={},nlState={};
+let scoreState={},ketcaState={},nlState={},ccState={};
 let threshold=parseInt(localStorage.getItem("kl_th4"))||7;
 let currentMonth=new Date(),currentCLPerson=null,currentScorePerson=null,currentTab=null;
 
