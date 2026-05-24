@@ -1132,6 +1132,41 @@ function editNLItem(p, idx){
   }
 }
 
+function updateNLStatus(el){
+  updateNLItem(el.dataset.p, el.dataset.idx, 'status', el.value);
+}
+
+function updateNLItem(p, idx, field, val){
+  idx = parseInt(idx);
+  const dk = getDateKey();
+  if(nlState[dk] && nlState[dk][p] && nlState[dk][p][idx]){
+    nlState[dk][p][idx][field] = val;
+  }
+  saveNL();
+}
+
+function submitNLItem(p, idx){
+  idx = parseInt(idx);
+  const dk = getDateKey();
+  if(nlState[dk] && nlState[dk][p] && nlState[dk][p][idx]){
+    nlState[dk][p][idx].submitted = true;
+    nlState[dk][p][idx].submittedAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  }
+  saveNL();
+  renderNguyenLieu();
+}
+
+function addNLItem(p, type){
+  const dk = getDateKey();
+  if(!nlState[dk]) nlState[dk] = {thoa:[], hanh:[]};
+  if(!nlState[dk][p]) nlState[dk][p] = [];
+  const name = prompt('Tên nguyên liệu:');
+  if(!name) return;
+  nlState[dk][p].push({name, type, status:'', submitted:false});
+  saveNL();
+  renderNguyenLieu();
+}
+
 function renderNLSummary(dk){
   let h="";
   [["thoa","Pha chế (Thoa)"],["hanh","Bếp (Hạnh)"]].forEach(([p,label])=>{
