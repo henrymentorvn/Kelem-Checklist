@@ -1391,7 +1391,11 @@ function buildTimeSelect(id, defaultVal) {
     var hh = (h < 10 ? '0' : '') + h;
     hours += '<option value="' + hh + '">' + hh + 'h</option>';
   }
-  var mins = '<option value="">--</option><option value="00">00</option><option value="30">30</option>';
+  var mins = '<option value="">--</option>';
+  for(var mi = 0; mi <= 59; mi++) {
+    var mm = (mi < 10 ? '0' : '') + mi;
+    mins += '<option value="' + mm + '">' + mm + '</option>';
+  }
 
   return '<div style="display:flex;align-items:center;gap:4px">'
     + '<select class="cc-time-input" id="' + id + '-h" style="flex:1;padding:8px 6px" data-timeid="' + id + '" onchange="syncTimeVal(this.dataset.timeid)">'
@@ -1419,7 +1423,7 @@ function setTimeSelect(id, val) {
   var mEl = document.getElementById(id + '-m');
   var hidden = document.getElementById(id);
   if(hEl) hEl.value = parts[0] || '';
-  var mVal = parts[1] ? (parseInt(parts[1]) >= 30 ? '30' : '00') : '00';
+  var mVal = parts[1] ? (parts[1].length === 2 ? parts[1] : '0' + parts[1]) : '00';
   if(mEl) mEl.value = mVal;
   if(hidden) hidden.value = (parts[0] && mVal) ? parts[0] + ':' + mVal : '';
 }
