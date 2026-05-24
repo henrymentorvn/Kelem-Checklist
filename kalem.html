@@ -1413,18 +1413,16 @@ function buildCCBlock(p, dk){
     h += ' &nbsp; Vào: <strong>'+(rec.inTime||'—')+'</strong>';
     h += ' &nbsp; Ra: <strong>'+(rec.outTime||'—')+'</strong>';
     if(rec.reason) h += '<br><span style="color:#555;font-size:12px;margin-top:4px;display:block">Lý do: '+rec.reason+'</span>';
-    h += '<button class="cc-edit-btn" onclick="editCCDK(''+p+'',''+dk+'')">Sửa</button>';
+    h += '<button class="cc-edit-btn" data-p="'+p+'" data-dk="'+dk+'" onclick="editCCDK(this.dataset.p,this.dataset.dk)">Sửa</button>';
     h += '</div>';
   } else {
-    // Status buttons
     h += '<div class="cc-status-row">';
     Object.keys(CC_STATUSES).forEach(function(key){
       var st = CC_STATUSES[key];
       var sel = status===key ? ' '+st.cls : '';
-      h += '<button class="cc-status-btn'+sel+'" onclick="setCCStatusDK(''+p+'',''+key+'',''+dk+'')">'+st.label+'</button>';
+      h += '<button class="cc-status-btn'+sel+'" data-p="'+p+'" data-dk="'+dk+'" data-key="'+key+'" onclick="setCCStatusDK(this.dataset.p,this.dataset.key,this.dataset.dk)">'+st.label+'</button>';
     });
     h += '</div>';
-    // Time inputs
     h += '<div class="cc-time-row">';
     h += '<div class="cc-time-group"><div class="cc-time-label">Giờ vào ca</div>';
     h += '<input type="time" class="cc-time-input" id="cc-in-'+p+'-'+dk+'" value="'+(rec.inTime||info.inTime)+'"></div>';
@@ -1437,7 +1435,7 @@ function buildCCBlock(p, dk){
       h += '</div>';
     }
     h += '<div class="cc-save-row">';
-    h += '<button class="cc-save-btn" onclick="saveCCRecordDK(''+p+'',''+dk+'')">Lưu chấm công '+info.name+'</button>';
+    h += '<button class="cc-save-btn" data-p="'+p+'" data-dk="'+dk+'" onclick="saveCCRecordDK(this.dataset.p,this.dataset.dk)">Lưu chấm công '+info.name+'</button>';
     h += '</div>';
   }
   h += '</div>';
