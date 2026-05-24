@@ -993,28 +993,28 @@ function submitKetCa(p){
 
 function renderXacNhan(){
   const dk=getDateKey();
-  let h="<div class=\"wrap\">";
-  h+="<div class=\"sec-title\">Xác nhận kết ca hôm nay</div>";
-  [["hanh","Kết ca 1 — Hạnh (14:30)"],["thoa","Kết ca 2 — Thoa (18:00/21:00)"],["hieu","Kết ca tối — Hiếu (22:00)"]].forEach(([p,label])=>{
-    const r=ROLES[p],kc=ketcaState[dk]&&ketcaState[dk][p];
-    h+=`<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px">${label}</div>`;
-    if(!kc||!kc.submitted)
-      h+=`<div style="background:var(--cream);border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#aaa;margin-bottom:10px">${r.name} chưa nộp báo cáo</div>`;
-    else if(kc.confirmed)
-      h+=renderReportCard(p,kc,true)+"<div style=\"height:12px\"></div>";
-    else
+  let h='<div class="wrap">';
+  h+='<div class="sec-title">Xác nhận kết ca hôm nay</div>';
+  [['hanh','Kết ca 1 — Hạnh (14:30)'],['thoa','Kết ca 2 — Thoa (18:00/21:00)'],['hieu','Kết ca tối — Hiếu (22:00)']].forEach(function([p,label]){
+    const r=ROLES[p], kc=ketcaState[dk]&&ketcaState[dk][p];
+    h+='<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px">'+label+'</div>';
+    if(!kc||!kc.submitted){
+      h+='<div style="background:var(--cream);border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#aaa;margin-bottom:10px">'+r.name+' chưa nộp báo cáo</div>';
+    } else if(kc.confirmed){
+      h+=renderReportCard(p,kc,true)+'<div style="height:12px"></div>';
+    } else {
       h+=renderReportCard(p,kc,false);
-      // Ka nhập chuyển khoản trước khi xác nhận
-      h+=`<div style="background:var(--cream);border-radius:10px;padding:12px;margin:8px 0">
-        <div class="field-label">Chuyển khoản nhận được ca này (đồng)</div>
-        <div style="display:flex;gap:8px">
-          <input type="number" class="field-input" id="ck-${p}" placeholder="0" value="${kc.ck&&kc.ck!=='0'?kc.ck:''}" style="margin-bottom:0;flex:1">
-          <button class="confirm-btn" style="width:auto;padding:10px 16px;margin-top:0" onclick="confirmKetCaWithCK('${p}')">✓ Xác nhận</button>
-        </div>
-      </div><div style="height:12px"></div>`;
+      const ckVal = kc.ck && kc.ck!=='0' ? kc.ck : '';
+      h+='<div style="background:var(--cream);border-radius:10px;padding:12px;margin:8px 0">'
+        +'<div class="field-label">Chuyển khoản nhận được ca này (đồng)</div>'
+        +'<div style="display:flex;gap:8px">'
+        +'<input type="number" class="field-input" id="ck-'+p+'" placeholder="0" value="'+ckVal+'" style="margin-bottom:0;flex:1">'
+        +'<button class="confirm-btn" style="width:auto;padding:10px 16px;margin-top:0" data-p="'+p+'" onclick="confirmKetCaWithCK(this.dataset.p)">✓ Xác nhận</button>'
+        +'</div></div><div style="height:12px"></div>';
+    }
   });
-  h+="</div>";
-  document.getElementById("main-content").innerHTML=h;
+  h+='</div>';
+  document.getElementById('main-content').innerHTML=h;
 }
 
 function confirmKetCa(p){
