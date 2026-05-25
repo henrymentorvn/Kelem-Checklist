@@ -598,7 +598,7 @@ function renderApp(){
   const tabs=r.type==="staff"
     ?[{id:"checklist",label:"Checklist"},{id:"ketca",label:"Kết ca"},{id:"luong-nv",label:"Lương của tôi"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :r.type==="lead"
-    ?[{id:"checklist",label:"Checklist"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"nhap-cong",label:"Nhập công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
+    ?[{id:"checklist",label:"Checklist"},{id:"ketca-hieu",label:"Kết ca"},{id:"cham-cong",label:"Chấm công"},{id:"cham-diem",label:"Chấm điểm"},{id:"xac-nhan",label:"Xác nhận ca"},{id:"nguyen-lieu",label:"Nguyên liệu"}]
     :[{id:"tong-ket",label:"Tổng kết"},{id:"doanh-thu",label:"Doanh thu"},{id:"luong-admin",label:"Lương"},{id:"cham-cong-admin",label:"Chấm công"},{id:"nguyen-lieu",label:"Nguyên liệu"},{id:"cham-diem",label:"Điểm NV"}];
   const tb=document.getElementById("tab-bar");
   tb.innerHTML=tabs.map(t=>`<button class="tab-btn" id="tab-btn-${t.id}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
@@ -617,7 +617,7 @@ function switchTab(tab){
   else if(tab==="cham-diem")renderChamDiem();
   else if(tab==="xac-nhan")renderXacNhan();
   else if(tab==="cham-cong")renderChamCong();
-  else if(tab==="nhap-cong")renderBackfill();
+  
   else if(tab==="ketca-hieu")renderKetCaHieu();
   else if(tab==="luong-admin")renderAdminLuong();
   else if(tab==="luong-nv")renderMyLuong();
