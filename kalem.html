@@ -1478,16 +1478,29 @@ function renderChamCong(){
 
 // Time selector 24h tự build — không phụ thuộc locale máy
 function buildTimeSelect(id, defaultVal) {
+  // Parse defaultVal
+  var defH = '', defM = '';
+  if(defaultVal && defaultVal.indexOf(':') >= 0) {
+    var parts = defaultVal.split(':');
+    defH = parts[0] || '';
+    defM = parts[1] ? parts[1].substring(0,2) : '';
+  }
+
   var hours = '<option value="">--</option>';
   for(var h = 0; h <= 23; h++) {
     var hh = (h < 10 ? '0' : '') + h;
-    hours += '<option value="' + hh + '">' + hh + 'h</option>';
+    var sel = (hh === defH) ? ' selected' : '';
+    hours += '<option value="' + hh + '"' + sel + '>' + hh + 'h</option>';
   }
   var mins = '<option value="">--</option>';
   for(var mi = 0; mi <= 59; mi++) {
     var mm = (mi < 10 ? '0' : '') + mi;
-    mins += '<option value="' + mm + '">' + mm + '</option>';
+    var sel2 = (mm === defM) ? ' selected' : '';
+    mins += '<option value="' + mm + '"' + sel2 + '>' + mm + '</option>';
   }
+
+  // Tính hidden value từ default
+  var hiddenVal = (defH && defM) ? defH + ':' + defM : '';
 
   return '<div style="display:flex;align-items:center;gap:4px">'
     + '<select class="cc-time-input" id="' + id + '-h" style="flex:1;padding:8px 6px" data-timeid="' + id + '" onchange="syncTimeVal(this.dataset.timeid)">'
@@ -1495,7 +1508,7 @@ function buildTimeSelect(id, defaultVal) {
     + '<span style="font-weight:600;color:var(--muted)">:</span>'
     + '<select class="cc-time-input" id="' + id + '-m" style="width:70px;padding:8px 6px" data-timeid="' + id + '" onchange="syncTimeVal(this.dataset.timeid)">'
     + mins + '</select>'
-    + '<input type="hidden" id="' + id + '">'
+    + '<input type="hidden" id="' + id + '" value="' + hiddenVal + '">'
     + '</div>';
 }
 
