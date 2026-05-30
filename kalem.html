@@ -1212,19 +1212,28 @@ function calcAvg(scores){const v=Object.values(scores).filter(x=>x>0);return v.l
 function renderChamDiem(){
   if(currentScorePerson){renderScoringDetail(currentScorePerson);return;}
   const dk=getDateKey();
-  let h="<div class=\"wrap\">";
-  h+="<div class=\"sec-title\">Chấm điểm hôm nay</div>";
-  h+="<div style=\"font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5\">Chấm từng mục công việc từ 1–10. App tự tính trung bình và tích lũy theo tháng.</div>";
-  ["thoa","hanh"].forEach(p=>{
+  const assign=getCurrentAssignment();
+  let h='<div class="wrap">';
+  h+='<div class="sec-title">Chấm điểm hôm nay</div>';
+  h+='<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Chấm từng mục công việc từ 1–10. App tự tính trung bình và tích lũy theo tháng.</div>';
+  // Hiển thị banner phân công tuần
+  h+='<div style="background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:8px 12px;font-size:12px;color:var(--green);margin-bottom:12px">📋 '+getAssignmentLabel()+'</div>';
+  ["thoa","hanh"].forEach(function(p){
     const r=ROLES[p],s=scoreState[dk]&&scoreState[dk][p];
     const avg=s&&Object.keys(s).length?calcAvg(s):null;
-    h+=`<div class="score-person-card" onclick="openScoring('${p}')">
-      <div class="avatar ${r.avClass}">${r.avatar}</div>
-      <div class="person-info"><div class="person-name">${r.name}</div><div class="person-role">${avg?"Đã chấm hôm nay":"Chưa chấm hôm nay"}</div></div>
-      <div class="score-badge badge-${p}">${avg?avg.toFixed(1)+"/10":"→"}</div>
-    </div>`;
+    // Lấy vòng thực tế tuần này
+    const actualRole=getActualRole(p);
+    const vongLabel=actualRole==="thoa"?"Vòng trong":"Vòng ngoài";
+    h+='<div class="score-person-card" data-p="'+p+'" onclick="openScoring(this.dataset.p)">'
+      +'<div class="avatar '+r.avClass+'">'+r.avatar+'</div>'
+      +'<div class="person-info">'
+      +'<div class="person-name">'+r.name+'</div>'
+      +'<div class="person-role">'+vongLabel+' · '+(avg?"Đã chấm hôm nay":"Chưa chấm hôm nay")+'</div>'
+      +'</div>'
+      +'<div class="score-badge badge-'+p+'">'+(avg?avg.toFixed(1)+"/10":"→")+'</div>'
+      +'</div>';
   });
-  h+="</div>";
+  h+='</div>';
   document.getElementById("main-content").innerHTML=h;
 }
 
@@ -1240,7 +1249,10 @@ function renderScoringDetail(p){
   h+=`<div class="back-row"><button class="back-btn" onclick="currentScorePerson=null;renderChamDiem()">← Chấm điểm</button></div>`;
   h+=avg!==null?`<div class="today-scored" id="avg-disp">Điểm trung bình: <strong>${avg.toFixed(1)}/10</strong></div>`:`<div class="today-scored" id="avg-disp" style="display:none"></div>`;
   h+=`<div style="font-size:13px;font-weight:600;color:${r.color};margin-bottom:12px">Chấm điểm cho ${r.name}</div>`;
-  DATA[p].sections.forEach(sec=>{
+  // Lấy data theo vòng thực tế tuần này
+  const actualDataRole = getActualRole(p);
+  const dataSource = DATA[actualDataRole] || DATA[p];
+  dataSource.sections.forEach(sec=>{
     h+=`<div class="task-sec-label">${sec.label}</div>`;
     sec.tasks.forEach(task=>{
       const val=saved[task.id]||5;
