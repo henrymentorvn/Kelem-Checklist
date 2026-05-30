@@ -1050,7 +1050,10 @@ function confirmKetCaWithCK(p){
     ketcaState[dk][p].ck=ck;
     ketcaState[dk][p].confirmed=true;
     ketcaState[dk][p].confirmedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-    saveKC();renderXacNhan();
+    saveKC();
+    // Gửi Telegram khi Hiếu xác nhận ca
+    tgBaoCaoKetCa(p, ketcaState[dk][p]);
+    renderXacNhan();
   }
 }
 
