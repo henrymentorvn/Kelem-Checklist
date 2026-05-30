@@ -1035,7 +1035,10 @@ function confirmKetCa(p){
   if(ketcaState[dk]&&ketcaState[dk][p]){
     ketcaState[dk][p].confirmed=true;
     ketcaState[dk][p].confirmedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-    saveKC();renderXacNhan();
+    saveKC();
+    // Bot gửi báo cáo kết ca vào Telegram
+    tgBaoCaoKetCa(p, ketcaState[dk][p]);
+    renderXacNhan();
   }
 }
 
@@ -1212,28 +1215,19 @@ function calcAvg(scores){const v=Object.values(scores).filter(x=>x>0);return v.l
 function renderChamDiem(){
   if(currentScorePerson){renderScoringDetail(currentScorePerson);return;}
   const dk=getDateKey();
-  const assign=getCurrentAssignment();
-  let h='<div class="wrap">';
-  h+='<div class="sec-title">Chấm điểm hôm nay</div>';
-  h+='<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Chấm từng mục công việc từ 1–10. App tự tính trung bình và tích lũy theo tháng.</div>';
-  // Hiển thị banner phân công tuần
-  h+='<div style="background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:8px 12px;font-size:12px;color:var(--green);margin-bottom:12px">📋 '+getAssignmentLabel()+'</div>';
-  ["thoa","hanh"].forEach(function(p){
+  let h="<div class=\"wrap\">";
+  h+="<div class=\"sec-title\">Chấm điểm hôm nay</div>";
+  h+="<div style=\"font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5\">Chấm từng mục công việc từ 1–10. App tự tính trung bình và tích lũy theo tháng.</div>";
+  ["thoa","hanh"].forEach(p=>{
     const r=ROLES[p],s=scoreState[dk]&&scoreState[dk][p];
     const avg=s&&Object.keys(s).length?calcAvg(s):null;
-    // Lấy vòng thực tế tuần này
-    const actualRole=getActualRole(p);
-    const vongLabel=actualRole==="thoa"?"Vòng trong":"Vòng ngoài";
-    h+='<div class="score-person-card" data-p="'+p+'" onclick="openScoring(this.dataset.p)">'
-      +'<div class="avatar '+r.avClass+'">'+r.avatar+'</div>'
-      +'<div class="person-info">'
-      +'<div class="person-name">'+r.name+'</div>'
-      +'<div class="person-role">'+vongLabel+' · '+(avg?"Đã chấm hôm nay":"Chưa chấm hôm nay")+'</div>'
-      +'</div>'
-      +'<div class="score-badge badge-'+p+'">'+(avg?avg.toFixed(1)+"/10":"→")+'</div>'
-      +'</div>';
+    h+=`<div class="score-person-card" onclick="openScoring('${p}')">
+      <div class="avatar ${r.avClass}">${r.avatar}</div>
+      <div class="person-info"><div class="person-name">${r.name}</div><div class="person-role">${avg?"Đã chấm hôm nay":"Chưa chấm hôm nay"}</div></div>
+      <div class="score-badge badge-${p}">${avg?avg.toFixed(1)+"/10":"→"}</div>
+    </div>`;
   });
-  h+='</div>';
+  h+="</div>";
   document.getElementById("main-content").innerHTML=h;
 }
 
@@ -1249,7 +1243,7 @@ function renderScoringDetail(p){
   h+=`<div class="back-row"><button class="back-btn" onclick="currentScorePerson=null;renderChamDiem()">← Chấm điểm</button></div>`;
   h+=avg!==null?`<div class="today-scored" id="avg-disp">Điểm trung bình: <strong>${avg.toFixed(1)}/10</strong></div>`:`<div class="today-scored" id="avg-disp" style="display:none"></div>`;
   h+=`<div style="font-size:13px;font-weight:600;color:${r.color};margin-bottom:12px">Chấm điểm cho ${r.name}</div>`;
-  // Lấy data theo vòng thực tế tuần này
+  // Dùng checklist theo vòng thực tế tuần này
   const actualDataRole = getActualRole(p);
   const dataSource = DATA[actualDataRole] || DATA[p];
   dataSource.sections.forEach(sec=>{
@@ -2579,6 +2573,10 @@ function saveKKRecord(idx, freq) {
     isWarn: diff > item.nguong || kkRecords[periodKey][idx].chatLuong === 'hu',
   };
   saveKKRecords();
+  // Gửi cảnh báo Telegram nếu dưới ngưỡng
+  if(item && soLuong <= item.nguong) {
+    tgCanhBaoNguyenLieu();
+  }
   renderKKCheck(freq);
 }
 
@@ -3197,6 +3195,72 @@ function setupRealtimeListeners() {
     else if(key === "week_assignment"){ weekAssignment = val; try{localStorage.setItem('kl_week_assign',JSON.stringify(val));}catch(e){} }
   });
 }
+
+// ===== TELEGRAM BOT =====
+const TG_TOKEN = '8916370018:AAGSPVfOtt-r7J_de0iu18fk0u58Yt35Eq0';
+const TG_CHAT  = '-5273870042';
+
+async function tgSend(text) {
+  try {
+    await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        chat_id: TG_CHAT,
+        text: text,
+        parse_mode: 'HTML'
+      })
+    });
+  } catch(e) { console.warn('Telegram error:', e); }
+}
+
+// Gửi báo cáo kết ca
+function tgBaoCaoKetCa(p, kc) {
+  const caLabel = p==='hanh' ? 'Ca 1 — Hạnh (14:30)'
+                : p==='thoa' ? 'Ca 2 — Thoa (18:00)'
+                : 'Ca tối — Hiếu (22:00)';
+  const tm = parseInt(kc.tienmat||0);
+  const ck = parseInt(kc.ck||0);
+  const total = tm + ck;
+  const khach = kc.khach ? kc.khach + ' lượt' : '—';
+  const ghichu = kc.ghichu ? '\n\uD83D\uDCDD ' + kc.ghichu : '';
+  const text = '\u2705 <b>K\u1ebft ca x\u00e1c nh\u1eadn</b>\n'
+    + '\uD83D\uDCCD ' + caLabel + '\n'
+    + '\uD83D\uDCB5 Ti\u1ec1n m\u1eb7t: <b>' + fmtMoney(tm) + '</b>\n'
+    + '\uD83D\uDCB3 Chuy\u1ec3n kho\u1ea3n: <b>' + fmtMoney(ck) + '</b>\n'
+    + '\uD83D\uDCB0 T\u1ed5ng: <b>' + fmtMoney(total) + '</b>\n'
+    + '\uD83D\uDC65 Kh\u00e1ch: ' + khach
+    + ghichu;
+  tgSend(text);
+}
+
+// Gửi cảnh báo nguyên liệu
+function tgCanhBaoNguyenLieu() {
+  if(!kkItems || !kkItems.length) return;
+  const today = new Date();
+  const dk = today.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'});
+  // Tìm kỳ kiểm kê hôm nay
+  const pkNgay = getKKPeriodKey('ngay');
+  const recNgay = kkRecords[pkNgay] || {};
+  const pkTuan = getKKPeriodKey('tuan');
+  const recTuan = kkRecords[pkTuan] || {};
+
+  const warnings = [];
+  kkItems.forEach(function(item, idx) {
+    const rec = item.tanSuat === 'ngay' ? recNgay[idx] : recTuan[idx];
+    if(!rec || !rec.saved) return;
+    if(rec.soLuongThucTe <= item.nguong) {
+      warnings.push('\u26A0\uFE0F <b>' + item.name + '</b>: c\u00f2n ' + rec.soLuongThucTe + ' ' + item.donvi + ' (ng\u01b0\u1ee1ng ' + item.nguong + ' ' + item.donvi + ')');
+    }
+  });
+
+  if(!warnings.length) return;
+  const text = '\uD83D\uDEA8 <b>C\u1ea3nh b\u00e1o nguy\u00ean li\u1ec7u s\u1eafp h\u1ebft</b>\n\n'
+    + warnings.join('\n')
+    + '\n\n\uD83D\uDCCB C\u1ea7n mua b\u1ed5 sung ngay!';
+  tgSend(text);
+}
+
 </script>
 </body>
 </html>
