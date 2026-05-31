@@ -956,9 +956,15 @@ function renderKetCa(){
   }else{
     h+=`<div class="ketca-card">
       <div class="ketca-title">📋 Báo cáo kết ca</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Chỉ báo tiền mặt đếm được trong két. Chuyển khoản do Ka nhập khi xác nhận.</div>
-      <div class="field-label">Tiền mặt đếm được trong két (đồng) ★</div>
-      <input type="number" class="field-input" id="kc-tienmat" placeholder="Ví dụ: 1500000">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Điền tiền két ban đầu và tổng tiền đếm được. App tự tính doanh thu ca.</div>
+      <div class="field-label">Tiền két ban đầu Ka để sẵn (đồng) ★</div>
+      <input type="number" class="field-input" id="kc-bandau" placeholder="Ví dụ: 500000" oninput="calcDoanhThuCa()">
+      <div class="field-label">Tổng tiền mặt đếm được trong két (đồng) ★</div>
+      <input type="number" class="field-input" id="kc-tienmat" placeholder="Ví dụ: 2000000" oninput="calcDoanhThuCa()">
+      <div id="kc-doanhthu-preview" style="display:none;background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--muted)">Doanh thu ca = Tổng két - Ban đầu</div>
+        <div style="font-size:20px;font-weight:700;color:var(--green);margin-top:4px" id="kc-doanhthu-val">0đ</div>
+      </div>
       <div class="field-label">Số khách phục vụ (lượt)</div>
       <input type="number" class="field-input" id="kc-khach" placeholder="Ví dụ: 25">
       <div class="field-label">Ghi chú / Sự cố (nếu có)</div>
@@ -977,7 +983,9 @@ function renderReportCard(p,kc,confirmed){
       <div><img class="report-logo-img" src="${LOGO_SRC}" alt="Kalem"><div style="font-size:11px;color:var(--muted);margin-top:2px">Báo cáo kết ca — ${r.name}</div></div>
       <div class="report-date">${getDateKey()}</div>
     </div>
-    <div class="report-row"><div class="report-label">Tiền mặt</div><div class="report-value">${fmtMoney(tm)}</div></div>
+    ${kc.bandau?`<div class="report-row"><div class="report-label">Tiền két ban đầu</div><div class="report-value">${fmtMoney(parseInt(kc.bandau||0))}</div></div>`:''}
+    ${kc.tongKet?`<div class="report-row"><div class="report-label">Tổng két cuối ca</div><div class="report-value">${fmtMoney(parseInt(kc.tongKet||0))}</div></div>`:''}
+    <div class="report-row"><div class="report-label">Doanh thu ca (tiền mặt)</div><div class="report-value">${fmtMoney(tm)}</div></div>
     ${ck>0?`<div class="report-row"><div class="report-label">Chuyển khoản (Ka nhập)</div><div class="report-value">${fmtMoney(ck)}</div></div>`:''}
     <div class="report-row"><div class="report-label">Số khách</div><div class="report-value">${kc.khach||0} lượt</div></div>
     ${kc.ghichu?`<div class="report-row"><div class="report-label">Ghi chú</div><div class="report-value" style="font-size:13px;color:var(--muted)">${kc.ghichu}</div></div>`:""}
@@ -986,15 +994,35 @@ function renderReportCard(p,kc,confirmed){
   </div>`;
 }
 
+
+function calcDoanhThuCa() {
+  const bandau = parseInt(document.getElementById('kc-bandau').value) || 0;
+  const tienmat = parseInt(document.getElementById('kc-tienmat').value) || 0;
+  const doanhthu = tienmat - bandau;
+  const preview = document.getElementById('kc-doanhthu-preview');
+  const val = document.getElementById('kc-doanhthu-val');
+  if(bandau > 0 && tienmat > 0) {
+    preview.style.display = 'block';
+    val.textContent = fmtMoney(Math.max(0, doanhthu));
+    val.style.color = doanhthu >= 0 ? 'var(--green)' : '#C62828';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 function submitKetCa(p){
-  const tm=document.getElementById("kc-tienmat").value;
-  if(!tm||parseInt(tm)<=0){alert("Vui lòng nhập số tiền mặt đếm được trong két");return;}
+  const bandau = parseInt(document.getElementById("kc-bandau").value) || 0;
+  const tongKet = parseInt(document.getElementById("kc-tienmat").value) || 0;
+  if(!bandau){alert("Vui lòng nhập tiền két ban đầu Ka để sẵn");return;}
+  if(!tongKet){alert("Vui lòng nhập tổng tiền mặt đếm được trong két");return;}
+  const doanhThu = Math.max(0, tongKet - bandau);
   const dk=getDateKey();
   if(!ketcaState[dk])ketcaState[dk]={};
-  // Giữ lại ck nếu Ka đã nhập trước đó
   const existing=ketcaState[dk][p]||{};
   ketcaState[dk][p]={
-    tienmat:tm,
+    tienmat: String(doanhThu),  // doanh thu thực = tổng két - ban đầu
+    tongKet: String(tongKet),   // lưu thêm tổng két để hiển thị
+    bandau: String(bandau),     // lưu tiền ban đầu
     ck:existing.ck||'0',
     khach:document.getElementById("kc-khach").value,
     ghichu:document.getElementById("kc-ghichu").value,
@@ -1035,10 +1063,7 @@ function confirmKetCa(p){
   if(ketcaState[dk]&&ketcaState[dk][p]){
     ketcaState[dk][p].confirmed=true;
     ketcaState[dk][p].confirmedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-    saveKC();
-    // Bot gửi báo cáo kết ca vào Telegram
-    tgBaoCaoKetCa(p, ketcaState[dk][p]);
-    renderXacNhan();
+    saveKC();renderXacNhan();
   }
 }
 
