@@ -977,7 +977,8 @@ function renderKetCa(){
 }
 
 function renderReportCard(p,kc,confirmed){
-  const r=ROLES[p],tm=parseInt(kc.tienmat||0),ck=parseInt(kc.ck||0),total=tm+ck;
+  const r=ROLES[p],tm=parseInt(kc.tienmat||0);
+  // CK không hiển thị trong report card từng ca — CK là số tổng ngày do Ka nhập riêng
   return `<div class="report-card" id="report-card">
     <div class="report-header">
       <div><img class="report-logo-img" src="${LOGO_SRC}" alt="Kalem"><div style="font-size:11px;color:var(--muted);margin-top:2px">Báo cáo kết ca — ${r.name}</div></div>
@@ -986,10 +987,10 @@ function renderReportCard(p,kc,confirmed){
     ${kc.bandau?`<div class="report-row"><div class="report-label">Tiền két ban đầu</div><div class="report-value">${fmtMoney(parseInt(kc.bandau||0))}</div></div>`:''}
     ${kc.tongKet?`<div class="report-row"><div class="report-label">Tổng két cuối ca</div><div class="report-value">${fmtMoney(parseInt(kc.tongKet||0))}</div></div>`:''}
     <div class="report-row"><div class="report-label">Doanh thu ca (tiền mặt)</div><div class="report-value">${fmtMoney(tm)}</div></div>
-    ${ck>0?`<div class="report-row"><div class="report-label">Chuyển khoản (Ka nhập)</div><div class="report-value">${fmtMoney(ck)}</div></div>`:''}
     <div class="report-row"><div class="report-label">Số khách</div><div class="report-value">${kc.khach||0} lượt</div></div>
     ${kc.ghichu?`<div class="report-row"><div class="report-label">Ghi chú</div><div class="report-value" style="font-size:13px;color:var(--muted)">${kc.ghichu}</div></div>`:""}
-    <div class="report-total"><div class="report-total-label">Tổng doanh thu ca</div><div class="report-total-value">${fmtMoney(total)}</div></div>
+    <div class="report-total"><div class="report-total-label">Doanh thu tiền mặt ca này</div><div class="report-total-value">${fmtMoney(tm)}</div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">Chuyển khoản do Ka nhập riêng trong tab Doanh thu</div>
     ${confirmed?`<div class="report-confirmed">✓ Đã xác nhận bởi Hiếu · ${kc.confirmedAt||""}</div>`:""}
   </div>`;
 }
@@ -1036,6 +1037,7 @@ function renderXacNhan(){
   const dk=getDateKey();
   let h='<div class="wrap">';
   h+='<div class="sec-title">Xác nhận kết ca hôm nay</div>';
+  h+='<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;background:var(--cream);border-radius:8px;padding:10px">Hiếu xác nhận tiền mặt từng ca. Chuyển khoản do Ka nhập riêng trong tab Doanh thu của Henry/Ka.</div>';
   [['hanh','Kết ca 1 — Hạnh (14:30)'],['thoa','Kết ca 2 — Thoa (18:00/21:00)'],['hieu','Kết ca tối — Hiếu (22:00)']].forEach(function([p,label]){
     const r=ROLES[p], kc=ketcaState[dk]&&ketcaState[dk][p];
     h+='<div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.6px;padding:10px 0 6px">'+label+'</div>';
@@ -1045,13 +1047,8 @@ function renderXacNhan(){
       h+=renderReportCard(p,kc,true)+'<div style="height:12px"></div>';
     } else {
       h+=renderReportCard(p,kc,false);
-      const ckVal = kc.ck && kc.ck!=='0' ? kc.ck : '';
-      h+='<div style="background:var(--cream);border-radius:10px;padding:12px;margin:8px 0">'
-        +'<div class="field-label">Chuyển khoản nhận được ca này (đồng)</div>'
-        +'<div style="display:flex;gap:8px">'
-        +'<input type="number" class="field-input" id="ck-'+p+'" placeholder="0" value="'+ckVal+'" style="margin-bottom:0;flex:1">'
-        +'<button class="confirm-btn" style="width:auto;padding:10px 16px;margin-top:0" data-p="'+p+'" onclick="confirmKetCaWithCK(this.dataset.p)">✓ Xác nhận</button>'
-        +'</div></div><div style="height:12px"></div>';
+      h+='<button class="confirm-btn" style="margin-top:8px" data-p="'+p+'" onclick="confirmKetCa(this.dataset.p)">✓ Xác nhận ca này</button>';
+      h+='<div style="height:12px"></div>';
     }
   });
   h+='</div>';
@@ -1063,20 +1060,7 @@ function confirmKetCa(p){
   if(ketcaState[dk]&&ketcaState[dk][p]){
     ketcaState[dk][p].confirmed=true;
     ketcaState[dk][p].confirmedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-    saveKC();renderXacNhan();
-  }
-}
-
-function confirmKetCaWithCK(p){
-  const dk=getDateKey();
-  const ckEl=document.getElementById("ck-"+p);
-  const ck=ckEl?ckEl.value||"0":"0";
-  if(ketcaState[dk]&&ketcaState[dk][p]){
-    ketcaState[dk][p].ck=ck;
-    ketcaState[dk][p].confirmed=true;
-    ketcaState[dk][p].confirmedAt=new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
     saveKC();
-    // Gửi Telegram khi Hiếu xác nhận ca
     tgBaoCaoKetCa(p, ketcaState[dk][p]);
     renderXacNhan();
   }
@@ -1370,12 +1354,14 @@ function renderDoanhThu(){
     const dk=d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
     const kc=ketcaState[dk];
     const ca1=kc&&kc.hanh,ca2=kc&&kc.thoa,ca3=kc&&kc.hieu;
-    const t1=ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
-    const t2=ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
-    const t3=ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
-    const dt=t1+t2+t3;
+    // Chỉ tính tiền mặt của ca ĐÃ confirmed + CK tổng ngày (field riêng)
+    const totalTM=(ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)
+                +(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)
+                +(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
+    const totalCK=getDayCK(dk);
+    const dt=totalTM+totalCK;
     if(dt>0){totalMonth+=dt;totalDays++;}
-    dayCards.push({dk,d,ca1,ca2,ca3,t1,t2,t3,dt});
+    dayCards.push({dk,d,ca1,ca2,ca3,totalTM,totalCK,dt});
   }
 
   let h='<div class="wrap">';
@@ -1394,13 +1380,10 @@ function renderDoanhThu(){
   } else {
     dayCards.reverse().forEach(function(item){
       const dk=item.dk, ca1=item.ca1, ca2=item.ca2, ca3=item.ca3, dt=item.dt;
+      const totalTM=item.totalTM, totalCK=item.totalCK;
       const dow=getDOW(parseDateVN(dk));
-      const totalCK=(ca1?parseInt(ca1.ck||0):0)+(ca2?parseInt(ca2.ck||0):0)+(ca3?parseInt(ca3.ck||0):0);
-      const totalTM=(ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)
-                   +(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)
-                   +(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
 
-      // Ca rows
+      // Ca rows — chỉ hiện tiền mặt riêng từng ca
       var ca1txt = ca1&&ca1.confirmed ? fmtMoney(parseInt(ca1.tienmat||0))
                  : ca1&&ca1.submitted ? '<span style="color:var(--brown)">Chờ XN</span>'
                  : '<span style="color:#C62828">Chưa báo</span>';
@@ -2767,12 +2750,14 @@ function renderKetCaHistory() {
     const dk = formatDateVN(d);
     const kc = ketcaState[dk];
     const ca1 = kc&&kc.hanh, ca2 = kc&&kc.thoa, ca3 = kc&&kc.hieu;
-    const t1 = ca1?(parseInt(ca1.tienmat||0)+parseInt(ca1.ck||0)):0;
-    const t2 = ca2?(parseInt(ca2.tienmat||0)+parseInt(ca2.ck||0)):0;
-    const t3 = ca3?(parseInt(ca3.tienmat||0)+parseInt(ca3.ck||0)):0;
-    const total = t1+t2+t3;
+    // Chỉ tính tiền mặt đã confirmed + CK tổng ngày
+    const totalTM=(ca1&&ca1.confirmed?parseInt(ca1.tienmat||0):0)
+                +(ca2&&ca2.confirmed?parseInt(ca2.tienmat||0):0)
+                +(ca3&&ca3.confirmed?parseInt(ca3.tienmat||0):0);
+    const totalCK=getDayCK(dk);
+    const total = totalTM+totalCK;
     if(total > 0) totalMonth += total;
-    days.push({dk, d, kc, ca1, ca2, ca3, t1, t2, t3, total});
+    days.push({dk, d, kc, ca1, ca2, ca3, totalTM, totalCK, total});
   }
 
   // Summary
@@ -2786,10 +2771,15 @@ function renderKetCaHistory() {
   if(!days.length) {
     h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Chưa có dữ liệu tháng này</div>';
   } else {
-    days.forEach(({dk, d, ca1, ca2, ca3, t1, t2, t3, total}) => {
+    days.forEach(({dk, d, ca1, ca2, ca3, totalTM, totalCK, total}) => {
       const dow = getDOW(d);
       const isWE = isWeekendOrHoliday(d);
       const hasData = ca1||ca2||ca3;
+      // Hiển thị tiền mặt từng ca (chỉ ca confirmed mới có số)
+      const t1txt = ca1&&ca1.confirmed ? fmtMoney(parseInt(ca1.tienmat||0)) : ca1&&ca1.submitted ? 'Chờ xác nhận' : 'Chưa báo';
+      const t2txt = ca2&&ca2.confirmed ? fmtMoney(parseInt(ca2.tienmat||0)) : ca2&&ca2.submitted ? 'Chờ xác nhận' : 'Chưa báo';
+      const t3txt = ca3&&ca3.confirmed ? fmtMoney(parseInt(ca3.tienmat||0)) : ca3&&ca3.submitted ? 'Chờ xác nhận' : 'Chưa báo';
+      const ckRow = totalCK>0 ? `<div class="hdc-row"><span>Chuyển khoản (Ka)</span><span style="color:var(--green)">${fmtMoney(totalCK)}</span></div>` : '';
       h += `<div class="history-day-card" id="hdc-${dk}" onclick="toggleHDC('${dk}')">
         <div class="hdc-header">
           <div class="hdc-date">${dk} <span style="color:${isWE?'#C62828':'var(--muted)'};font-size:12px">(${dow})</span></div>
@@ -2799,9 +2789,11 @@ function renderKetCaHistory() {
           <div class="hdc-arrow" id="arrow-${dk}">›</div>
         </div>
         <div class="hdc-detail" id="detail-${dk}">
-          <div class="hdc-row"><span>Ca 1 — Hạnh</span><span>${ca1&&ca1.confirmed?fmtMoney(t1):ca1&&ca1.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
-          <div class="hdc-row"><span>Ca 2 — Thoa</span><span>${ca2&&ca2.confirmed?fmtMoney(t2):ca2&&ca2.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
-          <div class="hdc-row"><span>Ca tối — Hiếu</span><span>${ca3&&ca3.confirmed?fmtMoney(t3):ca3&&ca3.submitted?'Chờ xác nhận':'Chưa báo'}</span></div>
+          <div class="hdc-row"><span>Ca 1 — Hạnh</span><span>${t1txt}</span></div>
+          <div class="hdc-row"><span>Ca 2 — Thoa</span><span>${t2txt}</span></div>
+          <div class="hdc-row"><span>Ca tối — Hiếu</span><span>${t3txt}</span></div>
+          <div class="hdc-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span>Tổng tiền mặt</span><span style="font-weight:500">${fmtMoney(totalTM)}</span></div>
+          ${ckRow}
           ${ca1&&ca1.khach?`<div class="hdc-row"><span>Số khách</span><span>${parseInt(ca1.khach||0)+parseInt(ca2&&ca2.khach||0)+parseInt(ca3&&ca3.khach||0)} lượt</span></div>`:''}
           ${(ca1&&ca1.ghichu)||(ca2&&ca2.ghichu)||(ca3&&ca3.ghichu)
             ?`<div class="hdc-note">Ghi chú: ${[ca1&&ca1.ghichu,ca2&&ca2.ghichu,ca3&&ca3.ghichu].filter(Boolean).join(' | ')}</div>`:''}
@@ -3140,23 +3132,50 @@ function toggleDTCard(dk){
   if(card)card.classList.toggle('expanded',!isOpen);
 }
 
+// ---- Helpers tính doanh thu ngày (dùng chung ở mọi nơi) ----
+// CK của ngày lưu tại ketcaState[dk]['_ck'].value — tách hoàn toàn khỏi ca
+function getDayCK(dk) {
+  const kc = ketcaState[dk];
+  if(!kc) return 0;
+  // Cấu trúc mới: _ck.value
+  if(kc['_ck'] && kc['_ck'].value !== undefined) return parseInt(kc['_ck'].value||0);
+  // Migration từ cấu trúc cũ: hanh.ck khi kaEnteredCK=true
+  if(kc.hanh && kc.hanh.kaEnteredCK) return parseInt(kc.hanh.ck||0);
+  return 0;
+}
+
+function getTotalTMConfirmed(dk) {
+  const kc = ketcaState[dk];
+  if(!kc) return 0;
+  return (kc.hanh&&kc.hanh.confirmed?parseInt(kc.hanh.tienmat||0):0)
+       + (kc.thoa&&kc.thoa.confirmed?parseInt(kc.thoa.tienmat||0):0)
+       + (kc.hieu&&kc.hieu.confirmed?parseInt(kc.hieu.tienmat||0):0);
+}
+
+function getDayTotal(dk) {
+  return getTotalTMConfirmed(dk) + getDayCK(dk);
+}
+
 function saveKaDayCK(dk) {
   const el = document.getElementById('ck-dt-'+dk);
   if(!el) return;
   const ck = el.value || '0';
   if(!ketcaState[dk]) ketcaState[dk] = {};
 
-  // Lưu CK vào ca1 (Hạnh) — dùng làm đại diện CK cả ngày
-  if(!ketcaState[dk]['hanh']) ketcaState[dk]['hanh'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
-  if(!ketcaState[dk]['thoa']) ketcaState[dk]['thoa'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
-  if(!ketcaState[dk]['hieu']) ketcaState[dk]['hieu'] = {tienmat:'0',ck:'0',submitted:true,confirmed:true};
+  // Lưu CK vào field riêng _ck — không tạo ghost record, không chạm vào ca nào
+  ketcaState[dk]['_ck'] = {
+    value: ck,
+    enteredBy: 'Ka',
+    enteredAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+  };
 
-  // Đặt toàn bộ CK vào ca1, ca2 và ca3 = 0 để tránh tính trùng
-  ketcaState[dk]['hanh'].ck = ck;
-  ketcaState[dk]['thoa'].ck = '0';
-  ketcaState[dk]['hieu'].ck = '0';
-  ketcaState[dk]['hanh'].kaEnteredCK = true;
-  ketcaState[dk]['hanh'].kaEnteredAt = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  // Dọn sạch CK cũ bị nhét vào hanh (cấu trúc lỗi cũ) nếu còn tồn tại
+  if(ketcaState[dk]['hanh']) {
+    ketcaState[dk]['hanh'].ck = '0';
+    ketcaState[dk]['hanh'].kaEnteredCK = false;
+  }
+  if(ketcaState[dk]['thoa']) ketcaState[dk]['thoa'].ck = '0';
+  if(ketcaState[dk]['hieu']) ketcaState[dk]['hieu'].ck = '0';
 
   saveKC();
   renderDoanhThu();
@@ -3248,17 +3267,15 @@ function tgBaoCaoKetCa(p, kc) {
                 : p==='thoa' ? 'Ca 2 — Thoa (18:00)'
                 : 'Ca tối — Hiếu (22:00)';
   const tm = parseInt(kc.tienmat||0);
-  const ck = parseInt(kc.ck||0);
-  const total = tm + ck;
   const khach = kc.khach ? kc.khach + ' lượt' : '—';
   const ghichu = kc.ghichu ? '\n\uD83D\uDCDD ' + kc.ghichu : '';
   const text = '\u2705 <b>K\u1ebft ca x\u00e1c nh\u1eadn</b>\n'
     + '\uD83D\uDCCD ' + caLabel + '\n'
     + '\uD83D\uDCB5 Ti\u1ec1n m\u1eb7t: <b>' + fmtMoney(tm) + '</b>\n'
-    + '\uD83D\uDCB3 Chuy\u1ec3n kho\u1ea3n: <b>' + fmtMoney(ck) + '</b>\n'
-    + '\uD83D\uDCB0 T\u1ed5ng: <b>' + fmtMoney(total) + '</b>\n'
+    + '\uD83D\uDCB0 Doanh thu ca: <b>' + fmtMoney(tm) + '</b>\n'
     + '\uD83D\uDC65 Kh\u00e1ch: ' + khach
-    + ghichu;
+    + ghichu
+    + '\n\u2139\uFE0F Chuy\u1ec3n kho\u1ea3n c\u1ea3 ng\u00e0y do Ka nh\u1eadp ri\u00eang.';
   tgSend(text);
 }
 
