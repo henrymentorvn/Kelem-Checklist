@@ -568,6 +568,11 @@ const DATA={
       {id:"t11",name:"Thay túi rác trong quầy",std:"Túi rác mới, thùng không có mùi"},
       {id:"t12",name:"Kiểm tra tồn kho nguyên liệu pha chế + ghi báo cáo",std:"Đồ tươi báo mỗi ngày, nguyên liệu khô báo khi còn 3–5 ngày",priority:true},
       {id:"t13",name:"[T7, CN] Mang bình trà tự phục vụ ra khu khách",std:"Bình trà pha sẵn, có nhãn tên loại trà"},
+      {id:"t22",name:"Vệ sinh tủ lạnh — kiểm tra rau củ loại bỏ phần hư",std:"Lau mặt trong tủ, xếp lại gọn, bỏ rau củ hết hạn hoặc hư",note:"Làm mỗi sáng — tủ lạnh sạch tránh lây vi khuẩn sang thực phẩm khác"},
+      {id:"t23",name:"Dọn tủ đông (tủ đá) — tránh đóng tuyết",std:"Kiểm tra lớp tuyết, nếu dày > 1cm thì xả đông theo đúng quy trình"},
+      {id:"t24",name:"Lau dọn kệ sau quầy thu ngân và kệ khu pha chế",std:"Lau sạch bụi, sắp xếp gọn các vật dụng — không để lộn xộn"},
+      {id:"t25",name:"Thay thảm lau chân cửa chính + quầy pha chế khi dơ",std:"Thảm dơ phải thay ngay, không để ướt nhớp"},
+      {id:"t26",name:"Chà rửa tất cả ca đong trong quầy pha chế",std:"Dùng bàn chải chuyên dụng, tráng kỹ bằng nước sạch, úp ráo",priority:true},
     ]},
     {label:"09:00–18:00 · Vận hành",tasks:[
       {id:"t14",name:"Pha chế đồ uống theo order POS",std:"Đúng tỷ lệ — ra trong 5 phút/đơn, 8 phút/phức tạp",priority:true},
@@ -595,6 +600,11 @@ const DATA={
       {id:"h09",name:"Kiểm tra khu vật nuôi (thỏ, gà, ngỗng, cừu)",std:"Có đủ nước và thức ăn; khu không có mùi nặng; chuồng khóa đúng",note:"Báo ngay Hiếu nếu con vật bệnh, bỏ ăn hoặc chuồng bị hư"},
       {id:"h10",name:"Đem bàn ghế ra ban công (nếu trời không mưa)",std:"Sắp xếp gọn, đúng vị trí quy định"},
       {id:"h11",name:"Kiểm tra tồn kho nguyên liệu bếp + ghi báo cáo",std:"Đồ tươi sống báo mỗi ngày, nguyên liệu khô báo khi còn 3–5 ngày",priority:true},
+      {id:"h21",name:"Nấu cơm",std:"Vo gạo sạch, đong nước đúng tỷ lệ, bật nồi cơm đúng giờ"},
+      {id:"h22",name:"[Khi mưa] Đem bạt che khu vui chơi cát — [Nắng lên] Thu bạt vô",std:"Kiểm tra thường xuyên khi trời biến động — bạt phủ kín, buộc chắc",note:"Ưu tiên làm ngay khi thấy trời chuyển mưa"},
+      {id:"h23",name:"Quét 2 kho",std:"Quét sạch góc kho, không để rác tích tụ"},
+      {id:"h24",name:"Quét mạng nhện đèn gỗ to khu vườn nho — quét bụi trên kệ nồi gốm",std:"Không còn mạng nhện nhìn thấy, kệ nồi gốm không có lớp bụi dày"},
+      {id:"h25",name:"Kiểm tra nguồn điện tủ đông khu vườn nho",std:"Đèn nguồn sáng, tủ chạy đều — báo Hiếu ngay nếu có bất thường",priority:true},
     ]},
     {label:"09:00–14:00 · Vận hành",tasks:[
       {id:"h12",name:"Đón khách tại cổng, hướng dẫn chỗ ngồi",std:"Chào tự nhiên, nụ cười — không để khách đứng chờ quá 1 phút",priority:true},
@@ -2152,6 +2162,21 @@ function saveBFDay(dk, idx) {
 
 
 // ===================== KẾT CA HIẾU =====================
+function calcDoanhThuHieu() {
+  const bandau = parseInt(document.getElementById('kch-bandau').value) || 0;
+  const tongKet = parseInt(document.getElementById('kch-tienmat').value) || 0;
+  const preview = document.getElementById('kch-doanhthu-preview');
+  const val = document.getElementById('kch-doanhthu-val');
+  if(bandau > 0 && tongKet > 0) {
+    const dt = tongKet - bandau;
+    preview.style.display = 'block';
+    val.textContent = fmtMoney(Math.max(0, dt));
+    val.style.color = dt >= 0 ? 'var(--green)' : '#C62828';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 function renderKetCaHieu(){
   const dk = getDateKey();
   const kc = ketcaState[dk]&&ketcaState[dk]['hieu'];
@@ -2169,9 +2194,15 @@ function renderKetCaHieu(){
     h += `<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Báo cáo doanh thu ca tối — bao gồm doanh thu phát sinh sau khi Thoa và Hạnh đã về.</div>`;
     h += `<div class="ketca-card">
       <div class="ketca-title">📋 Báo cáo kết ca tối</div>
-      <div class="field-label">Tổng tiền mặt thu được (đồng)</div>
-      <input type="number" class="field-input" id="kch-tienmat" placeholder="Ví dụ: 500000">
-
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Điền tiền két ban đầu và tổng tiền đếm được cuối ca. App tự tính doanh thu.</div>
+      <div class="field-label">Tiền két ban đầu Ka để sẵn (đồng) ★</div>
+      <input type="number" class="field-input" id="kch-bandau" placeholder="Ví dụ: 500000" oninput="calcDoanhThuHieu()">
+      <div class="field-label">Tổng tiền mặt đếm được trong két (đồng) ★</div>
+      <input type="number" class="field-input" id="kch-tienmat" placeholder="Ví dụ: 1500000" oninput="calcDoanhThuHieu()">
+      <div id="kch-doanhthu-preview" style="display:none;background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--muted)">Doanh thu ca tối = Tổng két - Ban đầu</div>
+        <div style="font-size:20px;font-weight:700;color:var(--green);margin-top:4px" id="kch-doanhthu-val">0đ</div>
+      </div>
       <div class="field-label">Số khách phục vụ ca tối (lượt)</div>
       <input type="number" class="field-input" id="kch-khach" placeholder="Ví dụ: 8">
       <div class="field-label">Ghi chú / Sự cố (nếu có)</div>
@@ -2184,12 +2215,18 @@ function renderKetCaHieu(){
 }
 
 function submitKetCaHieu(){
-  const tm = document.getElementById('kch-tienmat').value;
-  if(!tm || parseInt(tm) <= 0){ alert('Vui lòng nhập tiền mặt đếm được'); return; }
+  const bandau = parseInt(document.getElementById('kch-bandau').value) || 0;
+  const tongKet = parseInt(document.getElementById('kch-tienmat').value) || 0;
+  if(!bandau){ alert('Vui lòng nhập tiền két ban đầu Ka để sẵn'); return; }
+  if(!tongKet){ alert('Vui lòng nhập tổng tiền mặt đếm được trong két'); return; }
+  const doanhThu = Math.max(0, tongKet - bandau);
   const dk = getDateKey();
   if(!ketcaState[dk]) ketcaState[dk] = {};
   ketcaState[dk]['hieu'] = {
-    tienmat: tm, ck: '0',
+    tienmat: String(doanhThu),
+    tongKet: String(tongKet),
+    bandau: String(bandau),
+    ck: '0',
     khach: document.getElementById('kch-khach').value,
     ghichu: document.getElementById('kch-ghichu').value,
     submitted: true, confirmed: false,
