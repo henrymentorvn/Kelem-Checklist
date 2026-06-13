@@ -304,19 +304,6 @@ html,body{min-height:100%;background:#F0EDE6;font-family:-apple-system,BlinkMacS
 .backfill-save-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:12px}
 
 /* KIỂM KÊ */
-/* ---- V2 INV CSS ---- */
-.inv2-badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;font-weight:500}
-.inv2-freq-badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;font-weight:500}
-.inv2-qty-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:var(--ink);flex-shrink:0;line-height:1}
-.inv2-qty-btn:active{background:var(--cream)}
-.inv2-tt-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;background:var(--white);color:var(--muted);transition:all 0.12s}
-.inv2-tt-btn.selected{background:var(--green);border-color:var(--green);color:#fff;font-weight:500}
-.inv2-action-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;background:var(--white);color:var(--ink)}
-.inv2-action-btn:active{background:var(--cream)}
-.inv2-action-warn{border-color:#FFC107;color:#E65100;background:#FFFDE7}
-.inv2-locked-banner{background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:12px 14px;font-size:13px;color:#2E7D32;margin-bottom:12px;text-align:center}
-.inv2-done-banner{background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--green);text-align:center}
-/* ---- END V2 INV CSS ---- */
 .kk-wrap{padding:16px}
 .kk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .kk-stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
@@ -538,7 +525,7 @@ function dbListen(cb) {
   _pollInterval = setInterval(async () => {
     if(!dbReady) return;
     try {
-      const keys = ['checklist','ketca','chamcong','scores','nguyen_lieu','week_assignment','kk_items','kk_records','kk_lock','inventory_v2_items','inventory_v2_sessions','inventory_v2_alerts'];
+      const keys = ['checklist','ketca','chamcong','scores','nguyen_lieu','week_assignment','kk_items','kk_records','kk_lock'];
       for(const key of keys) {
         const {data, error} = await _sbClient.from('kalem_data').select('value,updated_at').eq('key',key).single();
         if(!error && data) {
@@ -684,7 +671,7 @@ function fmtMoney(n){return parseInt(n||0).toLocaleString("vi-VN")+"đ";}
 
 async function load(){
   try {
-    const [cl, sc, kc, nl, cc, kkI, kkR, kkL, wkA, iv2I, iv2S, iv2Al, iv2Au] = await Promise.all([
+    const [cl, sc, kc, nl, cc, kkI, kkR, kkL, wkA] = await Promise.all([
       dbGet("checklist"),
       dbGet("scores"),
       dbGet("ketca"),
@@ -694,10 +681,6 @@ async function load(){
       dbGet("kk_records"),
       dbGet("kk_lock"),
       dbGet("week_assignment"),
-      dbGet("inventory_v2_items"),
-      dbGet("inventory_v2_sessions"),
-      dbGet("inventory_v2_alerts"),
-      dbGet("inventory_v2_audit"),
     ]);
 
     if(cl && cl.date === getToday()) clState = cl;
@@ -711,24 +694,18 @@ async function load(){
     if(kkR) kkRecords = kkR;
     if(kkL) kkLockState = kkL;
     if(wkA) weekAssignment = wkA;
-    if(iv2I) inv2Items = iv2I;
-    if(iv2S) inv2Sessions = iv2S;
-    if(iv2Al) inv2Alerts = iv2Al;
-    if(iv2Au) inv2AuditLog = iv2Au;
 
     // Backup vào localStorage
     if(kkI) try{localStorage.setItem('kl_kk_items',JSON.stringify(kkI));}catch(e){}
     if(kkR) try{localStorage.setItem('kl_kk_records',JSON.stringify(kkR));}catch(e){}
     if(kkL) try{localStorage.setItem('kl_kk_lock',JSON.stringify(kkL));}catch(e){}
     if(wkA) try{localStorage.setItem('kl_week_assign',JSON.stringify(wkA));}catch(e){}
-    if(iv2I) try{localStorage.setItem('kl_inv2_items',JSON.stringify(iv2I));}catch(e){}
-    if(iv2S) try{localStorage.setItem('kl_inv2_sessions',JSON.stringify(iv2S));}catch(e){}
 
   } catch(e) {
     console.warn('load() error, using localStorage fallback:', e);
     clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
     // Fallback: đọc localStorage
-    loadInv2();
+    loadKK();
     loadKKLock();
     loadWeekAssignment();
   }
@@ -2270,11 +2247,10 @@ function selfConfirmHieu(){
 }
 
 
+// ===================== KIỂM KÊ =====================
+let kkItems = []; // Danh sách vật dụng (setup bởi Hiếu)
+let kkRecords = {}; // Lịch sử kiểm kê theo ngày/tuần
 
-// ===================== KIỂM KÊ V2 =====================
-// Giữ lại biến cũ để không phá module Nguyên liệu đang dùng kkItems
-let kkItems = []; // Legacy — vẫn dùng cho tab Nguyên liệu
-let kkRecords = {}; // Legacy
 const KK_GROUPS = {
   phache: 'Nguyên liệu pha chế',
   bep: 'Nguyên liệu bếp',
@@ -2282,1079 +2258,534 @@ const KK_GROUPS = {
   decor: 'Đồ trang trí & Nội thất',
   vattu: 'Vật tư & Tiêu hao',
 };
+
 const KK_CHATLG = {
   tot: {label:'Tốt', cls:'sel-tot'},
   theo: {label:'Cần theo dõi', cls:'sel-theo'},
   hu: {label:'Hư hỏng', cls:'sel-hu'},
   thay: {label:'Cần thay', cls:'sel-thay'},
 };
+
 const KK_DEXUAT = ['Mua thêm','Sửa chữa','Thanh lý','Báo Henry/Ka','Không cần xử lý'];
 
-// ---- V2 DATA ----
-let inv2Items   = [];  // Danh mục vật tư V2
-let inv2Sessions = {}; // {dateKey: {items:[{idx,qty,status,note,savedAt,savedBy}], locked, lockedAt, lockedBy, handoverDone, handoverAt}}
-let inv2Alerts  = [];  // [{id,type,itemIdx,msg,ts,read}]
-let inv2AuditLog = []; // [{ts,who,action,itemIdx,itemName,oldVal,newVal,reason}]
+function loadKK() {
+  try { const d=localStorage.getItem('kl_kk_items');if(d)kkItems=JSON.parse(d); } catch(e){}
+  try { const d=localStorage.getItem('kl_kk_records');if(d)kkRecords=JSON.parse(d); } catch(e){}
+}
 
-// Tần suất nhóm
-const INV2_GROUPS = {A:'Mỗi ngày', B:'2 lần/tuần', C:'Hàng tuần', D:'Hàng tháng'};
-const INV2_STATUS = {
-  OK:          {label:'Bình thường',    cls:'inv2-ok',       color:'#2E7D32'},
-  LOW_STOCK:   {label:'Sắp hết',        cls:'inv2-low',      color:'#E65100'},
-  CRITICAL:    {label:'Khẩn cấp',       cls:'inv2-critical', color:'#C62828'},
-  OUT_OF_STOCK:{label:'Hết hàng',       cls:'inv2-out',      color:'#B71C1C'},
-  DAMAGED:     {label:'Hư hỏng',        cls:'inv2-damaged',  color:'#6A1B9A'},
-  MISSING:     {label:'Không tìm thấy', cls:'inv2-missing',  color:'#4E342E'},
-  NOT_CHECKED: {label:'Chưa kiểm',      cls:'inv2-nc',       color:'#9E9E9E'},
-};
-const INV2_TINHTRANG = ['Bình thường','Sắp hết','Hết hàng','Hư hỏng','Đổ/vỡ','Không tìm thấy'];
-
-// ---- PERSIST ----
-function loadInv2() {
-  try { const d=localStorage.getItem('kl_inv2_items');   if(d) inv2Items=JSON.parse(d); } catch(e){}
-  try { const d=localStorage.getItem('kl_inv2_sessions');if(d) inv2Sessions=JSON.parse(d); } catch(e){}
-  try { const d=localStorage.getItem('kl_inv2_alerts');  if(d) inv2Alerts=JSON.parse(d); } catch(e){}
-  try { const d=localStorage.getItem('kl_inv2_audit');   if(d) inv2AuditLog=JSON.parse(d); } catch(e){}
-  // Legacy KK (cho Nguyên liệu)
-  try { const d=localStorage.getItem('kl_kk_items');  if(d) kkItems=JSON.parse(d); } catch(e){}
-  try { const d=localStorage.getItem('kl_kk_records');if(d) kkRecords=JSON.parse(d); } catch(e){}
-}
-function saveInv2Items() {
-  try { localStorage.setItem('kl_inv2_items', JSON.stringify(inv2Items)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('inventory_v2_items', inv2Items);
-}
-function saveInv2Sessions() {
-  try { localStorage.setItem('kl_inv2_sessions', JSON.stringify(inv2Sessions)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('inventory_v2_sessions', inv2Sessions);
-}
-function saveInv2Alerts() {
-  try { localStorage.setItem('kl_inv2_alerts', JSON.stringify(inv2Alerts)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('inventory_v2_alerts', inv2Alerts);
-}
-function saveInv2Audit() {
-  try { localStorage.setItem('kl_inv2_audit', JSON.stringify(inv2AuditLog)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('inventory_v2_audit', inv2AuditLog);
-}
-// Legacy save (cho Nguyên liệu module)
 function saveKKItems() {
-  try { localStorage.setItem('kl_kk_items', JSON.stringify(kkItems)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('kk_items', kkItems);
-}
-function saveKKRecords() {
-  try { localStorage.setItem('kl_kk_records', JSON.stringify(kkRecords)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('kk_records', kkRecords);
+  try { localStorage.setItem('kl_kk_items',JSON.stringify(kkItems)); } catch(e){}
+  if(typeof dbSet === "function") dbSet('kk_items', kkItems);
 }
 
-// ---- LEGACY KK LOCK (vẫn cần cho module Nguyên liệu) ----
-let kkLockState = {};
-function loadKKLock() {
-  try { const d=localStorage.getItem('kl_kk_lock'); if(d) kkLockState=JSON.parse(d); } catch(e){}
+function saveKKRecords() {
+  try { localStorage.setItem('kl_kk_records',JSON.stringify(kkRecords)); } catch(e){}
+  if(typeof dbSet === "function") dbSet('kk_records', kkRecords);
 }
-function saveKKLock() {
-  try { localStorage.setItem('kl_kk_lock', JSON.stringify(kkLockState)); } catch(e){}
-  if(typeof dbSet==='function') dbSet('kk_lock', kkLockState);
-}
-function isKKLocked(freq) { return !!(kkLockState && kkLockState[freq] && kkLockState[freq].locked); }
-function lockKK(freq) {
-  const periodKey = getKKPeriodKey(freq);
-  const recs = freq==='ngay' ? kkRecords[periodKey] : kkRecords[periodKey];
-  if(!kkLockState) kkLockState={};
-  kkLockState[freq] = { locked:true, lockedAt: new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}), periodKey, snapshot: recs||{} };
-  saveKKLock();
-}
-function unlockKK(freq) {
-  if(!kkLockState) kkLockState={};
-  kkLockState[freq] = { locked:false };
-  saveKKLock();
-}
+
 function getKKPeriodKey(freq) {
   const today = new Date();
-  if(freq==='ngay') return formatDateVN(today);
+  if(freq === 'ngay') return formatDateVN(today);
+  // Tuần: lấy ngày thứ 2 đầu tuần
   const dow = today.getDay();
   const monday = new Date(today);
-  monday.setDate(today.getDate() - (dow===0 ? 6 : dow-1));
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
   return 'W_' + formatDateVN(monday);
 }
-function renderKKCompare(freq) { return ''; } // stub — không dùng nữa
 
-// ---- HELPER ----
-function inv2Today() {
-  return new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Ho_Chi_Minh'});
-}
-function inv2NowTime() {
-  return new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
-}
-function inv2DOW() {
-  // 0=CN,1=T2,...,6=T7
-  return new Date().getDay();
-}
-function inv2IsGroupBDay() {
-  // Nhóm B kiểm thứ 4 (3) và CN (0)
-  const d = inv2DOW(); return d===3 || d===0;
-}
-function inv2IsGroupCDay() {
-  // Nhóm C kiểm CN (0)
-  return inv2DOW()===0;
-}
-function inv2IsGroupDDay() {
-  // Nhóm D kiểm ngày cuối tháng
-  const t = new Date();
-  const lastDay = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
-  return t.getDate()===lastDay;
-}
-function inv2GetTodayGroups() {
-  const gs = ['A'];
-  if(inv2IsGroupBDay()) gs.push('B');
-  if(inv2IsGroupCDay()) gs.push('C');
-  if(inv2IsGroupDDay()) gs.push('D');
-  return gs;
-}
-function inv2GetItemsForToday() {
-  const gs = inv2GetTodayGroups();
-  return inv2Items.map((item,idx)=>({...item,idx})).filter(item=>gs.includes(item.freq));
-}
-function inv2GetSession(dk) {
-  if(!inv2Sessions[dk]) inv2Sessions[dk] = {items:{},locked:false,handoverDone:false};
-  return inv2Sessions[dk];
-}
-function inv2CalcStatus(item, qty) {
-  if(qty===null || qty===undefined || qty==='') return 'NOT_CHECKED';
-  const q = parseFloat(qty);
-  if(isNaN(q)) return 'NOT_CHECKED';
-  if(q<=0) return 'OUT_OF_STOCK';
-  if(item.minStock>0 && q<=item.minStock) return 'CRITICAL';
-  if(item.minStock>0 && q<=item.minStock*1.5) return 'LOW_STOCK';
-  return 'OK';
-}
-function inv2CalcStatusFromTinhTrang(tinhtrang) {
-  if(!tinhtrang) return null;
-  if(tinhtrang==='Hư hỏng'||tinhtrang==='Đổ/vỡ') return 'DAMAGED';
-  if(tinhtrang==='Không tìm thấy') return 'MISSING';
-  if(tinhtrang==='Hết hàng') return 'OUT_OF_STOCK';
-  if(tinhtrang==='Sắp hết') return 'LOW_STOCK';
-  return null;
-}
-function inv2GetItemRecord(dk, itemIdx) {
-  const sess = inv2GetSession(dk);
-  return sess.items[itemIdx] || null;
-}
-function inv2CountChecked(dk) {
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  return todayItems.filter(it=>sess.items[it.idx] && sess.items[it.idx].saved).length;
-}
-function inv2CountAlerts(dk) {
-  const sess = inv2GetSession(dk);
-  let warn=0, crit=0;
-  inv2GetItemsForToday().forEach(item=>{
-    const rec = sess.items[item.idx];
-    if(!rec||!rec.saved) return;
-    const st = rec.overrideStatus || inv2CalcStatus(item, rec.qty);
-    if(st==='LOW_STOCK') warn++;
-    if(st==='CRITICAL'||st==='OUT_OF_STOCK'||st==='DAMAGED'||st==='MISSING') crit++;
+// ---- HIẾU: Setup danh sách vật dụng ----
+function renderKKSetup() {
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Thiết lập danh sách kiểm kê</div>';
+  h += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Nhập tất cả vật dụng, nguyên liệu cần kiểm kê. Chỉ cần làm 1 lần, sau đó chỉ cập nhật số lượng mỗi kỳ.</div>';
+
+  // Nhóm các item theo group
+  const groups = {};
+  kkItems.forEach((item, idx) => {
+    if(!groups[item.group]) groups[item.group] = [];
+    groups[item.group].push({...item, idx});
   });
-  return {warn,crit};
-}
 
-// ---- MIGRATE từ kkItems cũ ----
-function inv2MigrateFromLegacy() {
-  if(!kkItems || !kkItems.length) return;
-  if(inv2Items.length>0) return; // Đã có data V2, không migrate lại
-  const keywordA = ['mứt','sirup','syrup','trà','cafe','cacao','matcha','sữa','trân châu','whipping','kem','chanh','tắc','cam','ổi','dừa','nước uống','coca','proro','đường','đá','bình sữa','bạc hà','gừng','nước cốt'];
-  const keywordB = ['sấy','bột','quế','thảo mộc','bánh','kẹo','snack','hạt','decor','topping','rim','mật ong','hoa','cam sấy'];
-  const keywordC = ['ly','muỗng','nĩa','khay','ca đong','phin','bình','kéo','kẹp','xúc đá','cây múc','bát','đĩa','xô','tô','chén','dĩa'];
-  const keywordD = ['máy','ghế','bàn','sofa','tủ','thiết bị'];
-  function autoFreq(name, mucDich) {
-    const s = (name+' '+(mucDich||'')).toLowerCase();
-    if(keywordD.some(k=>s.includes(k))) return 'D';
-    if(keywordC.some(k=>s.includes(k))) return 'C';
-    if(keywordA.some(k=>s.includes(k))) return 'A';
-    if(keywordB.some(k=>s.includes(k))) return 'B';
-    return 'B'; // mặc định
-  }
-  const mainGroupMap = {phache:'Nguyên liệu', bep:'Nguyên liệu', dungcu:'Dụng cụ', decor:'Dụng cụ', vattu:'Vật tư tiêu hao'};
-  kkItems.forEach(item=>{
-    inv2Items.push({
-      name:       item.name || '',
-      mainGroup:  mainGroupMap[item.group] || 'Vật tư tiêu hao',
-      freq:       autoFreq(item.name, item.mucDich),
-      unit:       item.donvi || '',
-      stdStock:   parseFloat(item.soluongChuan)||0,
-      minStock:   parseFloat(item.nguong)||0,
-      costPrice:  0,
-      mucDich:    item.mucDich || '',
-      note:       '',
-      createdAt:  inv2Today(),
-    });
-  });
-  saveInv2Items();
-}
-
-// ---- TG ALERTS ----
-function inv2TgCanhBaoKhan(item, rec, dk) {
-  const st = rec.overrideStatus || inv2CalcStatus(item, rec.qty);
-  if(st!=='CRITICAL'&&st!=='OUT_OF_STOCK') return;
-  const text = '🚨 <b>CẢNH BÁO KHO KHẨN CẤP</b>\n'
-    + '📦 Món: <b>'+item.name+'</b>\n'
-    + '📉 Tồn thực tế: <b>'+rec.qty+' '+item.unit+'</b>\n'
-    + '⚠️ Tồn tối thiểu: '+item.minStock+' '+item.unit+'\n'
-    + '👤 Người báo: '+(rec.savedBy||'—')+'\n'
-    + '🕐 Thời gian: '+rec.savedAt+'\n'
-    + '🛒 Đề xuất: Mua thêm ngay.';
-  if(typeof tgSend==='function') tgSend(text);
-}
-function inv2TgBaoCaoNgay(dk) {
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const checked = todayItems.filter(it=>sess.items[it.idx]&&sess.items[it.idx].saved).length;
-  const alerts = inv2CountAlerts(dk);
-  const crits=[], warns=[], buyList=[];
-  let haoHutVal = 0;
-  todayItems.forEach(item=>{
-    const rec = sess.items[item.idx];
-    if(!rec||!rec.saved) return;
-    const st = rec.overrideStatus || inv2CalcStatus(item,rec.qty);
-    if(st==='CRITICAL'||st==='OUT_OF_STOCK') {
-      crits.push('• '+item.name+': còn '+rec.qty+' '+item.unit);
-      buyList.push(item.name);
-    }
-    if(st==='LOW_STOCK') warns.push('• '+item.name+': còn '+rec.qty+' '+item.unit);
-    if(st==='DAMAGED'||st==='MISSING') {
-      crits.push('• '+item.name+': '+(rec.tinhtrang||st));
-      if(item.costPrice>0) haoHutVal += item.costPrice;
-    }
-  });
-  const lockedBy = sess.lockedBy || 'Hiếu';
-  const lockedAt = sess.lockedAt || inv2NowTime();
-  let text = '📊 <b>BÁO CÁO TỒN KHO KALEM — '+dk+'</b>\n\n'
-    + '✅ Đã kiểm: '+checked+'/'+todayItems.length+' món\n'
-    + '🟡 Cảnh báo vàng: '+alerts.warn+'\n'
-    + '🔴 Cảnh báo đỏ: '+alerts.crit+'\n'
-    + (haoHutVal>0 ? '💸 Hao hụt/hư hỏng ước tính: '+haoHutVal.toLocaleString('vi-VN')+'đ\n' : '');
-  if(crits.length) text += '\n🔴 <b>Khẩn cấp:</b>\n'+crits.join('\n')+'\n';
-  if(warns.length) text += '\n🟡 <b>Sắp hết:</b>\n'+warns.join('\n')+'\n';
-  if(buyList.length) text += '\n🛒 <b>Đề xuất mua:</b>\n'+buyList.map(x=>'• '+x).join('\n')+'\n';
-  text += '\n👤 Người chốt: '+lockedBy+'\n🕐 Thời gian chốt: '+lockedAt;
-  if(typeof tgSend==='function') tgSend(text);
-}
-function inv2TgNhacChuaBanGiao() {
-  if(typeof tgSend==='function') tgSend('⚠️ <b>CHƯA BÀN GIAO KHO CA SÁNG</b>\nNhân viên ca sáng chưa hoàn tất kiểm kê nhóm A.\nVui lòng kiểm tra lại.');
-}
-function inv2TgNhacChuaChot() {
-  if(typeof tgSend==='function') tgSend('⚠️ <b>CHƯA CHỐT KIỂM KÊ CUỐI NGÀY</b>\nHiếu chưa hoàn tất kiểm kê hôm nay.\nVui lòng chốt trước khi đóng ca.');
-}
-
-// ---- RENDER HELPER ----
-function inv2StatusBadge(st) {
-  const s = INV2_STATUS[st] || INV2_STATUS.NOT_CHECKED;
-  return '<span class="inv2-badge" style="background:'+s.color+'20;color:'+s.color+';border:1px solid '+s.color+'40">'+s.label+'</span>';
-}
-function inv2FreqBadge(freq) {
-  const colors = {A:'var(--brown)',B:'var(--green)',C:'#1565C0',D:'#6A1B9A'};
-  const labels = {A:'Mỗi ngày',B:'2 lần/tuần',C:'Hàng tuần',D:'Hàng tháng'};
-  return '<span class="inv2-freq-badge" style="background:'+colors[freq]+'20;color:'+colors[freq]+';border:1px solid '+colors[freq]+'40">'+freq+' · '+(labels[freq]||freq)+'</span>';
-}
-
-// ===================== RENDER CHÍNH =====================
-function renderKiemKe() {
-  const r = ROLES[currentRole];
-  if(r.type==='admin') { renderKKAdmin(); return; }
-  if(r.type==='lead')  { renderKKLead(); return; }
-  // Staff
-  renderKKStaff();
-}
-
-// ===================== STAFF VIEW =====================
-function renderKKStaff() {
-  const dk = inv2Today();
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const groups = inv2GetTodayGroups();
-
-  let h = '<div class="wrap">';
-  h += '<div class="sec-title">Kiểm kê hôm nay · '+dk+'</div>';
-
-  // Banner ngày kiểm
-  h += '<div style="background:var(--green-pale);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--green)">Hôm nay kiểm nhóm: <b>'+groups.join(', ')+'</b> ('+todayItems.length+' món)</div>';
-
-  if(sess.locked) {
-    h += '<div class="inv2-locked-banner">🔒 Ca hôm nay đã được Hiếu chốt. Không thể sửa.</div>';
-    h += '</div>';
-    document.getElementById('main-content').innerHTML=h; return;
-  }
-
-  // Progress
-  const checked = inv2CountChecked(dk);
-  const pct = todayItems.length ? Math.round(checked/todayItems.length*100) : 0;
-  h += '<div style="margin-bottom:14px">';
-  h += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px"><span>Đã kiểm</span><span>'+checked+'/'+todayItems.length+'</span></div>';
-  h += '<div class="top-bar-wrap"><div class="top-bar" style="width:'+pct+'%;background:var(--green)"></div></div>';
-  h += '</div>';
-
-  if(!todayItems.length) {
-    h += '<div style="text-align:center;color:#aaa;padding:32px;font-size:13px">Hiếu chưa setup danh mục vật tư.<br>Nhờ Hiếu vào tab <b>Kiểm kê → Quản lý kho</b> để thêm.</div>';
-    h += '</div>';
-    document.getElementById('main-content').innerHTML=h; return;
-  }
-
-  // Nhóm theo freq
-  groups.forEach(g=>{
-    const gItems = todayItems.filter(it=>it.freq===g);
-    if(!gItems.length) return;
-    h += '<div class="kk-group-label">Nhóm '+g+' — '+INV2_GROUPS[g]+' ('+gItems.length+' món)</div>';
-    gItems.forEach(item=>{
-      h += inv2RenderStaffCard(item, dk, sess);
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = groups[gkey] || [];
+    h += `<div class="kk-group-label">${glabel} (${items.length} mục)</div>`;
+    items.forEach(({idx, name, donvi, soluongChuan, nguong, tanSuat, mucDich}) => {
+      h += `<div class="kk-dash-card">
+        <div class="kk-dash-header">
+          <div class="kk-dash-name">${name}</div>
+          <span class="kk-item-badge ${tanSuat==='ngay'?'badge-ngay':'badge-tuan'}">${tanSuat==='ngay'?'Mỗi ngày':'Mỗi tuần'}</span>
+          <button style="background:none;border:none;color:var(--brown);cursor:pointer;font-size:12px;text-decoration:underline;margin-right:4px" onclick="editKKItem(${idx})">Sửa</button>
+          <button style="background:none;border:none;color:#C62828;cursor:pointer;font-size:12px" onclick="deleteKKItem(${idx})">✕</button>
+        </div>
+        <div class="kk-dash-meta">
+          Mục đích: ${mucDich||'—'} · Chuẩn: ${soluongChuan} ${donvi} · Ngưỡng cảnh báo: -${nguong} ${donvi}
+        </div>
+      </div>`;
     });
   });
 
-  // Nút bàn giao
-  const allDone = checked===todayItems.length;
-  if(!sess.handoverDone) {
-    h += '<button class="submit-btn" style="margin-top:12px;'+(allDone?'':'opacity:0.5')+'" onclick="inv2DoHandover()" '+(allDone?'':'disabled')+'>✅ Bàn giao kho ca này</button>';
-    if(!allDone) h += '<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px">Kiểm đủ '+todayItems.length+' món mới bàn giao được</div>';
-  } else {
-    h += '<div class="inv2-done-banner">✅ Đã bàn giao lúc '+sess.handoverAt+'</div>';
-  }
-
+  h += '<div class="setup-card">';
+  h += '<div class="setup-title">+ Thêm vật dụng / nguyên liệu mới</div>';
+  h += `<div class="setup-field"><div class="setup-label">Tên vật dụng / nguyên liệu ★</div><input class="setup-input" id="kk-new-name" placeholder="VD: Ly thủy tinh 250ml, Sữa tươi không đường..."></div>`;
+  h += `<div class="setup-field"><div class="setup-label">Nhóm ★</div><select class="setup-select" id="kk-new-group">${Object.entries(KK_GROUPS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>`;
+  h += `<div class="setup-field"><div class="setup-label">Mục đích sử dụng</div><input class="setup-input" id="kk-new-mucdich" placeholder="VD: Phục vụ đồ uống lạnh, Nguyên liệu pha trà sữa..."></div>`;
+  h += `<div class="setup-row">
+    <div class="setup-field"><div class="setup-label">Đơn vị tính ★</div><input class="setup-input" id="kk-new-donvi" placeholder="cái / kg / lít / gói"></div>
+    <div class="setup-field"><div class="setup-label">Số lượng chuẩn ★</div><input type="number" class="setup-input" id="kk-new-chuan" placeholder="VD: 24"></div>
+  </div>`;
+  h += `<div class="setup-row">
+    <div class="setup-field"><div class="setup-label">Ngưỡng cảnh báo hao hụt</div><input type="number" class="setup-input" id="kk-new-nguong" placeholder="VD: 3 (mất >3 cái là cảnh báo)"></div>
+    <div class="setup-field"><div class="setup-label">Tần suất kiểm</div><select class="setup-select" id="kk-new-tanSuat"><option value="ngay">Mỗi ngày</option><option value="tuan">Mỗi tuần</option></select></div>
+  </div>`;
+  h += `<div class="setup-field"><div class="setup-label">Ghi chú thêm</div><input class="setup-input" id="kk-new-ghichu" placeholder="VD: Kiểm sau mỗi ca, đếm kỹ trong tủ..."></div>`;
+  h += `<button class="setup-save-btn" onclick="addKKItem()">Thêm vào danh sách</button>`;
   h += '</div>';
-  document.getElementById('main-content').innerHTML=h;
+  h += `<div style="margin-top:8px;font-size:13px;color:var(--muted);text-align:center">Tổng: ${kkItems.length} mục đã thiết lập</div>`;
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
 }
 
-function inv2RenderStaffCard(item, dk, sess) {
-  const rec = sess.items[item.idx] || {};
-  const saved = !!rec.saved;
-  const st = saved ? (rec.overrideStatus || inv2CalcStatus(item, rec.qty)) : 'NOT_CHECKED';
-  const warnCls = (st==='CRITICAL'||st==='OUT_OF_STOCK') ? 'danger' : (st==='LOW_STOCK'||st==='DAMAGED'||st==='MISSING') ? 'warn' : '';
-
-  let h = '<div class="kk-item-card '+warnCls+'" id="inv2card-'+item.idx+'">';
-  h += '<div class="kk-item-header">';
-  h += '<div class="kk-item-name">'+item.name+'</div>';
-  h += inv2StatusBadge(st);
-  h += '</div>';
-  h += '<div class="kk-item-meta">'+item.unit+(item.stdStock?(' · Chuẩn: '+item.stdStock):'')+(item.minStock?(' · Tối thiểu: '+item.minStock):'')+' · Nhóm '+item.freq+'</div>';
-
-  if(saved && !rec.editing) {
-    h += '<div class="kk-saved-row">✓ Đã lưu: '+rec.qty+' '+item.unit+(rec.tinhtrang?' · '+rec.tinhtrang:'')+(rec.note?' · '+rec.note:'')+'<button class="kk-edit-btn" onclick="inv2EditRecord('+item.idx+',\''+dk+'\')">Sửa</button></div>';
-  } else {
-    // Ô nhập số [-][số][+]
-    const qVal = rec.qty !== undefined ? rec.qty : '';
-    h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
-    h += '<span style="font-size:12px;color:var(--muted);flex:none">Số lượng:</span>';
-    h += '<button class="inv2-qty-btn" onclick="inv2AdjQty('+item.idx+',-1)">−</button>';
-    h += '<input type="number" class="kk-qty-input" id="inv2q-'+item.idx+'" value="'+qVal+'" min="0" placeholder="0" oninput="inv2PreviewStatus('+item.idx+')" style="width:70px">';
-    h += '<button class="inv2-qty-btn" onclick="inv2AdjQty('+item.idx+',1)">+</button>';
-    h += '<span style="font-size:12px;color:var(--muted)">'+item.unit+'</span>';
-    h += '<span id="inv2stprev-'+item.idx+'" style="font-size:11px;margin-left:4px"></span>';
-    h += '</div>';
-
-    // Tình trạng
-    h += '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">';
-    INV2_TINHTRANG.forEach(tt=>{
-      const sel = rec.tinhtrang===tt;
-      h += '<button class="inv2-tt-btn'+(sel?' selected':'')+'" onclick="inv2SelTT('+item.idx+',\''+tt+'\')">'+tt+'</button>';
-    });
-    h += '</div>';
-
-    // Ghi chú
-    h += '<input type="text" class="kk-note-input" id="inv2n-'+item.idx+'" placeholder="Ghi chú (không bắt buộc)" value="'+(rec.note||'')+'">';
-
-    h += '<button class="kk-save-item-btn" onclick="inv2SaveRecord('+item.idx+',\''+dk+'\')">Lưu</button>';
-  }
-
-  // Cảnh báo đỏ/vàng
-  if(st==='CRITICAL'||st==='OUT_OF_STOCK') {
-    h += '<div class="kk-warn-box">🚨 Khẩn cấp — Cần mua bổ sung ngay!</div>';
-  } else if(st==='LOW_STOCK') {
-    h += '<div style="background:#FFF8E1;border:1px solid #FFC107;border-radius:8px;padding:7px 10px;font-size:12px;color:#E65100;margin-top:4px">⚠️ Sắp hết — Cần theo dõi</div>';
-  }
-
-  h += '</div>';
-  return h;
-}
-
-function inv2AdjQty(idx, delta) {
-  const el = document.getElementById('inv2q-'+idx);
-  if(!el) return;
-  const cur = parseFloat(el.value)||0;
-  el.value = Math.max(0, cur+delta);
-  inv2PreviewStatus(idx);
-}
-
-function inv2PreviewStatus(idx) {
-  const el = document.getElementById('inv2q-'+idx);
-  const prev = document.getElementById('inv2stprev-'+idx);
-  if(!el||!prev) return;
-  const item = inv2Items[idx];
+function editKKItem(idx) {
+  const item = kkItems[idx];
   if(!item) return;
-  const st = inv2CalcStatus(item, el.value);
-  const s = INV2_STATUS[st];
-  prev.innerHTML = '<span style="color:'+s.color+';font-size:11px">'+s.label+'</span>';
+
+  // Hiện modal sửa
+  const overlay = document.createElement('div');
+  overlay.id = 'kk-edit-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:flex-end;justify-content:center';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
+      <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:14px">Sửa vật dụng</div>
+
+      <div class="setup-field"><div class="setup-label">Tên vật dụng / nguyên liệu ★</div>
+        <input class="setup-input" id="kk-edit-name" value="${item.name}"></div>
+
+      <div class="setup-field"><div class="setup-label">Nhóm ★</div>
+        <select class="setup-select" id="kk-edit-group">
+          ${Object.entries(KK_GROUPS).map(([k,v])=>'<option value="'+k+'"'+(item.group===k?' selected':'')+'>'+v+'</option>').join('')}
+        </select></div>
+
+      <div class="setup-field"><div class="setup-label">Mục đích sử dụng</div>
+        <input class="setup-input" id="kk-edit-mucdich" value="${item.mucDich||''}"></div>
+
+      <div style="display:flex;gap:8px">
+        <div class="setup-field" style="flex:1"><div class="setup-label">Đơn vị ★</div>
+          <input class="setup-input" id="kk-edit-donvi" value="${item.donvi}"></div>
+        <div class="setup-field" style="flex:1"><div class="setup-label">Số lượng chuẩn ★</div>
+          <input type="number" class="setup-input" id="kk-edit-chuan" value="${item.soluongChuan}"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div class="setup-field" style="flex:1"><div class="setup-label">Ngưỡng cảnh báo</div>
+          <input type="number" class="setup-input" id="kk-edit-nguong" value="${item.nguong}"></div>
+        <div class="setup-field" style="flex:1"><div class="setup-label">Tần suất kiểm</div>
+          <select class="setup-select" id="kk-edit-tanSuat">
+            <option value="ngay"${item.tanSuat==='ngay'?' selected':''}>Mỗi ngày</option>
+            <option value="tuan"${item.tanSuat==='tuan'?' selected':''}>Mỗi tuần</option>
+          </select></div>
+      </div>
+
+      <div class="setup-field"><div class="setup-label">Ghi chú thêm</div>
+        <input class="setup-input" id="kk-edit-ghichu" value="${item.ghichu||''}"></div>
+
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button onclick="saveKKEdit(${idx})" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Lưu thay đổi</button>
+        <button onclick="closeKKEdit()" style="padding:12px 20px;background:var(--cream-dark);color:var(--muted);border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">Huỷ</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target === overlay) closeKKEdit(); });
 }
 
-let _inv2SelTT = {}; // {idx: tinhtrang}
-function inv2SelTT(idx, tt) {
-  _inv2SelTT[idx] = tt;
-  // Re-render chỉ phần nút
-  document.querySelectorAll('#inv2card-'+idx+' .inv2-tt-btn').forEach(btn=>{
-    btn.classList.toggle('selected', btn.textContent===tt);
+function closeKKEdit() {
+  const el = document.getElementById('kk-edit-overlay');
+  if(el) el.remove();
+}
+
+function saveKKEdit(idx) {
+  const name = document.getElementById('kk-edit-name').value.trim();
+  const group = document.getElementById('kk-edit-group').value;
+  const mucDich = document.getElementById('kk-edit-mucdich').value.trim();
+  const donvi = document.getElementById('kk-edit-donvi').value.trim();
+  const soluongChuan = parseFloat(document.getElementById('kk-edit-chuan').value) || 0;
+  const nguong = parseFloat(document.getElementById('kk-edit-nguong').value) || 1;
+  const tanSuat = document.getElementById('kk-edit-tanSuat').value;
+  const ghichu = document.getElementById('kk-edit-ghichu').value.trim();
+
+  if(!name || !donvi || !soluongChuan) {
+    alert('Vui lòng điền đủ: Tên, Đơn vị, Số lượng chuẩn');
+    return;
+  }
+  kkItems[idx] = {...kkItems[idx], name, group, mucDich, donvi, soluongChuan, nguong, tanSuat, ghichu};
+  saveKKItems();
+  closeKKEdit();
+  renderKKSetup();
+}
+
+function addKKItem() {
+  const name = document.getElementById('kk-new-name').value.trim();
+  const group = document.getElementById('kk-new-group').value;
+  const mucDich = document.getElementById('kk-new-mucdich').value.trim();
+  const donvi = document.getElementById('kk-new-donvi').value.trim();
+  const soluongChuan = parseFloat(document.getElementById('kk-new-chuan').value) || 0;
+  const nguong = parseFloat(document.getElementById('kk-new-nguong').value) || 1;
+  const tanSuat = document.getElementById('kk-new-tanSuat').value;
+  const ghichu = document.getElementById('kk-new-ghichu').value.trim();
+
+  if(!name || !donvi || !soluongChuan) {
+    alert('Vui lòng điền đủ: Tên, Đơn vị, Số lượng chuẩn');
+    return;
+  }
+  kkItems.push({name, group, mucDich, donvi, soluongChuan, nguong, tanSuat, ghichu, createdAt: getDateKey()});
+  saveKKItems();
+  renderKKSetup();
+}
+
+function deleteKKItem(idx) {
+  if(!confirm('Xoá "' + kkItems[idx].name + '" khỏi danh sách?')) return;
+  kkItems.splice(idx, 1);
+  saveKKItems();
+  renderKKSetup();
+}
+
+// ---- HIẾU: Thực hiện kiểm kê ----
+function renderKKCheck(freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  const rec = kkRecords[periodKey];
+  const freqLabel = freq === 'ngay' ? 'Kiểm kê hàng ngày' : 'Kiểm kê hàng tuần';
+  const filteredItems = kkItems.filter(item => item.tanSuat === freq);
+  const locked = isKKLocked(freq);
+  const isAdmin = ROLES[currentRole] && ROLES[currentRole].type === 'admin';
+
+  if(!filteredItems.length) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="kk-wrap"><div class="sec-title">${freqLabel}</div><div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">Chưa có vật dụng nào được thiết lập kiểm kê ${freq==='ngay'?'hàng ngày':'hàng tuần'}.<br><br>Vào tab <strong>Thiết lập</strong> để thêm vào.</div></div>`;
+    return;
+  }
+
+  // Đếm stats
+  const total = filteredItems.length;
+  const done = filteredItems.filter((item,i) => rec[kkItems.indexOf(item)] && rec[kkItems.indexOf(item)].saved).length;
+  const warns = filteredItems.filter((item) => {
+    const idx = kkItems.indexOf(item);
+    const r = rec[idx];
+    if(!r || !r.saved) return false;
+    return (item.soluongChuan - (r.soLuongThucTe||0)) > item.nguong || r.chatLuong === 'hu' || r.chatLuong === 'thay';
+  }).length;
+
+  let h = `<div class="kk-wrap">`;
+  h += `<div class="sec-title">${freqLabel} — ${periodKey.startsWith('W_') ? 'Tuần từ ' + periodKey.replace('W_','') : periodKey}</div>`;
+
+  // Stats
+  h += `<div class="kk-stats">
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--green)">${done}/${total}</div><div class="kk-stat-label">Đã kiểm</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:#C62828">${warns}</div><div class="kk-stat-label">Cảnh báo</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--brown)">${total-done}</div><div class="kk-stat-label">Chưa kiểm</div></div>
+  </div>`;
+
+  // Lock banner
+  if(locked) {
+    const lk = kkLockState[getKKPeriodKey(freq)];
+    h += `<div class="lock-banner locked">
+      🔒 Đã khóa bởi Ka lúc ${lk.lockedAt}
+      ${isAdmin ? `<button class="lock-btn do-unlock" onclick="unlockKK('${freq}')">Mở khóa</button>` : ''}
+    </div>`;
+    h += renderKKCompare(freq);
+  } else if(isAdmin && done === total && total > 0) {
+    h += `<div class="lock-banner unlocked">
+      Chưa khóa — Ka xác nhận xong thì bấm Khóa để bảo toàn dữ liệu
+      <button class="lock-btn do-lock" onclick="lockKK('${freq}')">Khóa kỳ này</button>
+    </div>`;
+  }
+
+  // Group items
+  const groups = {};
+  filteredItems.forEach(item => {
+    const idx = kkItems.indexOf(item);
+    if(!groups[item.group]) groups[item.group] = [];
+    groups[item.group].push({...item, idx});
   });
-}
 
-function inv2SaveRecord(idx, dk) {
-  const item = inv2Items[idx];
-  if(!item) return;
-  const qEl = document.getElementById('inv2q-'+idx);
-  const nEl = document.getElementById('inv2n-'+idx);
-  if(!qEl) return;
-  const qty = qEl.value;
-  if(qty===''||qty===undefined) { alert('Vui lòng nhập số lượng!'); return; }
-  const tinhtrang = _inv2SelTT[idx] || '';
-  const note = nEl ? nEl.value : '';
-  const overrideSt = inv2CalcStatusFromTinhTrang(tinhtrang);
-  const st = overrideSt || inv2CalcStatus(item, qty);
-  const sess = inv2GetSession(dk);
-  const isEdit = sess.items[idx] && sess.items[idx].saved;
-  const oldRec = isEdit ? {...sess.items[idx]} : null;
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = groups[gkey];
+    if(!items || !items.length) return;
+    h += `<div class="kk-group-label">${glabel}</div>`;
 
-  sess.items[idx] = {
-    qty: parseFloat(qty)||0,
-    tinhtrang,
-    note,
-    overrideStatus: overrideSt,
-    saved: true,
-    savedAt: inv2NowTime(),
-    savedBy: ROLES[currentRole]?.name || currentRole,
-    editing: false,
-  };
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  delete _inv2SelTT[idx];
+    items.forEach(({idx, name, donvi, soluongChuan, nguong, mucDich, ghichu}) => {
+      const r = rec[idx] || {};
+      const isSaved = r.saved;
+      const diff = soluongChuan - (r.soLuongThucTe || 0);
+      const isWarn = isSaved && (diff > nguong || r.chatLuong === 'hu' || r.chatLuong === 'thay');
+      const isDanger = isSaved && (r.chatLuong === 'hu' || diff > nguong * 2);
 
-  // Audit nếu sửa lại
-  if(isEdit && oldRec) {
-    inv2AuditLog.push({ts:new Date().toISOString(),who:ROLES[currentRole]?.name||currentRole,action:'edit',itemIdx:idx,itemName:item.name,oldVal:oldRec.qty,newVal:sess.items[idx].qty,reason:'Staff edit'});
-    saveInv2Audit();
-  }
-  // Alert khẩn cấp
-  inv2TgCanhBaoKhan(item, sess.items[idx], dk);
-  renderKiemKe();
-}
+      h += `<div class="kk-item-card${isDanger?' danger':isWarn?' warn':''}">`;
+      h += `<div class="kk-item-header">
+        <div class="kk-item-name">${name}</div>
+        ${isWarn ? '<span style="font-size:18px">⚠️</span>' : isSaved ? '<span style="color:#2E7D32;font-size:16px">✓</span>' : ''}
+      </div>`;
 
-function inv2EditRecord(idx, dk) {
-  const sess = inv2GetSession(dk);
-  if(sess.locked) { alert('Ca đã bị khóa, không thể sửa.'); return; }
-  if(sess.items[idx]) sess.items[idx].editing = true;
-  inv2Sessions[dk] = sess;
-  renderKiemKe();
-}
+      if(mucDich) h += `<div class="kk-item-meta">Mục đích: ${mucDich} · Chuẩn: ${soluongChuan} ${donvi}${ghichu?' · '+ghichu:''}</div>`;
 
-function inv2DoHandover() {
-  const dk = inv2Today();
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const unchecked = todayItems.filter(it=>!sess.items[it.idx]||!sess.items[it.idx].saved);
-  if(unchecked.length) { alert('Còn '+unchecked.length+' món chưa kiểm!'); return; }
-  sess.handoverDone = true;
-  sess.handoverAt = inv2NowTime();
-  sess.handoverBy = ROLES[currentRole]?.name || currentRole;
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  alert('✅ Đã bàn giao kho lúc '+sess.handoverAt);
-  renderKiemKe();
-}
-
-// ===================== HIẾU / LEAD VIEW =====================
-function renderKKLead() {
-  const dk = inv2Today();
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const checked = inv2CountChecked(dk);
-  const alerts = inv2CountAlerts(dk);
-
-  let h = '<div class="wrap">';
-  h += '<div class="sec-title">Quản lý kho — '+dk+'</div>';
-
-  // Tabs Hiếu
-  const activeTab = window._inv2LeadTab || 'today';
-  h += '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">';
-  ['today','catalog','alerts'].forEach(tab=>{
-    const labels = {today:'Kiểm hôm nay',catalog:'Danh mục',alerts:'Cảnh báo'};
-    const isActive = activeTab===tab;
-    h += '<button onclick="window._inv2LeadTab=\''+tab+'\';renderKiemKe()" style="padding:7px 14px;border-radius:8px;border:1.5px solid '+(isActive?'var(--green)':'var(--border)')+';background:'+(isActive?'var(--green)':'var(--white)')+';color:'+(isActive?'#fff':'var(--muted)')+';font-size:13px;cursor:pointer;font-family:inherit">'+labels[tab]+'</button>';
-  });
-  h += '</div>';
-
-  if(activeTab==='today') {
-    h += inv2RenderLeadToday(dk, sess, todayItems, checked, alerts);
-  } else if(activeTab==='catalog') {
-    h += inv2RenderLeadCatalog();
-  } else if(activeTab==='alerts') {
-    h += inv2RenderLeadAlerts(dk, sess, todayItems);
-  }
-
-  h += '</div>';
-  document.getElementById('main-content').innerHTML=h;
-}
-
-function inv2RenderLeadToday(dk, sess, todayItems, checked, alerts) {
-  const groups = inv2GetTodayGroups();
-  let h = '';
-
-  // Status bar
-  h += '<div class="kk-stats">';
-  h += '<div class="kk-stat"><div class="kk-stat-num" style="color:var(--green)">'+checked+'</div><div class="kk-stat-label">Đã kiểm</div></div>';
-  h += '<div class="kk-stat"><div class="kk-stat-num" style="color:'+(alerts.warn?'#E65100':'#aaa')+'">'+alerts.warn+'</div><div class="kk-stat-label">Sắp hết</div></div>';
-  h += '<div class="kk-stat"><div class="kk-stat-num" style="color:'+(alerts.crit?'#C62828':'#aaa')+'">'+alerts.crit+'</div><div class="kk-stat-label">Khẩn cấp</div></div>';
-  h += '</div>';
-
-  // Banner bàn giao
-  if(sess.handoverDone) {
-    h += '<div class="inv2-done-banner" style="margin-bottom:10px">✅ Ca sáng đã bàn giao lúc '+sess.handoverAt+' ('+sess.handoverBy+')</div>';
-  } else {
-    h += '<div style="background:#FFEBEE;border:1px solid #EF9A9A;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#C62828">⚠️ Ca sáng chưa bàn giao kho</div>';
-  }
-
-  // Khóa/Mở khóa
-  if(sess.locked) {
-    h += '<div class="lock-banner locked" style="margin-bottom:10px">🔒 Đã chốt lúc '+(sess.lockedAt||'')+'<button class="lock-btn do-unlock" onclick="inv2AdminUnlock(\''+dk+'\')">Mở khóa</button></div>';
-  } else {
-    const canLock = checked===todayItems.length && todayItems.length>0;
-    h += '<button class="submit-btn" style="margin-bottom:10px;'+(canLock?'':'opacity:0.6')+'" onclick="inv2DoChot(\''+dk+'\')" '+(canLock?'':'disabled')+'>🔒 Chốt kiểm kê hôm nay</button>';
-    if(!canLock && todayItems.length>0) h += '<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px">Cần kiểm đủ '+todayItems.length+' món mới chốt được</div>';
-  }
-
-  if(!todayItems.length) {
-    h += '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Chưa có danh mục. Vào tab <b>Danh mục</b> để thêm vật tư.</div>';
-    return h;
-  }
-
-  // Danh sách theo nhóm
-  groups.forEach(g=>{
-    const gItems = todayItems.filter(it=>it.freq===g);
-    if(!gItems.length) return;
-    h += '<div class="kk-group-label">Nhóm '+g+' — '+INV2_GROUPS[g]+'</div>';
-    gItems.forEach(item=>{
-      const rec = sess.items[item.idx];
-      const saved = rec && rec.saved;
-      const st = saved ? (rec.overrideStatus||inv2CalcStatus(item,rec.qty)) : 'NOT_CHECKED';
-      const warnCls = (st==='CRITICAL'||st==='OUT_OF_STOCK') ? 'danger' : (st==='LOW_STOCK'||st==='DAMAGED'||st==='MISSING') ? 'warn' : '';
-      h += '<div class="kk-dash-card '+warnCls+'" style="border-radius:12px;padding:10px 14px;margin-bottom:7px">';
-      h += '<div class="kk-dash-header">';
-      h += '<div class="kk-dash-name">'+item.name+'</div>';
-      h += inv2StatusBadge(st);
-      h += '</div>';
-      if(saved) {
-        h += '<div class="kk-dash-meta">Thực tế: <b>'+rec.qty+'</b> '+item.unit;
-        if(item.stdStock) h += ' / chuẩn '+item.stdStock;
-        const diff = item.stdStock ? (parseFloat(rec.qty)-item.stdStock) : null;
-        if(diff!==null && diff<0) h += ' <span style="color:#C62828">↓ thiếu '+Math.abs(diff)+'</span>';
-        if(rec.tinhtrang && rec.tinhtrang!=='Bình thường') h += ' · '+rec.tinhtrang;
-        if(rec.note) h += '<br><span style="color:#888">'+rec.note+'</span>';
-        h += ' · <span style="color:#aaa">'+rec.savedBy+' '+rec.savedAt+'</span>';
-        if(!sess.locked) h += '<button class="kk-edit-btn" style="margin-left:8px" onclick="inv2LeadEditItem('+item.idx+',\''+dk+'\')">Sửa</button>';
-        h += '</div>';
-        // Nút Hiếu
-        if(!sess.locked) {
-          h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">';
-          h += '<button class="inv2-action-btn" onclick="inv2MarkBuy('+item.idx+',\''+dk+'\')">🛒 Đánh dấu mua</button>';
-          h += '<button class="inv2-action-btn inv2-action-warn" onclick="inv2MarkRecheck('+item.idx+',\''+dk+'\')">🔄 Yêu cầu kiểm lại</button>';
-          h += '</div>';
-        }
+      if(isSaved) {
+        const clObj = KK_CHATLG[r.chatLuong] || KK_CHATLG.tot;
+        h += `<div class="kk-saved-row">
+          <span class="kk-item-badge ${clObj.cls.replace('sel-','badge-')}" style="font-size:12px">${clObj.label}</span>
+          <span style="margin-left:8px">Thực tế: <strong>${r.soLuongThucTe} ${donvi}</strong></span>
+          ${diff !== 0 ? `<span class="kk-qty-diff" style="color:${diff>0?'#C62828':'#2E7D32'}">${diff>0?'−'+diff:'+'+Math.abs(diff)} ${donvi}</span>` : ''}
+          <button class="kk-edit-btn" onclick="editKKRecord(${idx},'${freq}')">Sửa</button>
+        </div>`;
+        if(r.ghiChuThucTe) h += `<div style="font-size:12px;color:#666;margin-top:4px">Ghi chú: ${r.ghiChuThucTe}</div>`;
+        if(r.deXuat && r.deXuat !== 'Không cần xử lý') h += `<div style="font-size:12px;color:var(--brown);margin-top:2px">Đề xuất: ${r.deXuat}</div>`;
+        if(isWarn) h += `<div class="kk-warn-box">⚠ Hao hụt vượt ngưỡng ${nguong} ${donvi} — Đã báo cáo cho Henry/Ka</div>`;
       } else {
-        h += '<div class="kk-dash-meta" style="color:#aaa">Chưa kiểm · '+item.unit+(item.minStock?' · Tối thiểu: '+item.minStock:'')+' '+item.unit+'</div>';
-        if(!sess.locked) {
-          // Hiếu nhập trực tiếp
-          h += inv2RenderLeadQuickInput(item, dk);
-        }
+        // Form kiểm
+        const curCL = r.chatLuong || 'tot';
+        h += `<div class="kk-chatlg-row">`;
+        Object.entries(KK_CHATLG).forEach(([key,val]) => {
+          h += `<button class="kk-chatlg-btn ${curCL===key?val.cls:''}" onclick="setKKCL(${idx},'${key}','${freq}')">${val.label}</button>`;
+        });
+        h += `</div>`;
+
+        h += `<div class="kk-qty-row">
+          <div class="kk-qty-label">Số lượng thực tế</div>
+          <input type="number" class="kk-qty-input" id="kk-qty-${idx}" value="${r.soLuongThucTe!==undefined?r.soLuongThucTe:soluongChuan}" step="0.5">
+          <span class="kk-qty-unit">${donvi}</span>
+          <span class="kk-qty-diff" id="kk-diff-${idx}" style="color:${diff>0?'#C62828':'var(--green)'}">${diff!==0?(diff>0?'−'+diff:'+'+Math.abs(diff))+' '+donvi:''}</span>
+        </div>`;
+
+        h += `<input class="kk-note-input" id="kk-note-${idx}" placeholder="Ghi chú: lý do hao hụt, tình trạng cụ thể..." value="${r.ghiChuThucTe||''}">`;
+
+        h += `<div class="kk-dexuat-row">`;
+        KK_DEXUAT.forEach(dx => {
+          h += `<button class="kk-dexuat-btn ${r.deXuat===dx?'sel':''}" onclick="setKKDeXuat(${idx},'${dx}','${freq}')">${dx}</button>`;
+        });
+        h += `</div>`;
+
+        h += `<button class="kk-save-item-btn" onclick="saveKKRecord(${idx},'${freq}')">Lưu kiểm kê</button>`;
       }
-      h += '</div>';
+      h += `</div>`;
     });
   });
-  return h;
-}
 
-function inv2RenderLeadQuickInput(item, dk) {
-  let h = '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">';
-  h += '<button class="inv2-qty-btn" onclick="inv2AdjQtyLead('+item.idx+',-1)">−</button>';
-  h += '<input type="number" id="inv2lq-'+item.idx+'" value="" placeholder="0" min="0" style="width:65px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--cream);text-align:center">';
-  h += '<button class="inv2-qty-btn" onclick="inv2AdjQtyLead('+item.idx+',1)">+</button>';
-  h += '<span style="font-size:12px;color:var(--muted)">'+item.unit+'</span>';
-  h += '<select id="inv2ltt-'+item.idx+'" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--cream)">';
-  h += '<option value="">— tình trạng —</option>';
-  INV2_TINHTRANG.forEach(tt=>{ h+='<option>'+tt+'</option>'; });
-  h += '</select>';
-  h += '<button class="inv2-qty-btn" style="background:var(--green);color:#fff;padding:5px 12px" onclick="inv2LeadSaveQuick('+item.idx+',\''+dk+'\')">Lưu</button>';
-  h += '</div>';
-  return h;
-}
-
-function inv2AdjQtyLead(idx, delta) {
-  const el = document.getElementById('inv2lq-'+idx);
-  if(!el) return;
-  el.value = Math.max(0, (parseFloat(el.value)||0)+delta);
-}
-function inv2LeadSaveQuick(idx, dk) {
-  const qEl = document.getElementById('inv2lq-'+idx);
-  const ttEl = document.getElementById('inv2ltt-'+idx);
-  if(!qEl) return;
-  const qty = qEl.value;
-  if(qty==='') { alert('Nhập số lượng!'); return; }
-  const tinhtrang = ttEl ? ttEl.value : '';
-  const overrideSt = inv2CalcStatusFromTinhTrang(tinhtrang);
-  const item = inv2Items[idx];
-  const sess = inv2GetSession(dk);
-  sess.items[idx] = {qty:parseFloat(qty)||0, tinhtrang, note:'', overrideStatus:overrideSt, saved:true, savedAt:inv2NowTime(), savedBy:ROLES[currentRole]?.name||'Hiếu', editing:false};
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  if(item) inv2TgCanhBaoKhan(item, sess.items[idx], dk);
-  renderKiemKe();
-}
-function inv2LeadEditItem(idx, dk) {
-  const sess = inv2GetSession(dk);
-  if(sess.locked) { alert('Đã khóa, không thể sửa.'); return; }
-  if(sess.items[idx]) sess.items[idx].editing = true;
-  inv2Sessions[dk] = sess;
-  renderKiemKe();
-}
-function inv2MarkBuy(idx, dk) {
-  const item = inv2Items[idx];
-  const sess = inv2GetSession(dk);
-  if(!sess.items[idx]) return;
-  sess.items[idx].needBuy = true;
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  alert('✅ Đã đánh dấu cần mua: '+item.name);
-  renderKiemKe();
-}
-function inv2MarkRecheck(idx, dk) {
-  const sess = inv2GetSession(dk);
-  if(!sess.items[idx]) { alert('Chưa có dữ liệu kiểm.'); return; }
-  sess.items[idx].saved = false;
-  sess.items[idx].editing = false;
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  alert('🔄 Đã yêu cầu kiểm lại.');
-  renderKiemKe();
-}
-function inv2DoChot(dk) {
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const unchecked = todayItems.filter(it=>!sess.items[it.idx]||!sess.items[it.idx].saved);
-  if(unchecked.length) { alert('Còn '+unchecked.length+' món chưa kiểm!'); return; }
-  sess.locked = true;
-  sess.lockedAt = inv2NowTime();
-  sess.lockedBy = ROLES[currentRole]?.name || 'Hiếu';
-  inv2Sessions[dk] = sess;
-  saveInv2Sessions();
-  inv2TgBaoCaoNgay(dk);
-  alert('🔒 Đã chốt kiểm kê hôm nay. Báo cáo đã gửi Telegram.');
-  renderKiemKe();
-}
-function inv2AdminUnlock(dk) {
-  showPIN('Mở khóa kiểm kê','Nhập PIN quản trị để mở khóa', ()=>{
-    const reason = prompt('Lý do mở khóa:');
-    if(!reason) { alert('Cần nhập lý do!'); return; }
-    const sess = inv2GetSession(dk);
-    inv2AuditLog.push({ts:new Date().toISOString(),who:ROLES[currentRole]?.name||currentRole,action:'unlock',itemIdx:null,itemName:null,oldVal:'locked',newVal:'unlocked',reason});
-    saveInv2Audit();
-    sess.locked = false;
-    inv2Sessions[dk] = sess;
-    saveInv2Sessions();
-    alert('🔓 Đã mở khóa. Mọi thay đổi sau đây đều được ghi log.');
-    renderKiemKe();
-  }, true);
-}
-
-// ---- LEAD: CẢNH BÁO ----
-function inv2RenderLeadAlerts(dk, sess, todayItems) {
-  let h = '<div class="sec-title">Cảnh báo hôm nay</div>';
-  const crits=[], warns=[], notChecked=[], damaged=[], needBuy=[];
-  todayItems.forEach(item=>{
-    const rec = sess.items[item.idx];
-    if(!rec||!rec.saved) { notChecked.push(item); return; }
-    const st = rec.overrideStatus || inv2CalcStatus(item, rec.qty);
-    if(st==='CRITICAL'||st==='OUT_OF_STOCK') crits.push({item,rec,st});
-    else if(st==='LOW_STOCK') warns.push({item,rec,st});
-    if(st==='DAMAGED'||st==='MISSING') damaged.push({item,rec,st});
-    if(rec.needBuy) needBuy.push(item);
-  });
-
-  if(!crits.length && !warns.length && !notChecked.length && !damaged.length) {
-    h += '<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#2E7D32">✅ Không có cảnh báo nào hôm nay</div>';
-    return h;
-  }
-
-  if(crits.length) {
-    h += '<div style="background:#FFEBEE;border:1px solid #EF9A9A;border-radius:12px;padding:12px 14px;margin-bottom:10px">';
-    h += '<div style="font-size:13px;font-weight:600;color:#C62828;margin-bottom:8px">🔴 Khẩn cấp ('+crits.length+')</div>';
-    crits.forEach(({item,rec})=>{
-      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #EF9A9A40;font-size:13px"><span>'+item.name+'</span><span style="color:#C62828;font-weight:500">'+rec.qty+' '+item.unit+'</span></div>';
-    });
-    h += '</div>';
-  }
-  if(warns.length) {
-    h += '<div style="background:#FFF8E1;border:1px solid #FFC107;border-radius:12px;padding:12px 14px;margin-bottom:10px">';
-    h += '<div style="font-size:13px;font-weight:600;color:#E65100;margin-bottom:8px">🟡 Sắp hết ('+warns.length+')</div>';
-    warns.forEach(({item,rec})=>{
-      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #FFC10740;font-size:13px"><span>'+item.name+'</span><span style="color:#E65100;font-weight:500">'+rec.qty+' '+item.unit+'</span></div>';
-    });
-    h += '</div>';
-  }
-  if(damaged.length) {
-    h += '<div style="background:#F3E5F5;border:1px solid #CE93D8;border-radius:12px;padding:12px 14px;margin-bottom:10px">';
-    h += '<div style="font-size:13px;font-weight:600;color:#6A1B9A;margin-bottom:8px">🔧 Hư hỏng / Mất ('+damaged.length+')</div>';
-    damaged.forEach(({item,rec})=>{
-      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span>'+item.name+'</span><span style="color:#6A1B9A">'+rec.tinhtrang+'</span></div>';
-    });
-    h += '</div>';
-  }
-  if(notChecked.length) {
-    h += '<div style="background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">';
-    h += '<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">⬜ Chưa kiểm ('+notChecked.length+')</div>';
-    notChecked.forEach(item=>{
-      h += '<div style="padding:4px 0;font-size:13px;color:#888">'+item.name+' · Nhóm '+item.freq+'</div>';
-    });
-    h += '</div>';
-  }
-  if(needBuy.length) {
-    h += '<div style="background:var(--green-pale);border:1px solid #A5D6A7;border-radius:12px;padding:12px 14px;margin-bottom:10px">';
-    h += '<div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px">🛒 Danh sách cần mua ('+needBuy.length+')</div>';
-    needBuy.forEach(item=>{ h += '<div style="padding:3px 0;font-size:13px">• '+item.name+' ('+item.unit+')</div>'; });
-    h += '</div>';
-  }
-  return h;
-}
-
-// ---- LEAD: DANH MỤC ----
-function inv2RenderLeadCatalog() {
-  let h = '<div class="sec-title">Danh mục vật tư</div>';
-  // Nút thêm mới
-  h += '<button class="submit-btn" style="margin-bottom:12px" onclick="inv2ShowAddForm()">+ Thêm vật tư mới</button>';
-
-  // Form thêm/sửa (ẩn mặc định)
-  h += '<div id="inv2-form-wrap" style="display:none"></div>';
-
-  if(!inv2Items.length) {
-    h += '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Chưa có vật tư nào. Bấm "+ Thêm" để bắt đầu.</div>';
-
-    // Nếu có kkItems cũ, offer migrate
-    if(kkItems && kkItems.length>0 && inv2Items.length===0) {
-      h += '<button class="confirm-btn" style="margin-top:8px" onclick="inv2DoMigrate()">📦 Import '+kkItems.length+' món từ danh sách cũ</button>';
-    }
-    return h;
-  }
-
-  // Lọc theo nhóm
-  const freqFilter = window._inv2FreqFilter || 'ALL';
-  h += '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
-  ['ALL','A','B','C','D'].forEach(f=>{
-    const cnt = f==='ALL' ? inv2Items.length : inv2Items.filter(it=>it.freq===f).length;
-    const active = freqFilter===f;
-    h += '<button onclick="window._inv2FreqFilter=\''+f+'\';renderKiemKe()" style="padding:5px 10px;border-radius:8px;border:1.5px solid '+(active?'var(--green)':'var(--border)')+';background:'+(active?'var(--green)':'var(--white)')+';color:'+(active?'#fff':'var(--muted)')+';font-size:12px;cursor:pointer;font-family:inherit">'+(f==='ALL'?'Tất cả':f)+' ('+cnt+')</button>';
-  });
-  h += '</div>';
-
-  const showItems = freqFilter==='ALL' ? inv2Items.map((it,i)=>({...it,idx:i})) : inv2Items.map((it,i)=>({...it,idx:i})).filter(it=>it.freq===freqFilter);
-
-  showItems.forEach(item=>{
-    h += '<div class="kk-item-card" style="padding:10px 14px">';
-    h += '<div class="kk-item-header">';
-    h += '<div class="kk-item-name">'+item.name+'</div>';
-    h += inv2FreqBadge(item.freq);
-    h += '</div>';
-    h += '<div class="kk-item-meta">'+item.mainGroup+' · '+item.unit;
-    if(item.stdStock) h += ' · Chuẩn: '+item.stdStock;
-    if(item.minStock) h += ' · Tối thiểu: '+item.minStock;
-    if(item.costPrice) h += ' · Giá vốn: '+item.costPrice.toLocaleString('vi-VN')+'đ';
-    h += '</div>';
-    h += '<div style="display:flex;gap:6px;margin-top:6px">';
-    h += '<button class="inv2-action-btn" onclick="inv2ShowEditForm('+item.idx+')">✏️ Sửa</button>';
-    h += '<button class="inv2-action-btn inv2-action-warn" onclick="inv2DeleteItem('+item.idx+')">🗑 Xoá</button>';
-    h += '</div>';
-    h += '</div>';
-  });
-
-  if(kkItems && kkItems.length>0 && inv2Items.length===0) {
-    h += '<button class="confirm-btn" style="margin-top:8px" onclick="inv2DoMigrate()">📦 Import '+kkItems.length+' món từ danh sách cũ</button>';
-  }
-  return h;
-}
-
-function inv2DoMigrate() {
-  if(!confirm('Import '+kkItems.length+' vật tư từ danh sách cũ? App sẽ tự phân nhóm A/B/C/D theo tên.')) return;
-  inv2Items = []; // reset để migrate clean
-  inv2MigrateFromLegacy();
-  alert('✅ Đã import '+inv2Items.length+' vật tư. Vào từng món để kiểm tra và điều chỉnh nhóm nếu cần.');
-  renderKiemKe();
-}
-
-function inv2ShowAddForm() {
-  const w = document.getElementById('inv2-form-wrap');
-  if(!w) return;
-  w.style.display = 'block';
-  w.innerHTML = inv2BuildForm(null, null);
-}
-function inv2ShowEditForm(idx) {
-  const w = document.getElementById('inv2-form-wrap');
-  if(!w) { renderKiemKe(); return; }
-  // Scroll lên form
-  w.style.display = 'block';
-  w.innerHTML = inv2BuildForm(idx, inv2Items[idx]);
-  w.scrollIntoView({behavior:'smooth'});
-}
-function inv2BuildForm(idx, item) {
-  const isEdit = idx!==null && item!==null;
-  let h = '<div class="setup-card" style="border:2px solid var(--green)">';
-  h += '<div class="setup-title">'+(isEdit?'Sửa vật tư: '+item.name:'Thêm vật tư mới')+'</div>';
-  h += '<div class="setup-field"><div class="setup-label">Tên vật tư *</div><input class="setup-input" id="inv2f-name" value="'+(item?item.name:'')+'" placeholder="VD: Sữa tươi không đường"></div>';
-  h += '<div class="setup-row">';
-  h += '<div class="setup-field"><div class="setup-label">Nhóm chính</div><select class="setup-select" id="inv2f-mg"><option value="Nguyên liệu"'+(item&&item.mainGroup==='Nguyên liệu'?' selected':'')+'>Nguyên liệu</option><option value="Vật tư tiêu hao"'+(item&&item.mainGroup==='Vật tư tiêu hao'?' selected':'')+'>Vật tư tiêu hao</option><option value="Dụng cụ"'+(item&&item.mainGroup==='Dụng cụ'?' selected':'')+'>Dụng cụ</option><option value="Tài sản"'+(item&&item.mainGroup==='Tài sản'?' selected':'')+'>Tài sản</option></select></div>';
-  h += '<div class="setup-field"><div class="setup-label">Tần suất *</div><select class="setup-select" id="inv2f-freq"><option value="A"'+(item&&item.freq==='A'?' selected':'')+'>A — Mỗi ngày</option><option value="B"'+(item&&item.freq==='B'?' selected':'')+'>B — 2 lần/tuần</option><option value="C"'+(item&&item.freq==='C'?' selected':'')+'>C — Hàng tuần</option><option value="D"'+(item&&item.freq==='D'?' selected':'')+'>D — Hàng tháng</option></select></div>';
-  h += '</div>';
-  h += '<div class="setup-row">';
-  h += '<div class="setup-field"><div class="setup-label">Đơn vị</div><input class="setup-input" id="inv2f-unit" value="'+(item?item.unit:'')+'" placeholder="hộp, kg, chai..."></div>';
-  h += '<div class="setup-field"><div class="setup-label">Tồn chuẩn</div><input type="number" class="setup-input" id="inv2f-std" value="'+(item?item.stdStock:'')+'" placeholder="0" min="0"></div>';
-  h += '</div>';
-  h += '<div class="setup-row">';
-  h += '<div class="setup-field"><div class="setup-label">Tồn tối thiểu</div><input type="number" class="setup-input" id="inv2f-min" value="'+(item?item.minStock:'')+'" placeholder="0" min="0"></div>';
-  h += '<div class="setup-field"><div class="setup-label">Giá vốn (đ)</div><input type="number" class="setup-input" id="inv2f-cost" value="'+(item?item.costPrice:'')+'" placeholder="0" min="0"></div>';
-  h += '</div>';
-  h += '<div class="setup-field"><div class="setup-label">Mục đích / Ghi chú</div><input class="setup-input" id="inv2f-note" value="'+(item?item.note:'')+'" placeholder="Dùng để pha..."></div>';
-  h += '<div style="display:flex;gap:8px;margin-top:4px">';
-  h += '<button class="setup-save-btn" style="flex:1" onclick="inv2SaveForm('+(isEdit?idx:'null')+')">💾 '+(isEdit?'Cập nhật':'Thêm mới')+'</button>';
-  h += '<button class="modal-btn secondary" style="flex:none;width:auto;padding:12px 16px" onclick="document.getElementById(\'inv2-form-wrap\').style.display=\'none\'">Huỷ</button>';
-  h += '</div>';
-  h += '</div>';
-  return h;
-}
-function inv2SaveForm(idx) {
-  const name = (document.getElementById('inv2f-name')||{}).value||'';
-  if(!name.trim()) { alert('Cần nhập tên vật tư!'); return; }
-  const item = {
-    name: name.trim(),
-    mainGroup: (document.getElementById('inv2f-mg')||{}).value||'Nguyên liệu',
-    freq: (document.getElementById('inv2f-freq')||{}).value||'A',
-    unit: (document.getElementById('inv2f-unit')||{}).value||'',
-    stdStock: parseFloat((document.getElementById('inv2f-std')||{}).value)||0,
-    minStock: parseFloat((document.getElementById('inv2f-min')||{}).value)||0,
-    costPrice: parseFloat((document.getElementById('inv2f-cost')||{}).value)||0,
-    note: (document.getElementById('inv2f-note')||{}).value||'',
-    createdAt: inv2Today(),
-  };
-  if(idx===null||idx===undefined||idx==='null') {
-    inv2Items.push(item);
-  } else {
-    item.createdAt = inv2Items[idx].createdAt || inv2Today();
-    inv2Items[idx] = item;
-  }
-  saveInv2Items();
-  window._inv2LeadTab = 'catalog';
-  alert('✅ Đã lưu: '+item.name);
-  renderKiemKe();
-}
-function inv2DeleteItem(idx) {
-  if(!confirm('Xóa "'+inv2Items[idx].name+'"? Dữ liệu kiểm kê liên quan vẫn giữ.')) return;
-  inv2Items.splice(idx, 1);
-  saveInv2Items();
-  renderKiemKe();
-}
-
-// ===================== ADMIN (Ka/Henry) VIEW =====================
-function renderKKAdmin() {
-  const dk = inv2Today();
-  const sess = inv2GetSession(dk);
-  const todayItems = inv2GetItemsForToday();
-  const checked = inv2CountChecked(dk);
-  const alerts = inv2CountAlerts(dk);
-  const totalItems = inv2Items.length;
-
-  let h = '<div class="wrap">';
-  h += '<div class="sec-title">Tổng quan tồn kho · '+dk+'</div>';
-
-  // Dashboard cards
-  h += '<div class="summary-stats">';
-  h += '<div class="summary-stat"><div class="summary-stat-num" style="color:var(--green)">'+checked+'/'+todayItems.length+'</div><div class="summary-stat-label">Đã kiểm hôm nay</div></div>';
-  h += '<div class="summary-stat"><div class="summary-stat-num" style="color:'+(alerts.crit?'#C62828':'#aaa')+'">'+alerts.crit+'</div><div class="summary-stat-label">Cảnh báo đỏ</div></div>';
-  h += '<div class="summary-stat"><div class="summary-stat-num" style="color:'+(alerts.warn?'#E65100':'#aaa')+'">'+alerts.warn+'</div><div class="summary-stat-label">Cảnh báo vàng</div></div>';
-  h += '<div class="summary-stat"><div class="summary-stat-num">'+totalItems+'</div><div class="summary-stat-label">Tổng vật tư</div></div>';
-  h += '</div>';
-
-  // Trạng thái session
-  if(sess.locked) {
-    h += '<div class="lock-banner locked">🔒 Đã chốt lúc '+(sess.lockedAt||'')+' bởi '+(sess.lockedBy||'Hiếu')+'</div>';
-  } else if(sess.handoverDone) {
-    h += '<div style="background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:var(--green)">✅ Ca sáng đã bàn giao · Hiếu chưa chốt cuối ngày</div>';
-  } else {
-    h += '<div style="background:#FFF8E1;border:1px solid #FFC107;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#E65100">⏳ Chưa bàn giao kho ca sáng hôm nay</div>';
-  }
-
-  // Tabs
-  const activeTab = window._inv2AdminTab || 'dashboard';
-  h += '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">';
-  [{id:'dashboard',label:'Dashboard'},{id:'alerts',label:'Cảnh báo'},{id:'buylist',label:'Cần mua'},{id:'history',label:'Lịch sử'},{id:'settings',label:'Cài đặt'}].forEach(tab=>{
-    const active = activeTab===tab.id;
-    h += '<button onclick="window._inv2AdminTab=\''+tab.id+'\';renderKiemKe()" style="padding:7px 13px;border-radius:8px;border:1.5px solid '+(active?'var(--green)':'var(--border)')+';background:'+(active?'var(--green)':'var(--white)')+';color:'+(active?'#fff':'var(--muted)')+';font-size:12px;cursor:pointer;font-family:inherit">'+tab.label+'</button>';
-  });
-  h += '</div>';
-
-  if(activeTab==='dashboard') {
-    h += inv2RenderAdminDashboard(dk, sess, todayItems);
-  } else if(activeTab==='alerts') {
-    h += inv2RenderLeadAlerts(dk, sess, todayItems); // reuse
-  } else if(activeTab==='buylist') {
-    h += inv2RenderBuyList(dk, sess, todayItems);
-  } else if(activeTab==='history') {
-    h += inv2RenderAdminHistory();
-  } else if(activeTab==='settings') {
-    h += inv2RenderAdminSettings();
+  // Nút hoàn tất kiểm kê
+  if(done === total && total > 0) {
+    h += `<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#2E7D32;margin-top:8px">✓ Đã kiểm kê đầy đủ ${total} mục hôm nay!<br>${warns>0?'<span style="color:#C62828">⚠ '+warns+' mục cần chú ý — đã báo cáo Henry/Ka</span>':''}</div>`;
   }
 
   h += '</div>';
   document.getElementById('main-content').innerHTML = h;
 }
 
-function inv2RenderAdminDashboard(dk, sess, todayItems) {
-  let h = '';
-  // Top hao hụt
-  const haoHut = [];
-  inv2Items.forEach((item,idx)=>{
-    const rec = sess.items[idx];
-    if(!rec||!rec.saved||!item.stdStock) return;
-    const diff = item.stdStock - parseFloat(rec.qty||0);
-    if(diff>0) haoHut.push({item,diff,unit:item.unit});
-  });
-  haoHut.sort((a,b)=>b.diff-a.diff);
-
-  if(haoHut.length) {
-    h += '<div class="sec-title">Hao hụt hôm nay</div>';
-    h += '<div class="overview-card">';
-    haoHut.slice(0,8).forEach(({item,diff})=>{
-      const pct = item.stdStock ? Math.min(100, Math.round(diff/item.stdStock*100)) : 0;
-      h += '<div class="ov-row"><div class="ov-name" style="width:120px;font-size:12px">'+item.name.substring(0,16)+'</div>';
-      h += '<div class="ov-bar-wrap"><div class="ov-bar" style="width:'+pct+'%;background:#EF9A9A"></div></div>';
-      h += '<div class="ov-pct" style="color:#C62828">-'+diff+' '+item.unit+'</div></div>';
-    });
-    h += '</div>';
-  }
-
-  // Danh sách đầy đủ đơn giản
-  h += '<div class="sec-title">Toàn bộ vật tư hôm nay</div>';
-  todayItems.forEach(item=>{
-    const rec = sess.items[item.idx];
-    const saved = rec&&rec.saved;
-    const st = saved ? (rec.overrideStatus||inv2CalcStatus(item,rec.qty)) : 'NOT_CHECKED';
-    const s = INV2_STATUS[st];
-    h += '<div class="kk-dash-card" style="border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:10px">';
-    h += '<div style="flex:1;font-size:13px">'+item.name+'<span style="color:#aaa;font-size:11px;margin-left:5px">'+item.freq+'</span></div>';
-    h += saved ? '<span style="font-size:12px;font-weight:500;color:'+s.color+'">'+rec.qty+' '+item.unit+'</span>' : '<span style="font-size:11px;color:#aaa">chưa kiểm</span>';
-    h += inv2StatusBadge(st);
-    h += '</div>';
-  });
-  return h;
+function setKKCL(idx, cl, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  kkRecords[periodKey][idx].chatLuong = cl;
+  saveKKRecords();
+  renderKKCheck(freq);
 }
 
-function inv2RenderBuyList(dk, sess, todayItems) {
-  let h = '<div class="sec-title">Danh sách cần mua</div>';
-  const buyList = [];
-  todayItems.forEach(item=>{
-    const rec = sess.items[item.idx];
-    if(!rec||!rec.saved) return;
-    const st = rec.overrideStatus||inv2CalcStatus(item,rec.qty);
-    if(st==='CRITICAL'||st==='OUT_OF_STOCK'||rec.needBuy) {
-      buyList.push({item,rec,st});
+function setKKDeXuat(idx, dx, freq) {
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  kkRecords[periodKey][idx].deXuat = dx;
+  saveKKRecords();
+  renderKKCheck(freq);
+}
+
+function saveKKRecord(idx, freq) {
+  if(isKKLocked(freq)) {
+    alert('Kỳ kiểm kê này đã được Ka khóa. Liên hệ Ka để mở khóa nếu cần sửa.');
+    return;
+  }
+  const periodKey = getKKPeriodKey(freq);
+  if(!kkRecords[periodKey]) kkRecords[periodKey] = {};
+  if(!kkRecords[periodKey][idx]) kkRecords[periodKey][idx] = {};
+  const qtyEl = document.getElementById('kk-qty-'+idx);
+  const noteEl = document.getElementById('kk-note-'+idx);
+  const soLuong = parseFloat(qtyEl ? qtyEl.value : 0) || 0;
+  const note = noteEl ? noteEl.value.trim() : '';
+  const item = kkItems[idx];
+  const diff = item.soluongChuan - soLuong;
+
+  kkRecords[periodKey][idx] = {
+    ...kkRecords[periodKey][idx],
+    soLuongThucTe: soLuong,
+    ghiChuThucTe: note,
+    saved: true,
+    savedAt: new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+    haoHut: diff,
+    isWarn: diff > item.nguong || kkRecords[periodKey][idx].chatLuong === 'hu',
+  };
+  saveKKRecords();
+  // Gửi cảnh báo Telegram nếu dưới ngưỡng
+  if(item && soLuong <= item.nguong) {
+    tgCanhBaoNguyenLieu();
+  }
+  renderKKCheck(freq);
+}
+
+function editKKRecord(idx, freq) {
+  if(isKKLocked(freq)) {
+    alert('Kỳ kiểm kê này đã được Ka khóa. Liên hệ Ka để mở khóa nếu cần sửa.');
+    return;
+  }
+  const periodKey = getKKPeriodKey(freq);
+  if(kkRecords[periodKey] && kkRecords[periodKey][idx]) {
+    kkRecords[periodKey][idx].saved = false;
+    saveKKRecords();
+    renderKKCheck(freq);
+  }
+}
+
+// ---- ADMIN: Dashboard kiểm kê ----
+function renderKKAdmin() {
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Tổng quan kiểm kê</div>';
+
+  // Cảnh báo hiện tại
+  const alerts = [];
+  const todayKey = getKKPeriodKey('ngay');
+  const weekKey = getKKPeriodKey('tuan');
+
+  kkItems.forEach((item, idx) => {
+    const periodKey = item.tanSuat === 'ngay' ? todayKey : weekKey;
+    const r = kkRecords[periodKey] && kkRecords[periodKey][idx];
+    if(r && r.saved && r.isWarn) {
+      alerts.push({item, r, idx});
     }
   });
-  if(!buyList.length) {
-    h += '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Không có mặt hàng nào cần mua hôm nay ✅</div>';
-    return h;
-  }
-  h += '<div class="overview-card">';
-  buyList.forEach(({item,rec})=>{
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cream-dark)">';
-    h += '<div><div style="font-size:13px;font-weight:500">'+item.name+'</div><div style="font-size:12px;color:var(--muted)">Còn: '+rec.qty+' '+item.unit+(item.stdStock?' · Chuẩn: '+item.stdStock:'')+' '+item.unit+'</div></div>';
-    h += inv2StatusBadge(rec.overrideStatus||inv2CalcStatus(item,rec.qty));
-    h += '</div>';
-  });
-  h += '</div>';
-  return h;
-}
 
-function inv2RenderAdminHistory() {
-  let h = '<div class="sec-title">Lịch sử kiểm kê (7 ngày gần nhất)</div>';
-  const keys = Object.keys(inv2Sessions).sort().reverse().slice(0,7);
-  if(!keys.length) { h += '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Chưa có lịch sử</div>'; return h; }
-  keys.forEach(dk=>{
-    const sess = inv2Sessions[dk];
-    const cnt = Object.values(sess.items||{}).filter(r=>r.saved).length;
-    h += '<div class="history-day-card" onclick="this.querySelector(\'.hdc-detail\').classList.toggle(\'show\');this.querySelector(\'.hdc-arrow\').classList.toggle(\'open\')">';
-    h += '<div class="hdc-header"><div class="hdc-date">'+dk+'</div>';
-    h += '<span style="font-size:11px;color:var(--muted)">'+cnt+' món đã kiểm</span>';
-    h += sess.locked ? '<span style="font-size:11px;color:var(--green);margin-left:6px">🔒 Đã chốt</span>' : '<span style="font-size:11px;color:#aaa;margin-left:6px">Chưa chốt</span>';
-    h += '<span class="hdc-arrow">›</span></div>';
-    h += '<div class="hdc-detail">';
-    Object.entries(sess.items||{}).forEach(([idxStr,rec])=>{
-      const item = inv2Items[parseInt(idxStr)];
-      if(!item||!rec.saved) return;
-      const st = rec.overrideStatus||inv2CalcStatus(item,rec.qty);
-      h += '<div class="hdc-row"><span>'+item.name+'</span><span>'+rec.qty+' '+item.unit+(rec.tinhtrang?' · '+rec.tinhtrang:'')+' '+inv2StatusBadge(st)+'</span></div>';
+  if(alerts.length) {
+    h += `<div style="font-size:12px;font-weight:600;color:#C62828;text-transform:uppercase;letter-spacing:0.5px;padding:6px 0">⚠ Cảnh báo hao hụt (${alerts.length} mục)</div>`;
+    alerts.forEach(({item, r}) => {
+      h += `<div class="kk-alert-card">
+        <div class="kk-alert-title">${item.name}</div>
+        <div class="kk-alert-meta">
+          Chuẩn: ${item.soluongChuan} ${item.donvi} · Thực tế: ${r.soLuongThucTe} ${item.donvi} · Hao hụt: ${r.haoHut} ${item.donvi}<br>
+          ${r.ghiChuThucTe ? 'Ghi chú: '+r.ghiChuThucTe : ''}
+          ${r.deXuat && r.deXuat !== 'Không cần xử lý' ? ' · Đề xuất: '+r.deXuat : ''}
+        </div>
+      </div>`;
     });
-    h += '</div></div>';
-  });
-  return h;
-}
-
-function inv2RenderAdminSettings() {
-  let h = '<div class="sec-title">Cài đặt kiểm kê</div>';
-  h += '<div class="setup-card">';
-  h += '<div class="setup-title">Lịch kiểm nhóm B</div>';
-  h += '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Mặc định: Thứ 4 và Chủ nhật</div>';
-  h += '<div style="font-size:12px;color:var(--green)">✅ Đang áp dụng lịch mặc định</div>';
-  h += '</div>';
-  h += '<div class="setup-card">';
-  h += '<div class="setup-title">Dữ liệu</div>';
-  h += '<button class="confirm-btn" style="margin-bottom:8px" onclick="inv2ExportData()">📤 Xuất dữ liệu kiểm kê</button>';
-  if(kkItems&&kkItems.length>0) {
-    h += '<button class="submit-btn" onclick="inv2DoMigrate()">📦 Import từ danh sách cũ ('+kkItems.length+' món)</button>';
+  } else {
+    h += `<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:12px;text-align:center;font-size:13px;color:#2E7D32;margin-bottom:12px">✓ Không có cảnh báo hao hụt hiện tại</div>`;
   }
-  h += '</div>';
-  // Audit log
-  if(inv2AuditLog.length) {
-    h += '<div class="sec-title">Audit log (10 gần nhất)</div>';
-    h += '<div class="overview-card">';
-    inv2AuditLog.slice(-10).reverse().forEach(log=>{
-      const ts = new Date(log.ts).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-      h += '<div style="padding:5px 0;border-bottom:1px solid var(--cream-dark);font-size:12px">';
-      h += '<span style="color:var(--muted)">'+ts+'</span> · <b>'+log.who+'</b> · '+log.action+(log.itemName?' · '+log.itemName:'')+(log.reason?' · Lý do: '+log.reason:'')+' '+(log.oldVal!==null&&log.oldVal!==undefined?'('+log.oldVal+'→'+log.newVal+')':'');
-      h += '</div>';
+
+  // Tình trạng kiểm kê hôm nay
+  h += `<div class="kk-group-label" style="margin-top:8px">Kiểm kê hàng ngày — ${todayKey}</div>`;
+  const ngayItems = kkItems.filter(i => i.tanSuat === 'ngay');
+  const ngayDone = ngayItems.filter((item,i) => {
+    const idx = kkItems.indexOf(item);
+    return kkRecords[todayKey] && kkRecords[todayKey][idx] && kkRecords[todayKey][idx].saved;
+  }).length;
+
+  h += `<div class="kk-stats" style="margin-bottom:12px">
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--green)">${ngayDone}/${ngayItems.length}</div><div class="kk-stat-label">Đã kiểm hôm nay</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:#C62828">${alerts.filter(a=>a.item.tanSuat==='ngay').length}</div><div class="kk-stat-label">Cảnh báo ngày</div></div>
+    <div class="kk-stat"><div class="kk-stat-num" style="color:var(--brown)">${kkItems.length}</div><div class="kk-stat-label">Tổng mục</div></div>
+  </div>`;
+
+  // Chi tiết từng mục hôm nay
+  Object.entries(KK_GROUPS).forEach(([gkey, glabel]) => {
+    const items = ngayItems.filter(i => i.group === gkey);
+    if(!items.length) return;
+    h += `<div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;padding:6px 0 4px">${glabel}</div>`;
+    items.forEach(item => {
+      const idx = kkItems.indexOf(item);
+      const r = kkRecords[todayKey] && kkRecords[todayKey][idx];
+      const isWarn = r && r.isWarn;
+      const cl = r && KK_CHATLG[r.chatLuong];
+      h += `<div class="kk-dash-card${isWarn?' danger':''}">
+        <div class="kk-dash-header">
+          <div class="kk-dash-name">${item.name}</div>
+          ${r && r.saved
+            ? `<span class="kk-dash-status ${isWarn?'att-late':'att-ok'}">${isWarn?'⚠ Cảnh báo':'✓ Đã kiểm'}</span>`
+            : `<span class="kk-dash-status att-none">Chưa kiểm</span>`}
+        </div>
+        ${r && r.saved ? `<div class="kk-dash-meta">
+          Thực tế: ${r.soLuongThucTe} / ${item.soluongChuan} ${item.donvi}
+          ${r.haoHut > 0 ? ` · <span style="color:#C62828">Thiếu ${r.haoHut} ${item.donvi}</span>` : ''}
+          ${cl ? ` · ${cl.label}` : ''}
+          ${r.ghiChuThucTe ? `<br>${r.ghiChuThucTe}` : ''}
+          ${r.deXuat && r.deXuat !== 'Không cần xử lý' ? ` · Đề xuất: ${r.deXuat}` : ''}
+        </div>` : ''}
+      </div>`;
     });
-    h += '</div>';
+  });
+
+  // ===== Truy cập nhanh — Ka/Henry có đầy đủ chức năng như Hiếu =====
+  const todayKey2 = getKKPeriodKey('ngay');
+  const weekKey2 = getKKPeriodKey('tuan');
+  const ngayTotal2 = kkItems.filter(i=>i.tanSuat==='ngay').length;
+  const tuanTotal2 = kkItems.filter(i=>i.tanSuat==='tuan').length;
+  const ngayDone2 = kkItems.filter((item,idx)=>item.tanSuat==='ngay' && kkRecords[todayKey2]&&kkRecords[todayKey2][idx]&&kkRecords[todayKey2][idx].saved).length;
+  const tuanDone2 = kkItems.filter((item,idx)=>item.tanSuat==='tuan' && kkRecords[weekKey2]&&kkRecords[weekKey2][idx]&&kkRecords[weekKey2][idx].saved).length;
+
+  h += `<div class="sec-title" style="margin-top:14px">Quản lý kho — Ka/Henry</div>`;
+  h += `<div class="person-card" onclick="renderKKCheck('ngay')">
+    <div class="avatar" style="background:var(--brown-pale);color:var(--brown);width:44px;height:44px;font-size:13px;font-weight:600">NG</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng ngày</div><div class="person-role">Nhập / sửa số lượng thực tế</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${ngayDone2}/${ngayTotal2}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+  h += `<div class="person-card" onclick="renderKKCheck('tuan')">
+    <div class="avatar" style="background:var(--green-pale);color:var(--green);width:44px;height:44px;font-size:13px;font-weight:600">TU</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng tuần</div><div class="person-role">Nhập / sửa số lượng thực tế</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${tuanDone2}/${tuanTotal2}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+  h += `<div class="person-card" onclick="renderKKSetup()">
+    <div class="avatar" style="background:var(--cream-dark);color:var(--muted);width:44px;height:44px;font-size:13px;font-weight:600">⚙</div>
+    <div class="person-info"><div class="person-name">Thiết lập danh sách</div><div class="person-role">Thêm / sửa / xoá vật dụng, nguyên liệu</div></div>
+  </div>`;
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
+}
+function renderKiemKe() {
+  const r = ROLES[currentRole];
+  if(r.type === 'admin') {
+    renderKKAdmin();
+    return;
   }
-  return h;
+
+  // Hiếu: menu chọn loại kiểm kê
+  let h = '<div class="kk-wrap">';
+  h += '<div class="sec-title">Kiểm kê kho</div>';
+
+  const todayKey = getKKPeriodKey('ngay');
+  const weekKey = getKKPeriodKey('tuan');
+  const ngayTotal = kkItems.filter(i=>i.tanSuat==='ngay').length;
+  const tuanTotal = kkItems.filter(i=>i.tanSuat==='tuan').length;
+  const ngayDone = kkItems.filter((item,idx)=>item.tanSuat==='ngay' && kkRecords[todayKey]&&kkRecords[todayKey][idx]&&kkRecords[todayKey][idx].saved).length;
+  const tuanDone = kkItems.filter((item,idx)=>item.tanSuat==='tuan' && kkRecords[weekKey]&&kkRecords[weekKey][idx]&&kkRecords[weekKey][idx].saved).length;
+
+  h += `<div class="person-card" onclick="renderKKCheck('ngay')">
+    <div class="avatar" style="background:var(--brown-pale);color:var(--brown);width:44px;height:44px;font-size:13px;font-weight:600">NG</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng ngày</div><div class="person-role">Nguyên liệu, ly chén, dụng cụ</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${ngayDone}/${ngayTotal}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+
+  h += `<div class="person-card" onclick="renderKKCheck('tuan')">
+    <div class="avatar" style="background:var(--green-pale);color:var(--green);width:44px;height:44px;font-size:13px;font-weight:600">TU</div>
+    <div class="person-info"><div class="person-name">Kiểm kê hàng tuần</div><div class="person-role">Bàn ghế, khăn rèm, đồ decor, vật tư</div></div>
+    <div class="person-stats"><div class="stat-num" style="color:var(--green)">${tuanDone}/${tuanTotal}</div><div class="stat-label">đã kiểm</div></div>
+  </div>`;
+
+  h += `<div class="person-card" onclick="renderKKSetup()">
+    <div class="avatar" style="background:var(--cream-dark);color:var(--muted);width:44px;height:44px;font-size:13px;font-weight:600">⚙</div>
+    <div class="person-info"><div class="person-name">Thiết lập danh sách</div><div class="person-role">Thêm / sửa / xoá vật dụng cần kiểm kê</div></div>
+  </div>`;
+
+  h += '</div>';
+  document.getElementById('main-content').innerHTML = h;
 }
 
-function inv2ExportData() {
-  try {
-    const data = {items:inv2Items, sessions:inv2Sessions, exportedAt:new Date().toISOString()};
-    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'kalem_inventory_'+inv2Today().replace(/\//g,'-')+'.json';
-    a.click();
-  } catch(e) { alert('Không thể xuất file: '+e.message); }
-}
 
-// ---- REALTIME SYNC CHO V2 ----
-function inv2HandleRealtimeKey(key, val) {
-  if(key==='inventory_v2_items')    { inv2Items=val; try{localStorage.setItem('kl_inv2_items',JSON.stringify(val));}catch(e){} if(currentTab==='kiem-ke') renderKiemKe(); }
-  else if(key==='inventory_v2_sessions') { inv2Sessions=val; try{localStorage.setItem('kl_inv2_sessions',JSON.stringify(val));}catch(e){} if(currentTab==='kiem-ke') renderKiemKe(); }
-  else if(key==='inventory_v2_alerts')   { inv2Alerts=val; try{localStorage.setItem('kl_inv2_alerts',JSON.stringify(val));}catch(e){} }
-  else if(key==='inventory_v2_audit')    { inv2AuditLog=val; try{localStorage.setItem('kl_inv2_audit',JSON.stringify(val));}catch(e){} }
-  // Legacy
-  else if(key==='kk_items')    { kkItems=val; try{localStorage.setItem('kl_kk_items',JSON.stringify(val));}catch(e){} }
-  else if(key==='kk_records')  { kkRecords=val; try{localStorage.setItem('kl_kk_records',JSON.stringify(val));}catch(e){} }
-  else if(key==='kk_lock')     { kkLockState=val; try{localStorage.setItem('kl_kk_lock',JSON.stringify(val));}catch(e){} }
-}
-
+// ===================== LỊCH SỬ KẾT CA =====================
 function renderKetCaHistory() {
   const {startDate} = getKyLuong();
   let h = '<div class="wrap">';
@@ -3554,6 +2985,87 @@ function changeMonthNL(d) {
   currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1);
   renderNLHistory2();
 }
+
+// ===================== KHÓA KIỂM KÊ =====================
+let kkLockState = {}; // {periodKey: {locked: bool, lockedAt, lockedBy}}
+
+function loadKKLock() {
+  try { const d=localStorage.getItem('kl_kk_lock');if(d)kkLockState=JSON.parse(d); } catch(e){}
+}
+
+function saveKKLock() {
+  try { localStorage.setItem('kl_kk_lock',JSON.stringify(kkLockState)); } catch(e){}
+  if(typeof dbSet==='function') dbSet('kk_lock', kkLockState);
+}
+
+function isKKLocked(freq) {
+  const pk = getKKPeriodKey(freq);
+  return !!(kkLockState[pk] && kkLockState[pk].locked);
+}
+
+function lockKK(freq) {
+  const pk = getKKPeriodKey(freq);
+  kkLockState[pk] = {
+    locked: true,
+    lockedAt: new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}),
+    lockedBy: 'Ka',
+    snapshot: JSON.parse(JSON.stringify(kkRecords[pk]||{})),
+  };
+  saveKKLock();
+  alert('Đã khóa kiểm kê kỳ này. Nhân viên không thể sửa lịch sử.');
+  renderKiemKe();
+}
+
+function unlockKK(freq) {
+  showPIN("Mở khóa kiểm kê", "Nhập PIN quản trị để xác nhận", ()=>{
+    const pk = getKKPeriodKey(freq);
+    if(kkLockState[pk]) kkLockState[pk].locked = false;
+    saveKKLock();
+    alert("Đã mở khóa. Ka có thể chỉnh sửa lại.");
+    renderKiemKe();
+  }, true);
+}
+
+// So sánh kỳ hiện tại với kỳ trước đã khóa
+function renderKKCompare(freq) {
+  const pk = getKKPeriodKey(freq);
+  const lock = kkLockState[pk];
+  if(!lock || !lock.snapshot) return '';
+
+  const cur = kkRecords[pk]||{};
+  const prev = lock.snapshot;
+  const diffs = [];
+
+  kkItems.forEach((item, idx) => {
+    if(item.tanSuat !== freq) return;
+    const curRec = cur[idx];
+    const prevRec = prev[idx];
+    if(!curRec || !prevRec) return;
+    const curQty = curRec.soLuongThucTe || 0;
+    const prevQty = prevRec.soLuongThucTe || 0;
+    const diff = curQty - prevQty;
+    if(diff !== 0) diffs.push({name:item.name, donvi:item.donvi, prevQty, curQty, diff});
+  });
+
+  if(!diffs.length) return '';
+  let h = `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:8px">
+    <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">So sánh với kỳ đã khóa (${lock.lockedAt})</div>
+    <div style="display:flex;font-size:11px;color:#aaa;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <span style="flex:1">Vật dụng</span><span style="width:60px;text-align:center">Kỳ trước</span><span style="width:60px;text-align:center">Hiện tại</span><span style="width:60px;text-align:right">Chênh lệch</span>
+    </div>`;
+  diffs.forEach(({name, donvi, prevQty, curQty, diff}) => {
+    h += `<div class="kk-compare-row">
+      <span class="kk-compare-name">${name}</span>
+      <span class="kk-compare-prev">${prevQty} ${donvi}</span>
+      <span class="kk-compare-cur">${curQty} ${donvi}</span>
+      <span class="kk-compare-diff ${diff>0?'plus':'minus'}">${diff>0?'+':''}${diff} ${donvi}</span>
+    </div>`;
+  });
+  h += '</div>';
+  return h;
+}
+
+
 // ===================== PHÂN CÔNG CA THEO TUẦN =====================
 // assignment: 'normal' = Thoa vòng trong + Hạnh vòng ngoài
 //             'swap'   = Thoa vòng ngoài + Hạnh vòng trong
@@ -3742,7 +3254,7 @@ document.getElementById("today-label").textContent=new Date().toLocaleDateString
 
 // Khởi động app ngay lập tức bằng localStorage, không chờ Supabase
 clState = {date:getToday(), thoa:{}, hanh:{}, hieu:{}};
-loadInv2();
+loadKK();
 loadKKLock();
 loadWeekAssignment();
 try {
@@ -3784,11 +3296,10 @@ function setupRealtimeListeners() {
     else if(key === "chamcong"){ ccState = val; if(currentTab==="cham-cong"||currentTab==="cham-cong-admin") renderChamCong(); }
     else if(key === "scores"){ scoreState = val; }
     else if(key === "nguyen_lieu"){ nlState = val; }
+    else if(key === "kk_items"){ kkItems = val; try{localStorage.setItem('kl_kk_items',JSON.stringify(val));}catch(e){} }
+    else if(key === "kk_records"){ kkRecords = val; try{localStorage.setItem('kl_kk_records',JSON.stringify(val));}catch(e){} }
+    else if(key === "kk_lock"){ kkLockState = val; try{localStorage.setItem('kl_kk_lock',JSON.stringify(val));}catch(e){} }
     else if(key === "week_assignment"){ weekAssignment = val; try{localStorage.setItem('kl_week_assign',JSON.stringify(val));}catch(e){} }
-    // Inventory V2 — route qua handler riêng
-    else if(key.startsWith("inventory_v2_") || key==="kk_items" || key==="kk_records" || key==="kk_lock") {
-      inv2HandleRealtimeKey(key, val);
-    }
   });
 }
 
@@ -3854,58 +3365,6 @@ function tgCanhBaoNguyenLieu() {
     + '\n\n\uD83D\uDCCB C\u1ea7n mua b\u1ed5 sung ngay!';
   tgSend(text);
 }
-
-// ===================== TIMER NHẮC KIỂM KÊ =====================
-// Chạy mỗi phút, check giờ hiện tại:
-//   14:30 — nếu ca sáng chưa bàn giao → nhắc qua Telegram
-//   21:45 — nếu Hiếu chưa chốt kiểm kê → nhắc qua Telegram
-// Mỗi loại nhắc chỉ gửi 1 lần/ngày (lưu flag theo dateKey)
-let _inv2RemindSent = {}; // {dk: {handover: bool, chot: bool}}
-
-function inv2CheckReminders() {
-  try {
-    const now = new Date();
-    const hhmm = now.getHours() * 100 + now.getMinutes(); // VD: 14:30 = 1430
-    const dk = inv2Today();
-
-    if(!_inv2RemindSent[dk]) _inv2RemindSent[dk] = {};
-
-    // --- Nhắc 14:30: ca sáng chưa bàn giao ---
-    if(hhmm >= 1430 && hhmm <= 1445 && !_inv2RemindSent[dk].handover) {
-      const sess = inv2GetSession(dk);
-      if(!sess.handoverDone) {
-        _inv2RemindSent[dk].handover = true;
-        inv2TgNhacChuaBanGiao();
-        console.log('[Remind] 14:30 — Chưa bàn giao kho, đã gửi TG');
-      } else {
-        _inv2RemindSent[dk].handover = true; // đã bàn giao, đánh dấu để không check lại
-      }
-    }
-
-    // --- Nhắc 21:45: Hiếu chưa chốt ---
-    if(hhmm >= 2145 && hhmm <= 2200 && !_inv2RemindSent[dk].chot) {
-      const sess = inv2GetSession(dk);
-      if(!sess.locked) {
-        _inv2RemindSent[dk].chot = true;
-        inv2TgNhacChuaChot();
-        console.log('[Remind] 21:45 — Chưa chốt kiểm kê, đã gửi TG');
-      } else {
-        _inv2RemindSent[dk].chot = true;
-      }
-    }
-
-    // Dọn flag của ngày cũ để không chiếm bộ nhớ
-    Object.keys(_inv2RemindSent).forEach(k => { if(k !== dk) delete _inv2RemindSent[k]; });
-
-  } catch(e) { console.warn('inv2CheckReminders error:', e); }
-}
-
-// Khởi động timer — chạy mỗi 60 giây
-// Bắt đầu sau 5 giây để app load xong
-setTimeout(() => {
-  inv2CheckReminders(); // chạy ngay lần đầu
-  setInterval(inv2CheckReminders, 60000); // sau đó mỗi phút
-}, 5000);
 
 </script>
 </body>
