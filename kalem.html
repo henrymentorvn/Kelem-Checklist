@@ -1782,17 +1782,29 @@ const TC_TOI  = 30000;  // tăng ca tối /giờ (sau 18h)
 const NGAY_CONG = 28;
 
 // Lấy kỳ lương hiện tại (từ 15 tháng trước/hiện tại đến hôm nay)
-function getKyLuong() {
+// ---- Kỳ lương: 15/M → 14/(M+1), điều hướng được bằng offset ----
+let payPeriodOffset = 0; // 0 = kỳ hiện tại, -1 = kỳ trước, v.v.
+
+function getKyLuong(offset) {
+  if(offset === undefined) offset = payPeriodOffset;
   const today = new Date();
-  const day = today.getDate();
-  let startDate, endDate;
-  if(day >= 15) {
-    startDate = new Date(today.getFullYear(), today.getMonth(), 15);
+  // Xác định kỳ hiện tại (kỳ 0)
+  let kyStart;
+  if(today.getDate() >= 15) {
+    kyStart = new Date(today.getFullYear(), today.getMonth(), 15);
   } else {
-    startDate = new Date(today.getFullYear(), today.getMonth()-1, 15);
+    kyStart = new Date(today.getFullYear(), today.getMonth()-1, 15);
   }
-  endDate = today;
-  return {startDate, endDate};
+  // Dịch chuyển theo offset (mỗi offset = 1 tháng)
+  const startDate = new Date(kyStart.getFullYear(), kyStart.getMonth() + offset, 15);
+  // endDate: nếu kỳ hiện tại thì đến hôm nay, kỳ cũ thì đến ngày 14 tháng tiếp theo
+  let endDate;
+  if(offset === 0) {
+    endDate = today;
+  } else {
+    endDate = new Date(startDate.getFullYear(), startDate.getMonth()+1, 14);
+  }
+  return {startDate, endDate, offset};
 }
 
 function formatDateVN(d) {
@@ -1868,10 +1880,11 @@ function calcEarlyDeduct(p, d, outActual) {
   }
 }
 
-function tinhLuong(p) {
+function tinhLuong(p, offset) {
   if(!LUONG_CONFIG[p] || LUONG_CONFIG[p].luongThang === 0) return null;
+  if(offset === undefined) offset = payPeriodOffset;
   const cfg = LUONG_CONFIG[p];
-  const {startDate, endDate} = getKyLuong();
+  const {startDate, endDate} = getKyLuong(offset);
   const luongNgay = cfg.luongThang / NGAY_CONG;
 
   let ngayLamDuoc = 0;
@@ -2003,10 +2016,31 @@ function renderMyLuong() {
 }
 
 // ---- Admin xem lương tất cả ----
+function changePayPeriod(d) {
+  const newOffset = payPeriodOffset + d;
+  if(newOffset > 0) return; // không cho xem kỳ tương lai
+  if(newOffset < -11) return; // tối đa 12 kỳ (~1 năm)
+  payPeriodOffset = newOffset;
+  renderAdminLuong();
+}
+
 function renderAdminLuong() {
-  const {startDate, endDate} = getKyLuong();
+  const {startDate, endDate, offset} = getKyLuong();
+  const isCurrentPeriod = offset === 0;
+  const periodLabel = `${formatDateVN(startDate)} → ${formatDateVN(endDate)}`;
+
   let h = '<div class="luong-wrap">';
-  h += `<div class="sec-title">Bảng lương kỳ ${formatDateVN(startDate)} → ${formatDateVN(endDate)}</div>`;
+
+  // Header điều hướng kỳ lương
+  h += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <button onclick="changePayPeriod(-1)" style="padding:8px 14px;background:var(--cream-dark);border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--ink)">← Kỳ trước</button>
+    <div style="text-align:center">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Bảng lương</div>
+      <div style="font-size:13px;font-weight:600;color:var(--green)">${periodLabel}</div>
+      ${isCurrentPeriod ? '<div style="font-size:11px;color:var(--brown)">Kỳ đang chạy — ước tính đến hôm nay</div>' : '<div style="font-size:11px;color:#2E7D32">Kỳ đã chốt</div>'}
+    </div>
+    <button onclick="changePayPeriod(1)" ${isCurrentPeriod?'disabled style="opacity:0.3;cursor:not-allowed"':''} style="padding:8px 14px;background:var(--cream-dark);border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--ink)">Kỳ sau →</button>
+  </div>`;
 
   ['thoa','hanh','hieu'].forEach(p => {
     const cfg = LUONG_CONFIG[p];
@@ -2021,7 +2055,7 @@ function renderAdminLuong() {
       </div>`;
       return;
     }
-    const kq = tinhLuong(p);
+    const kq = tinhLuong(p, offset);
     if(!kq) return;
 
     h += `<div class="luong-person-card">
@@ -2029,11 +2063,11 @@ function renderAdminLuong() {
         <div class="avatar ${r.avClass}" style="width:36px;height:36px;font-size:13px">${r.avatar}</div>
         <div>
           <div class="lph-name">${r.name}</div>
-          <div class="lph-period">${formatDateVN(startDate)} → ${formatDateVN(endDate)}</div>
+          <div class="lph-period">${periodLabel}</div>
         </div>
         <div style="margin-left:auto;text-align:right">
           <div style="font-size:22px;font-weight:700;color:#fff">${fmtK(kq.tongLuong)}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.7)">Ước tính đến hôm nay</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7)">${isCurrentPeriod?'Ước tính đến hôm nay':'Tổng kỳ đã chốt'}</div>
         </div>
       </div>
       <div class="luong-rows">
@@ -2044,7 +2078,7 @@ function renderAdminLuong() {
         ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
         ${kq.ngayNghiKhongLy > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ không phép (${kq.ngayNghiKhongLy} ngày)</div><div class="luong-row-val minus">Không tính công</div></div>` : ''}
         <div class="luong-divider"></div>
-        <div class="luong-row"><div class="luong-row-label" style="font-weight:600">Tổng ước tính</div><div class="luong-row-val total">${fmtK(kq.tongLuong)}</div></div>
+        <div class="luong-row"><div class="luong-row-label" style="font-weight:600">Tổng ${isCurrentPeriod?'ước tính':'kỳ đã chốt'}</div><div class="luong-row-val total">${fmtK(kq.tongLuong)}</div></div>
       </div>`;
 
     // Chi tiết ngày công thu gọn
