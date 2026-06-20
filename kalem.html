@@ -679,7 +679,7 @@ function fmtMoney(n){return parseInt(n||0).toLocaleString("vi-VN")+"đ";}
 
 async function load(){
   try {
-    const [cl, sc, kc, nl, cc, kkI, kkR, kkL, wkA] = await Promise.all([
+    const [cl, sc, kc, nl, cc, kkI, kkR, kkL, wkA, th] = await Promise.all([
       dbGet("checklist"),
       dbGet("scores"),
       dbGet("ketca"),
@@ -689,6 +689,7 @@ async function load(){
       dbGet("kk_records"),
       dbGet("kk_lock"),
       dbGet("week_assignment"),
+      dbGet("thuong"),
     ]);
 
     if(cl && cl.date === getToday()) clState = cl;
@@ -702,6 +703,7 @@ async function load(){
     if(kkR) kkRecords = kkR;
     if(kkL) kkLockState = kkL;
     if(wkA) weekAssignment = wkA;
+    if(th) thuongState = th;
 
     // Backup vào localStorage
     if(kkI) try{localStorage.setItem('kl_kk_items',JSON.stringify(kkI));}catch(e){}
@@ -722,6 +724,7 @@ function saveCL(){dbSet("checklist",clState);}
 function saveSC(){dbSet("scores",scoreState);}
 function saveKC(){dbSet("ketca",ketcaState);}
 function saveNL(){dbSet("nguyen_lieu",nlState);}
+function saveThuong(){dbSet("thuong",thuongState);}
 
 // ===== HỆ THỐNG PIN 2 CẤP =====
 // pinIsAdmin=true -> kiểm tra ADMIN_PIN (0561)
@@ -1792,6 +1795,7 @@ const NGAY_CONG = 28;
 // Lấy kỳ lương hiện tại (từ 15 tháng trước/hiện tại đến hôm nay)
 // ---- Kỳ lương: 15/M → 14/(M+1), điều hướng được bằng offset ----
 let payPeriodOffset = 0; // 0 = kỳ hiện tại, -1 = kỳ trước, v.v.
+let thuongState = {}; // Thưởng theo kỳ, key = "ddmmyyyy_p" -> {amount, note, updatedAt}, chỉ Thoa/Hạnh
 
 function getKyLuong(offset) {
   if(offset === undefined) offset = payPeriodOffset;
@@ -1890,6 +1894,30 @@ function calcEarlyDeduct(p, d, outActual) {
 }
 
 function tinhLuong(p, offset) {
+// ---- Thưởng theo kỳ — Ka nhập riêng mỗi lần chốt lương, chỉ áp dụng Thoa/Hạnh ----
+function getThuongKey(p, startDate) {
+  return formatDateVN(startDate) + '_' + p;
+}
+function getThuongKy(p, offset) {
+  if(p !== 'thoa' && p !== 'hanh') return {amount:0, note:''};
+  if(offset === undefined) offset = payPeriodOffset;
+  const {startDate} = getKyLuong(offset);
+  const key = getThuongKey(p, startDate);
+  const rec = thuongState[key];
+  return rec ? {amount: parseInt(rec.amount||0), note: rec.note||''} : {amount:0, note:''};
+}
+function saveThuongKy(p) {
+  const {startDate} = getKyLuong(payPeriodOffset);
+  const key = getThuongKey(p, startDate);
+  const amountEl = document.getElementById('thuong-amount-'+p);
+  const noteEl = document.getElementById('thuong-note-'+p);
+  const amount = parseInt(amountEl.value) || 0;
+  const note = noteEl.value || '';
+  thuongState[key] = {amount: String(amount), note, updatedAt: new Date().toLocaleString('vi-VN')};
+  saveThuong();
+  renderAdminLuong();
+}
+
   if(!LUONG_CONFIG[p] || LUONG_CONFIG[p].luongThang === 0) return null;
   if(offset === undefined) offset = payPeriodOffset;
   const cfg = LUONG_CONFIG[p];
@@ -1950,12 +1978,14 @@ function tinhLuong(p, offset) {
 
   const luongCoBan = ngayLamDuoc * luongNgay;
   const truSai = ngayTruThem * luongNgay;
-  const tongLuong = luongCoBan + tongOT - tongTruSom - truSai;
+  const thuong = getThuongKy(p, offset);
+  const tongLuong = luongCoBan + tongOT - tongTruSom - truSai + thuong.amount;
 
   return {
     p, cfg, luongNgay, ngayLamDuoc, ngayNghiKhongLy,
     ngayPhepCoLuong, ngayTruThem, tongOT, tongTruSom,
     luongCoBan, truSai, tongLuong, chiTiet,
+    thuong,
     startDate, endDate,
   };
 }
@@ -2000,6 +2030,20 @@ function renderMyLuong() {
       <div class="my-stat"><div class="my-stat-num">${kq.ngayPhepCoLuong}/${NGAY_PHEP_CO_LUONG}</div><div class="my-stat-label">Phép có lương</div></div>
       <div class="my-stat"><div class="my-stat-num">${fmtK(kq.tongOT)}</div><div class="my-stat-label">Tăng ca</div></div>
     </div>
+  </div>`;
+
+  // Chi tiết tính lương — để xem/chụp gửi đủ thông tin
+  h += `<div class="luong-rows" style="background:#fff;border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border)">
+    <div class="luong-row"><div class="luong-row-label" style="color:var(--muted)">Mức lương cơ bản/tháng</div><div class="luong-row-val" style="color:var(--muted)">${fmtK(kq.cfg.luongThang)}</div></div>
+    <div class="luong-row"><div class="luong-row-label">Lương theo công (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
+    ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.ngayPhepCoLuong * kq.luongNgay)}</div></div>` : ''}
+    ${kq.tongOT > 0 ? `<div class="luong-row"><div class="luong-row-label">Tăng ca</div><div class="luong-row-val plus">+${fmtK(kq.tongOT)}</div></div>` : ''}
+    ${kq.tongTruSom > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ về sớm</div><div class="luong-row-val minus">-${fmtK(kq.tongTruSom)}</div></div>` : ''}
+    ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
+    ${kq.ngayNghiKhongLy > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ không phép (${kq.ngayNghiKhongLy} ngày)</div><div class="luong-row-val minus">Không tính công</div></div>` : ''}
+    ${kq.thuong && kq.thuong.amount > 0 ? `<div class="luong-row"><div class="luong-row-label">Thưởng${kq.thuong.note?' — '+kq.thuong.note:''}</div><div class="luong-row-val plus">+${fmtK(kq.thuong.amount)}</div></div>` : ''}
+    <div class="luong-divider"></div>
+    <div class="luong-row"><div class="luong-row-label" style="font-weight:600">Tổng</div><div class="luong-row-val total">${fmtK(kq.tongLuong)}</div></div>
   </div>`;
 
   // Chi tiết ngày công
@@ -2080,15 +2124,33 @@ function renderAdminLuong() {
         </div>
       </div>
       <div class="luong-rows">
-        <div class="luong-row"><div class="luong-row-label">Lương cơ bản (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
+        <div class="luong-row"><div class="luong-row-label" style="color:var(--muted)">Mức lương cơ bản/tháng</div><div class="luong-row-val" style="color:var(--muted)">${fmtK(kq.cfg.luongThang)}</div></div>
+        <div class="luong-row"><div class="luong-row-label">Lương theo công (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
         ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.ngayPhepCoLuong * kq.luongNgay)}</div></div>` : ''}
         ${kq.tongOT > 0 ? `<div class="luong-row"><div class="luong-row-label">Tăng ca</div><div class="luong-row-val plus">+${fmtK(kq.tongOT)}</div></div>` : ''}
         ${kq.tongTruSom > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ về sớm</div><div class="luong-row-val minus">-${fmtK(kq.tongTruSom)}</div></div>` : ''}
         ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
         ${kq.ngayNghiKhongLy > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ không phép (${kq.ngayNghiKhongLy} ngày)</div><div class="luong-row-val minus">Không tính công</div></div>` : ''}
+        ${kq.thuong && kq.thuong.amount > 0 ? `<div class="luong-row"><div class="luong-row-label">Thưởng${kq.thuong.note?' — '+kq.thuong.note:''}</div><div class="luong-row-val plus">+${fmtK(kq.thuong.amount)}</div></div>` : ''}
         <div class="luong-divider"></div>
         <div class="luong-row"><div class="luong-row-label" style="font-weight:600">Tổng ${isCurrentPeriod?'ước tính':'kỳ đã chốt'}</div><div class="luong-row-val total">${fmtK(kq.tongLuong)}</div></div>
       </div>`;
+
+    // Khu vực Ka nhập thưởng theo kỳ — chỉ áp dụng Thoa/Hạnh
+    if(p === 'thoa' || p === 'hanh') {
+      const thuongHienTai = kq.thuong || {amount:0, note:''};
+      h += `<div style="margin:0 16px 14px;background:var(--green-pale);border:1px solid #A5D6A7;border-radius:10px;padding:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">🎁 Thưởng kỳ này (Ka nhập)</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="number" id="thuong-amount-${p}" value="${thuongHienTai.amount || ''}" placeholder="Số tiền thưởng"
+            style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#fff">
+        </div>
+        <input type="text" id="thuong-note-${p}" value="${thuongHienTai.note || ''}" placeholder="Ghi chú (ví dụ: thưởng KPI, thưởng lễ...)"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;margin-bottom:8px;box-sizing:border-box">
+        <button onclick="saveThuongKy('${p}')" style="width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Lưu thưởng kỳ này</button>
+        ${thuongHienTai.updatedAt ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">Cập nhật lúc ${thuongHienTai.updatedAt}</div>` : ''}
+      </div>`;
+    }
 
     // Chi tiết ngày công thu gọn
     if(kq.chiTiet.length) {
@@ -3343,6 +3405,7 @@ function setupRealtimeListeners() {
     else if(key === "kk_records"){ kkRecords = val; try{localStorage.setItem('kl_kk_records',JSON.stringify(val));}catch(e){} }
     else if(key === "kk_lock"){ kkLockState = val; try{localStorage.setItem('kl_kk_lock',JSON.stringify(val));}catch(e){} }
     else if(key === "week_assignment"){ weekAssignment = val; try{localStorage.setItem('kl_week_assign',JSON.stringify(val));}catch(e){} }
+    else if(key === "thuong"){ thuongState = val; if(currentTab==="luong-admin"||currentTab==="luong-nv") (currentTab==="luong-admin"?renderAdminLuong():renderMyLuong()); }
   });
 }
 
