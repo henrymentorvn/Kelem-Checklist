@@ -1978,13 +1978,14 @@ function saveThuongKy(p) {
 
   const luongCoBan = ngayLamDuoc * luongNgay;
   const truSai = ngayTruThem * luongNgay;
+  const tienPhepCoLuong = ngayPhepCoLuong * luongNgay;
   const thuong = getThuongKy(p, offset);
-  const tongLuong = luongCoBan + tongOT - tongTruSom - truSai + thuong.amount;
+  const tongLuong = luongCoBan + tienPhepCoLuong + tongOT - tongTruSom - truSai + thuong.amount;
 
   return {
     p, cfg, luongNgay, ngayLamDuoc, ngayNghiKhongLy,
     ngayPhepCoLuong, ngayTruThem, tongOT, tongTruSom,
-    luongCoBan, truSai, tongLuong, chiTiet,
+    luongCoBan, truSai, tienPhepCoLuong, tongLuong, chiTiet,
     thuong,
     startDate, endDate,
   };
@@ -2036,7 +2037,7 @@ function renderMyLuong() {
   h += `<div class="luong-rows" style="background:#fff;border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border)">
     <div class="luong-row"><div class="luong-row-label" style="color:var(--muted)">Mức lương cơ bản/tháng</div><div class="luong-row-val" style="color:var(--muted)">${fmtK(kq.cfg.luongThang)}</div></div>
     <div class="luong-row"><div class="luong-row-label">Lương theo công (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
-    ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.ngayPhepCoLuong * kq.luongNgay)}</div></div>` : ''}
+    ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.tienPhepCoLuong)}</div></div>` : ''}
     ${kq.tongOT > 0 ? `<div class="luong-row"><div class="luong-row-label">Tăng ca</div><div class="luong-row-val plus">+${fmtK(kq.tongOT)}</div></div>` : ''}
     ${kq.tongTruSom > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ về sớm</div><div class="luong-row-val minus">-${fmtK(kq.tongTruSom)}</div></div>` : ''}
     ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
@@ -2126,7 +2127,7 @@ function renderAdminLuong() {
       <div class="luong-rows">
         <div class="luong-row"><div class="luong-row-label" style="color:var(--muted)">Mức lương cơ bản/tháng</div><div class="luong-row-val" style="color:var(--muted)">${fmtK(kq.cfg.luongThang)}</div></div>
         <div class="luong-row"><div class="luong-row-label">Lương theo công (${kq.ngayLamDuoc} ngày × ${fmtK(Math.round(kq.luongNgay))})</div><div class="luong-row-val">${fmtK(kq.luongCoBan)}</div></div>
-        ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.ngayPhepCoLuong * kq.luongNgay)}</div></div>` : ''}
+        ${kq.ngayPhepCoLuong > 0 ? `<div class="luong-row"><div class="luong-row-label">Nghỉ phép có lương (${kq.ngayPhepCoLuong} ngày)</div><div class="luong-row-val plus">+${fmtK(kq.tienPhepCoLuong)}</div></div>` : ''}
         ${kq.tongOT > 0 ? `<div class="luong-row"><div class="luong-row-label">Tăng ca</div><div class="luong-row-val plus">+${fmtK(kq.tongOT)}</div></div>` : ''}
         ${kq.tongTruSom > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ về sớm</div><div class="luong-row-val minus">-${fmtK(kq.tongTruSom)}</div></div>` : ''}
         ${kq.truSai > 0 ? `<div class="luong-row"><div class="luong-row-label">Trừ nghỉ sai ngày (${kq.ngayTruThem} ngày T7/CN)</div><div class="luong-row-val minus">-${fmtK(kq.truSai)}</div></div>` : ''}
