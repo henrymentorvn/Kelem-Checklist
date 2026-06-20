@@ -1796,21 +1796,22 @@ let payPeriodOffset = 0; // 0 = kỳ hiện tại, -1 = kỳ trước, v.v.
 function getKyLuong(offset) {
   if(offset === undefined) offset = payPeriodOffset;
   const today = new Date();
-  // Xác định kỳ hiện tại (kỳ 0)
+  // Xác định kỳ hiện tại (kỳ 0): bắt đầu 16, nếu hôm nay >=16 thì kỳ bắt đầu tháng này, ngược lại tháng trước
   let kyStart;
-  if(today.getDate() >= 15) {
-    kyStart = new Date(today.getFullYear(), today.getMonth(), 15);
+  if(today.getDate() >= 16) {
+    kyStart = new Date(today.getFullYear(), today.getMonth(), 16);
   } else {
-    kyStart = new Date(today.getFullYear(), today.getMonth()-1, 15);
+    kyStart = new Date(today.getFullYear(), today.getMonth()-1, 16);
   }
   // Dịch chuyển theo offset (mỗi offset = 1 tháng)
-  const startDate = new Date(kyStart.getFullYear(), kyStart.getMonth() + offset, 15);
-  // endDate: nếu kỳ hiện tại thì đến hôm nay, kỳ cũ thì đến ngày 14 tháng tiếp theo
+  const startDate = new Date(kyStart.getFullYear(), kyStart.getMonth() + offset, 16);
+  // endDate: kỳ hiện tại thì đến hôm nay (kể cả hôm nay là ngày 15, vẫn tính đủ ca đêm/tăng ca),
+  // kỳ cũ đã chốt thì đến hết ngày 15 tháng tiếp theo
   let endDate;
   if(offset === 0) {
     endDate = today;
   } else {
-    endDate = new Date(startDate.getFullYear(), startDate.getMonth()+1, 14);
+    endDate = new Date(startDate.getFullYear(), startDate.getMonth()+1, 15);
   }
   return {startDate, endDate, offset};
 }
